@@ -1,0 +1,27 @@
+# Sample eMDee session TOML file
+
+[session]
+description = "MJC Summer Concert - Choir"
+comment = "For the MJC Summer concert in the main hall (my laptop, their piano, main stage PA)"
+updated = 2024-03-29T08:50:12
+
+[[track]]
+title = "C'est si bon"
+path = "/home/steve/Desktop/MJC_Saix_MP3/Accompaniments/CestSiBon_SAH_Accpt.mid"
+comment = "A little faster in the dry acoustic"
+tempo = 1.05                 # increase tempo by 5%
+
+[[track]]
+title = "C'est Magnifique"
+skip = true                 # this track will be skipped 
+path = "/home/steve/Desktop/MJC_Saix_MP3/Accompaniments/CestMagnifique_Accpt.mp3"
+comment = "*Good for encore!*"
+volume = 0.95               # reduce volume by 5%
+
+[[track]]
+title = "Mon coq est mort"
+comment = "No accompaniment, give note F"
+
+[[track]]
+title = "La Javanaise"
+path = "/home/steve/Desktop/MJC_Saix_MP3/Accompaniments/LaJavanaise_Accpt.mp3"

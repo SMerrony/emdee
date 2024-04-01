@@ -1,0 +1,472 @@
+--  SPDX-License-Identifier: GPL-3.0-or-later
+--  SPDX-FileCopyrightText: Copyright 2024 Stephen Merrony
+
+with Ada.Containers;          use Ada.Containers;
+with Ada.Directories;
+with Ada.Exceptions;          use Ada.Exceptions;
+with Ada.Sequential_IO;
+with Ada.Strings.Unbounded;   use Ada.Strings.Unbounded;
+with Ada.Text_IO;
+
+with Gdk.Threads;
+
+with Glib;                    use Glib;
+with Glib.Application;        use Glib.Application;
+with Glib.Error;              use Glib.Error;
+
+with Gtk.About_Dialog;        use Gtk.About_Dialog;
+with Gtk.Box;                 use Gtk.Box;
+with Gtk.Button;              use Gtk.Button;
+with Gtk.Dialog;              use Gtk.Dialog;
+with Gtk.Enums;               use Gtk.Enums;
+with Gtk.Frame;
+with Gtk.Menu;                use Gtk.Menu;
+with Gtk.Menu_Bar;            use Gtk.Menu_Bar;
+with Gtk.Menu_Item;           use Gtk.Menu_Item;
+with Gtk.Separator_Menu_Item; use Gtk.Separator_Menu_Item;
+with Gtk.Widget;
+
+with Gtkada.Dialogs;          use Gtkada.Dialogs;
+with Gtkada.File_Selection;
+
+with Interfaces;
+
+with Embedded;                use Embedded;
+with Players;                 use Players;
+with Session;                 use Session;
+
+package body GUI is
+
+   --  Internal Helpers
+
+   function Create_Icon_Pixbuf return Gdk.Pixbuf.Gdk_Pixbuf is
+      IP :  Gdk.Pixbuf.Gdk_Pixbuf;
+      Icon_Emb : constant Embedded.Content_Type := Embedded.Get_Content (App_Icon);
+      package IO is new Ada.Sequential_IO (Interfaces.Unsigned_8);
+      Tmp_Filename : constant String := "emdee_Icon.tmp";
+      Tmp_File : IO.File_Type;
+      Error : aliased Glib.Error.GError;
+   begin
+      if Ada.Directories.Exists (Tmp_Filename) then
+         Ada.Directories.Delete_File (Tmp_Filename);
+      end if;
+      IO.Create (File => Tmp_File, Name => Tmp_Filename);
+      for Val of Icon_Emb.Content.all loop
+         IO.Write (Tmp_File, Interfaces.Unsigned_8 (Val));
+      end loop;
+      IO.Close (Tmp_File);
+      Gdk.Pixbuf.Gdk_New_From_File (Pixbuf => IP, Filename => Tmp_Filename, Error => Error);
+      if Error /= null then
+         Ada.Text_IO.Put_Line ("WARNING: Could not find/load icon file: emdee_Icon.tmp");
+      end if;
+      Ada.Directories.Delete_File (Tmp_Filename);
+      return IP;
+   end Create_Icon_Pixbuf;
+
+   --  CALLBACKS
+
+   procedure About_CB (Self : access Gtk.Menu_Item.Gtk_Menu_Item_Record'Class) is
+      pragma Unreferenced (Self);
+      Dialog : Gtk_About_Dialog;
+      Dummy_Response : Gtk_Response_Type;
+   begin
+      Gtk_New (Dialog);
+      Dialog.Set_Destroy_With_Parent (True);
+      Dialog.Set_Modal (True);
+      Dialog.Set_Logo (Icon_PB);
+      Dialog.Set_Authors ((1 => new String'(App_Author)));
+      Dialog.Set_Copyright (App_Copyright);
+      Dialog.Set_Comments (App_Comment);
+      Dialog.Set_Program_Name (App_Title);
+      Dialog.Set_Version (App_SemVer);
+      Dialog.Set_Website (App_Website);
+      Dummy_Response := Dialog.Run;
+      Dialog.Destroy;
+   end About_CB;
+
+   procedure Players_Load_CB (Self : access Gtk.Menu_Item.Gtk_Menu_Item_Record'Class) is
+      pragma Unreferenced (Self);
+      Filename : constant String :=
+         Gtkada.File_Selection.File_Selection_Dialog (Title => App_Title & " Players Configuration",
+                                                      Dir_Only => False,
+                                                      Must_Exist => True);
+      Unused_Buttons : Gtkada.Dialogs.Message_Dialog_Buttons;
+   begin
+      if Filename'Length > 1 then
+         Players.Load_Player_Config (Filename);
+         Unused_Buttons := Message_Dialog (Msg => To_String (Active_Players_Config.Config_Desc),
+                                           Title => App_Title & " Players Configuration Loaded",
+                                           Buttons => Button_OK);
+      end if;
+   exception
+      when E : others =>
+         Unused_Buttons := Message_Dialog (Msg => "Could not load Players TOML file.  " & Exception_Message (E),
+                                           Dialog_Type => Warning,
+                                           Title => App_Title & " - Error");
+   end Players_Load_CB;
+
+   procedure Players_Edit_CB (Self : access Gtk.Menu_Item.Gtk_Menu_Item_Record'Class) is
+      pragma Unreferenced (Self);
+      Dialog : Gtk_Dialog;
+      Dlg_Box   : Gtk.Box.Gtk_Box;
+      Dlg_Grid  : Gtk.Grid.Gtk_Grid;
+      Name_Label, MP3_Label, OGG_Label, WAV_Label, MIDI_Label : Gtk.Label.Gtk_Label;
+      Name_Entry, MP3_Entry, OGG_Entry, WAV_Entry, MIDI_Entry : Gtk.GEntry.Gtk_Entry;
+      Cancel_Unused, Save_Unused : Gtk.Widget.Gtk_Widget;
+   begin
+      Gtk_New (Dialog);
+      Dialog.Set_Destroy_With_Parent (True);
+      Dialog.Set_Modal (True);
+      Dialog.Set_Title (App_Title & " - Edit Players");
+      Dlg_Box := Dialog.Get_Content_Area;
+      Gtk_New (Dlg_Grid);
+
+      Gtk.Label.Gtk_New (Name_Label, "Description: ");
+      Dlg_Grid.Attach (Child => Name_Label, Left => 0, Top => 0);
+      Gtk.GEntry.Gtk_New (Name_Entry);
+      Name_Entry.Set_Width_Chars (40);
+      Dlg_Grid.Attach (Child => Name_Entry, Left => 1, Top => 0);
+      if Active_Players_Config.Config_Desc /= Null_Unbounded_String then
+         Name_Entry.Set_Text (To_String (Active_Players_Config.Config_Desc));
+      end if;
+
+      Gtk.Label.Gtk_New (MIDI_Label, "MIDI Player: ");
+      Dlg_Grid.Attach (Child => MIDI_Label, Left => 0, Top => 1);
+      Gtk.GEntry.Gtk_New (MIDI_Entry);
+      MIDI_Entry.Set_Width_Chars (40);
+      Dlg_Grid.Attach (Child => MIDI_Entry, Left => 1, Top => 1);
+      if Active_Players_Config.MIDI_Player /= Null_Unbounded_String then
+         MIDI_Entry.Set_Text (To_String (Active_Players_Config.MIDI_Player));
+      end if;
+
+      Gtk.Label.Gtk_New (MP3_Label, "MP3 Player: ");
+      Dlg_Grid.Attach (Child => MP3_Label, Left => 0, Top => 2);
+      Gtk.GEntry.Gtk_New (MP3_Entry);
+      MP3_Entry.Set_Width_Chars (40);
+      Dlg_Grid.Attach (Child => MP3_Entry, Left => 1, Top => 2);
+      if Active_Players_Config.MP3_Player /= Null_Unbounded_String then
+         MP3_Entry.Set_Text (To_String (Active_Players_Config.MP3_Player));
+      end if;
+
+      Gtk.Label.Gtk_New (OGG_Label, "OGG Player: ");
+      Dlg_Grid.Attach (Child => OGG_Label, Left => 0, Top => 3);
+      Gtk.GEntry.Gtk_New (OGG_Entry);
+      OGG_Entry.Set_Width_Chars (40);
+      Dlg_Grid.Attach (Child => OGG_Entry, Left => 1, Top => 3);
+      if Active_Players_Config.OGG_Player /= Null_Unbounded_String then
+         OGG_Entry.Set_Text (To_String (Active_Players_Config.OGG_Player));
+      end if;
+
+      Gtk.Label.Gtk_New (WAV_Label, "WAV Player: ");
+      Dlg_Grid.Attach (Child => WAV_Label, Left => 0, Top => 4);
+      Gtk.GEntry.Gtk_New (WAV_Entry);
+      WAV_Entry.Set_Width_Chars (40);
+      Dlg_Grid.Attach (Child => WAV_Entry, Left => 1, Top => 4);
+      if Active_Players_Config.WAV_Player /= Null_Unbounded_String then
+         WAV_Entry.Set_Text (To_String (Active_Players_Config.WAV_Player));
+      end if;
+
+      Dlg_Box.Pack_Start (Child => Dlg_Grid, Padding => 5);
+
+      Cancel_Unused := Dialog.Add_Button ("Cancel", Gtk_Response_Cancel);
+      Save_Unused := Dialog.Add_Button ("Save", Gtk_Response_Accept);
+      Dialog.Set_Default_Response (Gtk_Response_Accept);
+      Dialog.Show_All;
+
+      if Dialog.Run = Gtk_Response_Accept then
+null; --  TODO Actually save players config
+      end if;
+      Dialog.Destroy;
+   end Players_Edit_CB;
+
+   procedure Display_Tracks is
+      Track_Row : Gint := 1;
+      Col       : Gint;
+      Track_Play_Btn, Track_Down_Btn, Track_Up_Btn : Gtk.Button.Gtk_Button;
+      Row_Label : Gtk.Label.Gtk_Label;
+      Title_Entry, Comment_Entry : Gtk.GEntry.Gtk_Entry;
+   begin
+      for Track of Active_Session.Tracks loop
+         Col := 0;
+
+         if Track.Path /= Null_Unbounded_String then
+            Gtk.Button.Gtk_New_From_Icon_Name (Track_Play_Btn, "media-playback-start-symbolic", Icon_Size_Button);
+            Tracks_Grid.Attach (Track_Play_Btn, Col, Track_Row);
+         end if;
+         Col := Col + 1;
+
+         Gtk.Label.Gtk_New (Row_Label, Track_Row 'Img);
+         Tracks_Grid.Attach (Row_Label, Col, Track_Row);
+         Col := Col + 1;
+
+         Gtk.GEntry.Gtk_New (Title_Entry);
+         Title_Entry.Set_Width_Chars (25);
+         Title_Entry.Set_Text (To_String (Track.Title));
+         Tracks_Grid.Attach (Title_Entry, Col, Track_Row);
+         Col := Col + 1;
+
+         if Integer (Track_Row) < Integer (Active_Session.Tracks.Length) then
+            Gtk.Button.Gtk_New_From_Icon_Name (Track_Down_Btn, "go-down-symbolic", Icon_Size_Button);
+            Tracks_Grid.Attach (Track_Down_Btn, Col, Track_Row);
+         end if;
+         Col := Col + 1;
+
+         if Track_Row > 1 then
+            Gtk.Button.Gtk_New_From_Icon_Name (Track_Up_Btn, "go-up-symbolic", Icon_Size_Button);
+            Tracks_Grid.Attach (Track_Up_Btn, Col, Track_Row);
+         end if;
+         Col := Col + 1;
+
+         Gtk.GEntry.Gtk_New (Comment_Entry);
+         Comment_Entry.Set_Width_Chars (40);
+         Comment_Entry.Set_Text (To_String (Track.Comment));
+         Tracks_Grid.Attach (Comment_Entry, Col, Track_Row);
+         Col := Col + 1;
+
+         Track_Row := Track_Row + 1;
+      end loop;
+
+      Tracks_Grid.Show_All;
+   end Display_Tracks;
+
+   procedure Session_Load_CB (Self : access Gtk.Menu_Item.Gtk_Menu_Item_Record'Class) is
+      pragma Unreferenced (Self);
+      Filename : constant String :=
+         Gtkada.File_Selection.File_Selection_Dialog (Title => App_Title & " Load Session",
+                                                      Dir_Only => False,
+                                                      Must_Exist => True);
+      Unused_Buttons : Gtkada.Dialogs.Message_Dialog_Buttons;
+   begin
+      if Filename'Length > 1 then
+         Session.Load_Session (Filename);
+         Session_Desc_Entry.Set_Text (To_String (Active_Session.Desc));
+         Session_Comment_Entry.Set_Text (To_String (Active_Session.Comment));
+         if Active_Session.Tracks.Length > 0 then
+            Display_Tracks;
+         end if;
+      end if;
+   exception
+      when E : others =>
+         Unused_Buttons := Message_Dialog (Msg => "Could not load Session TOML file.  " & Exception_Message (E),
+                                           Dialog_Type => Warning,
+                                           Title => App_Title & " - Error");
+   end Session_Load_CB;
+
+   function Update_Status_Box_CB (SB : Gtk.Box.Gtk_Box) return Boolean is
+   begin
+      Gdk.Threads.Enter;
+
+      if Active_Players_Config.Config_Desc /= Null_Unbounded_String then
+         Players_Label.Set_Text (To_String (Active_Players_Config.Config_Desc));
+      end if;
+
+      SB.Queue_Draw;
+
+      Gdk.Threads.Leave;
+      return True;
+   end Update_Status_Box_CB;
+
+   procedure Quit_CB (Self : access Gtk.Menu_Item.Gtk_Menu_Item_Record'Class) is
+      pragma Unreferenced (Self);
+   begin
+      --  Removing the main window closes the application...
+      App.Remove_Window (Main_Window);
+   end Quit_CB;
+
+   --  --------  --
+   --  BUILDERS  --
+
+   function Create_Menu_Bar return Gtk.Menu_Bar.Gtk_Menu_Bar is
+      Menu_Bar : Gtk.Menu_Bar.Gtk_Menu_Bar;
+      Sep_Item : Gtk.Separator_Menu_Item.Gtk_Separator_Menu_Item;
+      File_Menu, Edit_Menu, Session_Menu, Players_Menu, Help_Menu : Gtk.Menu.Gtk_Menu;
+      Menu_Item : Gtk.Menu_Item.Gtk_Menu_Item;
+      Logging_Item, Expect_Item,
+      Session_Load_Item,
+      Players_Load_Item, Players_Edit_Item,
+      Quit_Item,
+      Paste_Item,
+      About_Item : Gtk.Menu_Item.Gtk_Menu_Item;
+   begin
+      --  Log (DEBUG, "Starting to Create_Menu_Bar");
+      Gtk_New (Menu_Bar);
+
+      --  File
+
+      Gtk_New (Menu_Item, "File");
+      Menu_Bar.Append (Menu_Item);
+      Gtk_New (File_Menu);
+      Menu_Item.Set_Submenu (File_Menu);
+
+      Gtk_New (Logging_Item, "Logging");
+      File_Menu.Append (Logging_Item);
+      --  Logging_Item.On_Activate (Logging_CB'Access);
+
+      Gtk_New (Sep_Item);
+      File_Menu.Append (Sep_Item);
+
+      Gtk_New (Expect_Item, "Run mini-Expect Script");
+      File_Menu.Append (Expect_Item);
+      --  Expect_Item.On_Activate (Expect_CB'Access);
+
+      Gtk_New (Sep_Item);
+      File_Menu.Append (Sep_Item);
+
+      Gtk_New (Quit_Item, "Quit");
+      File_Menu.Append (Quit_Item);
+      Quit_Item.On_Activate (Quit_CB'Access);
+
+      --  Edit
+
+      Gtk_New (Menu_Item, "Edit");
+      Menu_Bar.Append (Menu_Item);
+      Gtk_New (Edit_Menu);
+      Menu_Item.Set_Submenu (Edit_Menu);
+      Gtk_New (Paste_Item, "Paste");
+      Edit_Menu.Append (Paste_Item);
+      --  Paste_Item.On_Activate (Paste_CB'Access);
+
+      --  --  View
+      --  Gtk_New (Menu_Item, "View");
+      --  Menu_Bar.Append (Menu_Item);
+      --  Gtk_New (View_Menu);
+      --  Menu_Item.Set_Submenu (View_Menu);
+
+      --  Gtk_New (History_Item, "History");
+      --  View_Menu.Append (History_Item);
+      --  History_Item.On_Activate (View_History_CB'Access);
+
+      --  Gtk_New (Sep_Item);
+      --  View_Menu.Append (Sep_Item);
+      --  Gtk_New (Load_Template_Item, "Load Func. Key Template");
+      --  View_Menu.Append (Load_Template_Item);
+      --  --  Load_Template_Item.On_Activate (Load_Template_CB'Access);
+      --  Gtk_New (Hide_Template_Item, "Hide Func. Key Template");
+      --  View_Menu.Append (Hide_Template_Item);
+      --  Hide_Template_Item.Set_Sensitive (False);
+      --  --  Hide_Template_Item.On_Activate (Hide_Template_CB'Access);
+
+      --  Session
+
+      Gtk_New (Menu_Item, "Session");
+      Menu_Bar.Append (Menu_Item);
+      Gtk_New (Session_Menu);
+      Menu_Item.Set_Submenu (Session_Menu);
+
+      --  Session Load
+      Gtk_New (Session_Load_Item, "Load Session");
+      Session_Menu.Append (Session_Load_Item);
+      Session_Load_Item.On_Activate (Session_Load_CB'Access);
+
+
+      --  Players
+
+      Gtk_New (Menu_Item, "Players");
+      Menu_Bar.Append (Menu_Item);
+      Gtk_New (Players_Menu);
+      Menu_Item.Set_Submenu (Players_Menu);
+
+      --  Players Load
+      Gtk_New (Players_Load_Item, "Load Configuration");
+      Players_Menu.Append (Players_Load_Item);
+      Players_Load_Item.On_Activate (Players_Load_CB'Access);
+
+      --  Players Config
+      Gtk_New (Players_Edit_Item, "Edit Configuration");
+      Players_Menu.Append (Players_Edit_Item);
+      Players_Edit_Item.On_Activate (Players_Edit_CB'Access);
+
+      --  --  Players Save
+      --  Gtk_New (Players_Save_Item, "Save Configuration");
+      --  Players_Menu.Append (Players_Save_Item);
+
+      --  Help
+
+      Gtk_New (Menu_Item, "Help");
+      Menu_Bar.Append (Menu_Item);
+      Gtk_New (Help_Menu);
+      Menu_Item.Set_Submenu (Help_Menu);
+
+      Gtk_New (About_Item, "About");
+      Help_Menu.Append (About_Item);
+      About_Item.On_Activate (About_CB'Access);
+
+      return Menu_Bar;
+   end Create_Menu_Bar;
+
+   function Create_Status_Box return Gtk_Box is
+      Status_Box : Gtk_Box;
+      Active_Frame, Players_Frame : Gtk.Frame.Gtk_Frame;
+   begin
+      Gtk_New (Status_Box, Gtk.Enums.Orientation_Horizontal, 2);
+
+      Gtk.Frame.Gtk_New (Active_Frame);
+      Gtk.Label.Gtk_New (Active_Label, "(Inactive)");
+      Active_Frame.Add (Active_Label);
+      Status_Box.Pack_Start (Active_Frame);
+
+      Gtk.Frame.Gtk_New (Players_Frame);
+      Gtk.Label.Gtk_New (Players_Label, "(Players Configuration not Loaded)");
+      Players_Frame.Add (Players_Label);
+      Status_Box.Pack_Start (Players_Frame);
+      Status_Box.Set_Hexpand (True);
+
+      SB_Timeout := SB_Timeout_P.Timeout_Add (1000, Update_Status_Box_CB'Access, Status_Box);
+
+      return Status_Box;
+   end Create_Status_Box;
+
+   -- ----------- --
+   -- Application --
+
+   procedure App_Activate (Self : access Gapplication_Record'Class) is
+      pragma Unreferenced (Self);
+      Session_Label, Comment_Label : Gtk.Label.Gtk_Label;
+   begin
+      Main_Window := Gtk_Application_Window_New (App);
+      Main_Window.Set_Title (App_Title);
+
+      --  Everything is in a Box...
+      Gtk.Box.Gtk_New (Main_Box, Gtk.Enums.Orientation_Vertical, 2);
+
+      --  Menu
+      Main_Box.Pack_Start (Child => Create_Menu_Bar, Expand => False);
+
+      --  Session Info Header
+      Gtk_New (Session_Header_Grid);
+      Gtk.GEntry.Gtk_New (Session_Desc_Entry);
+      Gtk_New (Session_Label, " Session: ");
+      Session_Header_Grid.Attach (Child => Session_Label, Left => 0, Top => 0);
+      Session_Desc_Entry.Set_Width_Chars (80);
+      Session_Header_Grid.Attach (Child => Session_Desc_Entry, Left => 1, Top => 0);
+      Gtk_New (Comment_Label, " Notes: ");
+      Session_Header_Grid.Attach (Child => Comment_Label, Left => 0, Top => 1);
+      Gtk.GEntry.Gtk_New (Session_Comment_Entry);
+      Session_Comment_Entry.Set_Width_Chars (132);
+      Session_Header_Grid.Attach (Child => Session_Comment_Entry, Left => 1, Top => 1);
+      Main_Box.Pack_Start (Child => Session_Header_Grid, Expand => False);
+
+      --  Tracks Grid
+      Gtk_New (Tracks_Grid);
+      Main_Box.Pack_Start (Child => Tracks_Grid);
+
+      --  Status Bar
+      Main_Box.Pack_End (Child => Create_Status_Box, Expand => False);
+
+      Main_Window.Add (Main_Box);
+      Main_Window.Resize (500, 400); --  Gotta start somewhere
+      Icon_PB := Create_Icon_Pixbuf;
+      Main_Window.Set_Icon (Icon_PB);
+      Main_Window.Show_All;
+   end App_Activate;
+
+   procedure Launch is
+
+      Unused_Status : Gint;
+   begin
+      App := Gtk_Application_New ("hello.world", G_Application_Flags_None);
+      App.On_Activate (App_Activate'Unrestricted_Access);
+      Unused_Status := App.Run;
+   end Launch;
+
+end GUI;

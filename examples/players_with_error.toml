@@ -1,0 +1,8 @@
+# Sample emdee players configuration TOML file
+
+[players]
+description = "Normal laptop/USB-MIDI setup"
+mp3_player = "mpg123"               # no path specified, must be on $PATH
+# ogg_player = "ogg123"             # this is an error!
+wav_player = "/usr/bin/aplay"       # specific path specified
+midi_player = "aplaymidi -p 20:0"   # port argument supplied

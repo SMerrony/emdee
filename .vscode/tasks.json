@@ -1,0 +1,18 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "ada",
+			"configuration": {
+				"kind": "buildProject",
+				"projectFile": "/home/steve/Ada/emdee/emdee.gpr",
+				"args": []
+			},
+			"problemMatcher": [
+				"$ada"
+			],
+			"group": "build",
+			"label": "ada: Build current project"
+		}
+	]
+}
