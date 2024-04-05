@@ -16,3 +16,4 @@ gtkada = "^24.0.0"
 
 [[depends-on]]
 ada_toml = "~0.4.0"
+

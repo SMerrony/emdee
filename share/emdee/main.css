@@ -1,0 +1,18 @@
+/* window {
+   background-color: teal;
+   color: red;
+} */
+
+grid {
+   /* color: darkblue; */
+   padding: 10px;
+}
+
+grid label {
+   margin: 8px;
+}
+
+.selected {
+   background-color: pink;
+}
+

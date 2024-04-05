@@ -3,6 +3,8 @@
 
 with Ada.Strings.Unbounded;   use Ada.Strings.Unbounded;
 
+with Glib.Spawn;
+
 package Players is
 
    type Players_T is record
@@ -23,6 +25,19 @@ package Players is
    Incomplete_Configuration,
    Unknown_Configuration_Item : exception;
 
+   --  Player Process exceptions
+   Already_Playing,
+   Player_Error,
+   Unknown_Media_Type : exception;
+
+   Currently_Playing_Track : Integer := 1;
+
+   Player_PID : aliased Glib.Spawn.GPid := 0;
+
    procedure Load_Player_Config (Filename : String);
+   procedure Play_Track;
+   procedure Stop_Playing;
+
+   function Player_Active return Boolean; --  May update PID
 
 end Players;

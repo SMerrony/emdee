@@ -5,9 +5,11 @@ with Ada.Containers;          use Ada.Containers;
 with Ada.Directories;
 with Ada.Exceptions;          use Ada.Exceptions;
 with Ada.Sequential_IO;
+--  with Ada.Streams;
 with Ada.Strings.Unbounded;   use Ada.Strings.Unbounded;
 with Ada.Text_IO;
 
+--  with Gdk.Screen;
 with Gdk.Threads;
 
 with Glib;                    use Glib;
@@ -17,13 +19,17 @@ with Glib.Error;              use Glib.Error;
 with Gtk.About_Dialog;        use Gtk.About_Dialog;
 with Gtk.Box;                 use Gtk.Box;
 with Gtk.Button;              use Gtk.Button;
+with Gtk.Container;
 with Gtk.Dialog;              use Gtk.Dialog;
 with Gtk.Enums;               use Gtk.Enums;
 with Gtk.Frame;
 with Gtk.Menu;                use Gtk.Menu;
 with Gtk.Menu_Bar;            use Gtk.Menu_Bar;
 with Gtk.Menu_Item;           use Gtk.Menu_Item;
+--  with Gtk.Radio_Button;
 with Gtk.Separator_Menu_Item; use Gtk.Separator_Menu_Item;
+with Gtk.Style_Provider;
+with Gtk.Style_Context;       use Gtk.Style_Context;
 with Gtk.Widget;
 
 with Gtkada.Dialogs;          use Gtkada.Dialogs;
@@ -38,6 +44,22 @@ with Session;                 use Session;
 package body GUI is
 
    --  Internal Helpers
+
+   package FA is new Gtk.Container.Forall_User_Data (Gtk.Style_Provider.Gtk_Style_Provider);
+
+   procedure Apply_Css (Widget   : not null access Gtk.Widget.Gtk_Widget_Record'Class;
+                        Provider : Gtk.Style_Provider.Gtk_Style_Provider) is
+   --  Apply the given CSS to the widget (which may be a container)
+   begin
+      Gtk.Style_Context.Get_Style_Context (Widget).Add_Provider (Provider, Glib.Guint'Last);
+      if Widget.all in Gtk.Container.Gtk_Container_Record'Class then
+         declare
+            Container : constant Gtk.Container.Gtk_Container := Gtk.Container.Gtk_Container (Widget);
+         begin
+            FA.Forall (Container, Apply_Css'Unrestricted_Access, Provider);
+         end;
+      end if;
+   end Apply_Css;
 
    function Create_Icon_Pixbuf return Gdk.Pixbuf.Gdk_Pixbuf is
       IP :  Gdk.Pixbuf.Gdk_Pixbuf;
@@ -83,6 +105,41 @@ package body GUI is
       Dummy_Response := Dialog.Run;
       Dialog.Destroy;
    end About_CB;
+
+   procedure Play_Btn_CB (Self : access Gtk.Button.Gtk_Button_Record'Class) is
+      pragma Unreferenced (Self);
+      Unused_Buttons : Gtkada.Dialogs.Message_Dialog_Buttons;
+   begin
+      if Player_Active then
+         Unused_Buttons := Message_Dialog (Msg => "Already playing a track",
+                                           Title => App_Title & " Cannot Play",
+                                           Buttons => Button_OK);
+      elsif Currently_Selected_Track = -1 then
+         Unused_Buttons := Message_Dialog (Msg => "No track is selected",
+                                           Title => App_Title & " Cannot Play",
+                                           Buttons => Button_OK);
+      else
+         Currently_Playing_Track := Currently_Selected_Track;
+         Play_Track;
+      end if;
+   end Play_Btn_CB;
+
+   procedure Stop_Btn_CB (Self : access Gtk.Button.Gtk_Button_Record'Class) is
+      pragma Unreferenced (Self);
+   begin
+      Stop_Playing;
+   end Stop_Btn_CB;
+
+   procedure Track_Select_Btn_CB (Self : access Gtk.Button.Gtk_Button_Record'Class) is
+      Name : constant UTF8_String := Self.Get_Name;
+      Track_Num : constant Integer := Integer'Value (Name (8 .. Name'Last));
+   begin
+      if Currently_Selected_Track /= -1 then
+         Tracks_Grid.Get_Child_At (1, Gint (Currently_Selected_Track)).Set_Opacity (1.0);
+      end if;
+      Currently_Selected_Track := Track_Num;
+      Tracks_Grid.Get_Child_At (1, Gint (Track_Num)).Set_Opacity (0.5);
+   end Track_Select_Btn_CB;
 
    procedure Players_Load_CB (Self : access Gtk.Menu_Item.Gtk_Menu_Item_Record'Class) is
       pragma Unreferenced (Self);
@@ -182,21 +239,23 @@ null; --  TODO Actually save players config
    procedure Display_Tracks is
       Track_Row : Gint := 1;
       Col       : Gint;
-      Track_Play_Btn, Track_Down_Btn, Track_Up_Btn : Gtk.Button.Gtk_Button;
+      Track_Select_Btn, Track_Down_Btn, Track_Del_Btn, Track_Up_Btn : Gtk.Button.Gtk_Button;
       Row_Label : Gtk.Label.Gtk_Label;
       Title_Entry, Comment_Entry : Gtk.GEntry.Gtk_Entry;
    begin
       for Track of Active_Session.Tracks loop
          Col := 0;
 
-         if Track.Path /= Null_Unbounded_String then
-            Gtk.Button.Gtk_New_From_Icon_Name (Track_Play_Btn, "media-playback-start-symbolic", Icon_Size_Button);
-            Tracks_Grid.Attach (Track_Play_Btn, Col, Track_Row);
-         end if;
-         Col := Col + 1;
-
          Gtk.Label.Gtk_New (Row_Label, Track_Row 'Img);
          Tracks_Grid.Attach (Row_Label, Col, Track_Row);
+         Col := Col + 1;
+
+         if Track.Path /= Null_Unbounded_String then
+            Gtk.Button.Gtk_New_From_Icon_Name (Track_Select_Btn, "go-next-symbolic", Icon_Size_Button);
+            Track_Select_Btn.Set_Name ("Select" & Track_Row'Image);
+            Track_Select_Btn.On_Clicked (Track_Select_Btn_CB'Access);
+            Tracks_Grid.Attach (Track_Select_Btn, Col, Track_Row);
+         end if;
          Col := Col + 1;
 
          Gtk.GEntry.Gtk_New (Title_Entry);
@@ -209,6 +268,10 @@ null; --  TODO Actually save players config
             Gtk.Button.Gtk_New_From_Icon_Name (Track_Down_Btn, "go-down-symbolic", Icon_Size_Button);
             Tracks_Grid.Attach (Track_Down_Btn, Col, Track_Row);
          end if;
+         Col := Col + 1;
+
+         Gtk.Button.Gtk_New_From_Icon_Name (Track_Del_Btn, "edit-delete", Icon_Size_Button);
+         Tracks_Grid.Attach (Track_Del_Btn, Col, Track_Row);
          Col := Col + 1;
 
          if Track_Row > 1 then
@@ -226,6 +289,7 @@ null; --  TODO Actually save players config
          Track_Row := Track_Row + 1;
       end loop;
 
+      Apply_Css (Tracks_Grid, +CSS_Provider);
       Tracks_Grid.Show_All;
    end Display_Tracks;
 
@@ -255,6 +319,12 @@ null; --  TODO Actually save players config
    function Update_Status_Box_CB (SB : Gtk.Box.Gtk_Box) return Boolean is
    begin
       Gdk.Threads.Enter;
+
+      if Player_Active then
+         Active_Label.Set_Text ("Playing: " & To_String (Active_Session.Tracks (Currently_Playing_Track).Title));
+      else
+         Active_Label.Set_Text ("Not Playing");
+      end if;
 
       if Active_Players_Config.Config_Desc /= Null_Unbounded_String then
          Players_Label.Set_Text (To_String (Active_Players_Config.Config_Desc));
@@ -358,7 +428,6 @@ null; --  TODO Actually save players config
       Session_Menu.Append (Session_Load_Item);
       Session_Load_Item.On_Activate (Session_Load_CB'Access);
 
-
       --  Players
 
       Gtk_New (Menu_Item, "Players");
@@ -394,6 +463,37 @@ null; --  TODO Actually save players config
       return Menu_Bar;
    end Create_Menu_Bar;
 
+   function Create_Controls_Grid return Gtk_Grid is
+      Controls_Grid : Gtk_Grid;
+      Play_Btn, Stop_Btn, Restart_Btn, Next_Btn : Gtk.Button.Gtk_Button;
+   begin
+      Gtk_New (Controls_Grid);
+      Controls_Grid.Set_Column_Spacing (10);
+      Gtk.Button.Gtk_New_From_Icon_Name (Play_Btn, "media-playback-start", Icon_Size_Dialog);
+      Play_Btn.Set_Image_Position (Pos_Top);
+      Play_Btn.Set_Label ("Play");
+      Play_Btn.On_Clicked (Play_Btn_CB'Access);
+      Controls_Grid.Attach (Play_Btn, 0, 0);
+
+      Gtk.Button.Gtk_New_From_Icon_Name (Stop_Btn, "media-playback-stop", Icon_Size_Dialog);
+      Stop_Btn.Set_Image_Position (Pos_Top);
+      Stop_Btn.Set_Label ("Stop");
+      Stop_Btn.On_Clicked (Stop_Btn_CB'Access);
+      Controls_Grid.Attach (Stop_Btn, 1, 0);
+
+      Gtk.Button.Gtk_New_From_Icon_Name (Restart_Btn, "media-playlist-repeat", Icon_Size_Dialog);
+      Restart_Btn.Set_Image_Position (Pos_Top);
+      Restart_Btn.Set_Label ("Restart!");
+      Controls_Grid.Attach (Restart_Btn, 2, 0);
+
+      Gtk.Button.Gtk_New_From_Icon_Name (Next_Btn, "media-skip-forward", Icon_Size_Dialog);
+      Next_Btn.Set_Image_Position (Pos_Top);
+      Next_Btn.Set_Label ("Next");
+      Controls_Grid.Attach (Next_Btn, 3, 0);
+
+      return Controls_Grid;
+   end Create_Controls_Grid;
+
    function Create_Status_Box return Gtk_Box is
       Status_Box : Gtk_Box;
       Active_Frame, Players_Frame : Gtk.Frame.Gtk_Frame;
@@ -401,7 +501,7 @@ null; --  TODO Actually save players config
       Gtk_New (Status_Box, Gtk.Enums.Orientation_Horizontal, 2);
 
       Gtk.Frame.Gtk_New (Active_Frame);
-      Gtk.Label.Gtk_New (Active_Label, "(Inactive)");
+      Gtk.Label.Gtk_New (Active_Label, " ");
       Active_Frame.Add (Active_Label);
       Status_Box.Pack_Start (Active_Frame);
 
@@ -411,7 +511,7 @@ null; --  TODO Actually save players config
       Status_Box.Pack_Start (Players_Frame);
       Status_Box.Set_Hexpand (True);
 
-      SB_Timeout := SB_Timeout_P.Timeout_Add (1000, Update_Status_Box_CB'Access, Status_Box);
+      SB_Timeout := SB_Timeout_P.Timeout_Add (SB_Update_MS, Update_Status_Box_CB'Access, Status_Box);
 
       return Status_Box;
    end Create_Status_Box;
@@ -422,7 +522,17 @@ null; --  TODO Actually save players config
    procedure App_Activate (Self : access Gapplication_Record'Class) is
       pragma Unreferenced (Self);
       Session_Label, Comment_Label : Gtk.Label.Gtk_Label;
+      Error : aliased Glib.Error.GError;
+      CSS_Emb : constant Embedded.Content_Type := Embedded.Get_Content (App_CSS);
+      CSS_US  : Unbounded_String;
    begin
+      for C of CSS_Emb.Content.all loop
+         Append (CSS_US, Character'Val (C));
+      end loop;
+      if not CSS_Provider.Load_From_Data (To_String (CSS_US), Error'Access) then
+         Ada.Text_IO.Put_Line ("ERROR: Could not load CSS internal resource");
+      end if;
+
       Main_Window := Gtk_Application_Window_New (App);
       Main_Window.Set_Title (App_Title);
 
@@ -453,18 +563,26 @@ null; --  TODO Actually save players config
       --  Status Bar
       Main_Box.Pack_End (Child => Create_Status_Box, Expand => False);
 
+      --  Controls Grid
+      Main_Box.Pack_End (Child => Create_Controls_Grid, Expand => False);
+
       Main_Window.Add (Main_Box);
       Main_Window.Resize (500, 400); --  Gotta start somewhere
+
+      --  Icon
       Icon_PB := Create_Icon_Pixbuf;
       Main_Window.Set_Icon (Icon_PB);
+
+      --  Styling - CSS
+      Apply_Css (Main_Window, +CSS_Provider);
+
       Main_Window.Show_All;
    end App_Activate;
 
    procedure Launch is
-
       Unused_Status : Gint;
    begin
-      App := Gtk_Application_New ("hello.world", G_Application_Flags_None);
+      App := Gtk_Application_New (App_ID, G_Application_Flags_None);
       App.On_Activate (App_Activate'Unrestricted_Access);
       Unused_Status := App.Run;
    end Launch;

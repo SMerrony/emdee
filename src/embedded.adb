@@ -1,5 +1,36 @@
 --  Advanced Resource Embedder 1.4.0
+with Interfaces; use Interfaces;
+
 package body Embedded is
+   function Hash (S : String) return Natural;
+
+   P : constant array (0 .. 0) of Natural :=
+     (0 .. 0 => 1);
+
+   T1 : constant array (0 .. 0) of Unsigned_8 :=
+     (0 .. 0 => 0);
+
+   T2 : constant array (0 .. 0) of Unsigned_8 :=
+     (0 .. 0 => 1);
+
+   G : constant array (0 .. 4) of Unsigned_8 :=
+     (0, 0, 0, 0, 1);
+
+   function Hash (S : String) return Natural is
+      F : constant Natural := S'First - 1;
+      L : constant Natural := S'Length;
+      F1, F2 : Natural := 0;
+      J : Natural;
+   begin
+      for K in P'Range loop
+         exit when L < P (K);
+         J  := Character'Pos (S (P (K) + F));
+         F1 := (F1 + Natural (T1 (K)) * J) mod 5;
+         F2 := (F2 + Natural (T2 (K)) * J) mod 5;
+      end loop;
+      return (Natural (G (F1)) + Natural (G (F2))) mod 2;
+   end Hash;
+
    C_0 : aliased constant Ada.Streams.Stream_Element_Array :=
      (1 => 0, 2 => 0, 3 => 1, 4 => 0, 5 => 1, 6 => 0, 7 => 128, 8 => 123,
       9 => 0, 10 => 0, 11 => 1, 12 => 0, 13 => 32, 14 => 0, 15 => 216,
@@ -13788,21 +13819,60 @@ package body Embedded is
       64999 => 255, 65000 => 255, 65001 => 255, 65002 => 255,
       65003 => 255, 65004 => 255, 65005 => 255, 65006 => 255);
 
+   C_1 : aliased constant Ada.Streams.Stream_Element_Array :=
+     (1 => 47, 2 => 42, 3 => 32, 4 => 119, 5 => 105, 6 => 110, 7 => 100,
+      8 => 111, 9 => 119, 10 => 32, 11 => 123, 12 => 10, 13 => 32,
+      14 => 32, 15 => 32, 16 => 98, 17 => 97, 18 => 99, 19 => 107,
+      20 => 103, 21 => 114, 22 => 111, 23 => 117, 24 => 110,
+      25 => 100, 26 => 45, 27 => 99, 28 => 111, 29 => 108, 30 => 111,
+      31 => 114, 32 => 58, 33 => 32, 34 => 116, 35 => 101, 36 => 97,
+      37 => 108, 38 => 59, 39 => 10, 40 => 32, 41 => 32, 42 => 32,
+      43 => 99, 44 => 111, 45 => 108, 46 => 111, 47 => 114, 48 => 58,
+      49 => 32, 50 => 114, 51 => 101, 52 => 100, 53 => 59, 54 => 10,
+      55 => 125, 56 => 32, 57 => 42, 58 => 47, 59 => 10, 60 => 10,
+      61 => 103, 62 => 114, 63 => 105, 64 => 100, 65 => 32, 66 => 123,
+      67 => 10, 68 => 32, 69 => 32, 70 => 32, 71 => 47, 72 => 42,
+      73 => 32, 74 => 99, 75 => 111, 76 => 108, 77 => 111, 78 => 114,
+      79 => 58, 80 => 32, 81 => 100, 82 => 97, 83 => 114, 84 => 107,
+      85 => 98, 86 => 108, 87 => 117, 88 => 101, 89 => 59, 90 => 32,
+      91 => 42, 92 => 47, 93 => 10, 94 => 32, 95 => 32, 96 => 32,
+      97 => 112, 98 => 97, 99 => 100, 100 => 100, 101 => 105,
+      102 => 110, 103 => 103, 104 => 58, 105 => 32, 106 => 49,
+      107 => 48, 108 => 112, 109 => 120, 110 => 59, 111 => 10,
+      112 => 125, 113 => 10, 114 => 10, 115 => 103, 116 => 114,
+      117 => 105, 118 => 100, 119 => 32, 120 => 108, 121 => 97,
+      122 => 98, 123 => 101, 124 => 108, 125 => 32, 126 => 123,
+      127 => 10, 128 => 32, 129 => 32, 130 => 32, 131 => 109,
+      132 => 97, 133 => 114, 134 => 103, 135 => 105, 136 => 110,
+      137 => 58, 138 => 32, 139 => 56, 140 => 112, 141 => 120,
+      142 => 59, 143 => 10, 144 => 125, 145 => 10, 146 => 10,
+      147 => 46, 148 => 115, 149 => 101, 150 => 108, 151 => 101,
+      152 => 99, 153 => 116, 154 => 101, 155 => 100, 156 => 32,
+      157 => 123, 158 => 10, 159 => 32, 160 => 32, 161 => 32,
+      162 => 98, 163 => 97, 164 => 99, 165 => 107, 166 => 103,
+      167 => 114, 168 => 111, 169 => 117, 170 => 110, 171 => 100,
+      172 => 45, 173 => 99, 174 => 111, 175 => 108, 176 => 111,
+      177 => 114, 178 => 58, 179 => 32, 180 => 112, 181 => 105,
+      182 => 110, 183 => 107, 184 => 59, 185 => 10, 186 => 125,
+      187 => 10, 188 => 10);
+
    type Name_Array is array (Natural range <>) of Name_Access;
 
 
    K_0             : aliased constant String := "emdee.ico";
+   K_1             : aliased constant String := "main.css";
 
    Names : constant Name_Array := (
-      0 => K_0'Access);
+      K_0'Access, K_1'Access);
 
    type Content_List_Array is array (Natural range <>) of Content_Type;
    Contents : constant Content_List_Array := (
-     0 =>  (K_0'Access, C_0'Access, 1711971985, FILE_RAW));
+      (K_0'Access, C_0'Access, 1711971985, FILE_RAW), (K_1'Access, C_1'Access, 1712307678, FILE_RAW));
 
    function Get_Content (Name : String) return Content_Type is
+      H : constant Natural := Hash (Name);
    begin
-      return (if Names (Names'First).all = Name then Contents (0) else Null_Content);
+      return (if Names (H).all = Name then Contents (H) else Null_Content);
    end Get_Content;
 
 end Embedded;

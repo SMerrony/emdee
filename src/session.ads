@@ -11,7 +11,7 @@ with Track;     use Track;
 package Session is
 
    package Track_Vectors is new Ada.Containers.Vectors (
-      Index_Type => Natural,
+      Index_Type => Positive,
       Element_Type => Track_T
    );
 

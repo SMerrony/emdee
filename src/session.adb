@@ -40,6 +40,7 @@ package body Session is
                      Track.Title   := As_Unbounded_String (Get (Toml_Track, "title"));
                      if Has (Toml_Track, "path") then
                         Track.Path    := As_Unbounded_String (Get (Toml_Track, "path"));
+                        Track.File_Type := Guess_Media_Type (To_String (Track.Path));
                      else
                         Track.Path := Null_Unbounded_String;
                      end if;
