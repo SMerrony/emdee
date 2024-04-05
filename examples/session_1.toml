@@ -8,7 +8,7 @@ updated = 2024-03-29T08:50:12
 [[track]]
 title = "C'est si bon"
 path = "/home/steve/Desktop/MJC_Saix_MP3/Accompaniments/CestSiBon_SAH_Accpt.mid"
-comment = "A little faster in the dry acoustic"
+comment = "MIDI - A little faster in the dry acoustic"
 tempo = 1.05                 # increase tempo by 5%
 
 [[track]]
@@ -25,3 +25,8 @@ comment = "No accompaniment, give note F"
 [[track]]
 title = "La Javanaise"
 path = "/home/steve/Desktop/MJC_Saix_MP3/Accompaniments/LaJavanaise_Accpt.mp3"
+
+[[track]]
+title = "Afrique Adieu"
+path = "/home/steve/Desktop/MJC_Saix_MP3/Accompaniments/AfriqueAdieu_Accpt.wav"
+comment = "WAV version"

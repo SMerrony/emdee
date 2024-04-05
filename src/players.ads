@@ -28,7 +28,10 @@ package Players is
    --  Player Process exceptions
    Already_Playing,
    Player_Error,
+   PulseAudio_Not_Found,
    Unknown_Media_Type : exception;
+
+   PulseAudio_Env_Dir : constant String := "XDG_RUNTIME_DIR";
 
    Currently_Playing_Track : Integer := 1;
 

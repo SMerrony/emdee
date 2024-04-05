@@ -2,6 +2,7 @@
 --  SPDX-FileCopyrightText: Copyright 2024 Stephen Merrony
 
 with Ada.Directories;
+with Ada.Environment_Variables;
 with Ada.Strings;       use Ada.Strings;
 with Ada.Strings.Fixed; use Ada.Strings.Fixed;
 with Ada.Text_IO;
@@ -97,22 +98,37 @@ package body Players is
       Okay : Glib.Gboolean;
       PErr : aliased Glib.Error.GError;
       Argv : aliased Gtkada.Types.Chars_Ptr_Array := (0 .. 5 => <>);
-      Env  : aliased Gtkada.Types.Chars_Ptr_Array := (0 .. 0 => <>);
+      Env  : aliased Gtkada.Types.Chars_Ptr_Array := (0 .. 5 => <>);
 
       procedure Prepare_Mpg123_Arguments (argv : out Gtkada.Types.Chars_Ptr_Array) is
       begin
          argv (0) := Gtkada.Types.New_String (To_String (Active_Players_Config.MP3_Player));
          argv (1) := Gtkada.Types.New_String ("-q");
          argv (2) := Gtkada.Types.New_String ("-o");
-         argv (3) := Gtkada.Types.New_String ("jack");
+         argv (3) := Gtkada.Types.New_String ("pulse");
          --  argv (3) := Gtkada.Types.New_String ("--no-control");
          argv (4) := Gtkada.Types.New_String (Media_File);
          argv (5) := Gtkada.Types.Null_Ptr;
       end Prepare_Mpg123_Arguments;
 
+      procedure Prepare_Paplay_Arguments (argv : out Gtkada.Types.Chars_Ptr_Array) is
+      begin
+         argv (0) := Gtkada.Types.New_String (To_String (Active_Players_Config.WAV_Player));
+         --  argv (1) := Gtkada.Types.New_String ("-q");
+         --  argv (2) := Gtkada.Types.New_String ("-o");
+         --  argv (3) := Gtkada.Types.New_String ("jack");
+         --  argv (3) := Gtkada.Types.New_String ("--no-control");
+         argv (1) := Gtkada.Types.New_String (Media_File);
+         argv (2) := Gtkada.Types.Null_Ptr;
+      end Prepare_Paplay_Arguments;
+
       procedure Prepare_Env (argv : out Gtkada.Types.Chars_Ptr_Array) is
       begin
-         argv (0) := Gtkada.Types.Null_Ptr;
+         if not Ada.Environment_Variables.Exists (PulseAudio_Env_Dir) then
+            raise PulseAudio_Not_Found;
+         end if;
+         argv (0) := Gtkada.Types.New_String ( PulseAudio_Env_Dir & "=" & Ada.Environment_Variables.Value (PulseAudio_Env_Dir));
+         argv (1) := Gtkada.Types.Null_Ptr;
       end Prepare_Env;
 
    begin
@@ -130,7 +146,7 @@ null;
          when OGG  =>
 null;
          when WAV  =>
-null;
+            Prepare_Paplay_Arguments (Argv);
          when UNKNOWN => raise Unknown_Media_Type;
       end case;
 
