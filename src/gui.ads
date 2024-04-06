@@ -9,6 +9,7 @@ with Gtk.Application;         use Gtk.Application;
 with Gtk.Application_Window;  use Gtk.Application_Window;
 
 with Gtk.Box;
+with Gtk.Button;
 with Gtk.Css_Provider;        use Gtk.Css_Provider;
 with Gtk.GEntry;
 with Gtk.Grid;                use Gtk.Grid;
@@ -30,12 +31,15 @@ package GUI is
 
    Max_Tracks  : constant Integer := 99;
 
+   type Select_Btn_Arr_T is array (1 .. Max_Tracks) of Gtk.Button.Gtk_Button;
+
    App         : Gtk_Application;
    Main_Window : Gtk_Application_Window;
    Icon_PB     : Gdk.Pixbuf.Gdk_Pixbuf;
    Main_Box    : Gtk.Box.Gtk_Box;
    Session_Header_Grid,
    Tracks_Grid : Gtk.Grid.Gtk_Grid;
+   Select_Btn_Arr : Select_Btn_Arr_T;
 
    Session_Desc_Entry,
    Session_Comment_Entry : Gtk.GEntry.Gtk_Entry;
@@ -47,6 +51,7 @@ package GUI is
    SB_Timeout    : Glib.Main.G_Source_Id := 0;
 
    Currently_Selected_Track : Integer := -1;
+   Currently_Active : Boolean := False;
 
    CSS_Provider : constant Gtk.Css_Provider.Gtk_Css_Provider := Gtk.Css_Provider.Gtk_Css_Provider_New;
 

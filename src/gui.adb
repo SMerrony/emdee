@@ -238,8 +238,9 @@ null; --  TODO Actually save players config
 
    procedure Display_Tracks is
       Track_Row : Gint := 1;
+      Row       : Integer;
       Col       : Gint;
-      Track_Select_Btn, Track_Down_Btn, Track_Del_Btn, Track_Up_Btn : Gtk.Button.Gtk_Button;
+      Track_Down_Btn, Track_Del_Btn, Track_Up_Btn : Gtk.Button.Gtk_Button;
       Row_Label : Gtk.Label.Gtk_Label;
       Title_Entry, Comment_Entry : Gtk.GEntry.Gtk_Entry;
    begin
@@ -251,10 +252,11 @@ null; --  TODO Actually save players config
          Col := Col + 1;
 
          if Track.Path /= Null_Unbounded_String then
-            Gtk.Button.Gtk_New_From_Icon_Name (Track_Select_Btn, "go-next-symbolic", Icon_Size_Button);
-            Track_Select_Btn.Set_Name ("Select" & Track_Row'Image);
-            Track_Select_Btn.On_Clicked (Track_Select_Btn_CB'Access);
-            Tracks_Grid.Attach (Track_Select_Btn, Col, Track_Row);
+            Row := Integer (Track_Row);
+            Gtk.Button.Gtk_New_From_Icon_Name (Select_Btn_Arr (Row), "go-next-symbolic", Icon_Size_Button);
+            Select_Btn_Arr (Row).Set_Name ("Select" & Row'Image);
+            Select_Btn_Arr (Row).On_Clicked (Track_Select_Btn_CB'Access);
+            Tracks_Grid.Attach (Select_Btn_Arr (Row), Col, Track_Row);
          end if;
          Col := Col + 1;
 
@@ -316,15 +318,29 @@ null; --  TODO Actually save players config
                                            Title => App_Title & " - Error");
    end Session_Load_CB;
 
+   procedure Advance_Selected_Track is
+   begin
+      --  Only try to advance if we are not already at the last track
+      if Currently_Selected_Track < Integer (Active_Session.Tracks.Length) then
+         Select_Btn_Arr (Currently_Selected_Track + 1).Clicked;
+      end if;
+   end Advance_Selected_Track;
+
    function Update_Status_Box_CB (SB : Gtk.Box.Gtk_Box) return Boolean is
    begin
       Gdk.Threads.Enter;
 
       if Player_Active then
          Active_Label.Set_Text ("Playing: " & To_String (Active_Session.Tracks (Currently_Playing_Track).Title));
+         Currently_Active := True;
       else
+         if Currently_Active then  --  we have transitioned from playing to not playing
+            Advance_Selected_Track;
+            Currently_Active := False;
+         end if;
          Active_Label.Set_Text ("Not Playing");
       end if;
+      
 
       if Active_Players_Config.Config_Desc /= Null_Unbounded_String then
          Players_Label.Set_Text (To_String (Active_Players_Config.Config_Desc));
