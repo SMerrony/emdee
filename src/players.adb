@@ -3,8 +3,9 @@
 
 with Ada.Directories;
 with Ada.Environment_Variables;
-with Ada.Strings;       use Ada.Strings;
-with Ada.Strings.Fixed; use Ada.Strings.Fixed;
+with Ada.Strings;             use Ada.Strings;
+with Ada.Strings.Fixed;       use Ada.Strings.Fixed;
+with Ada.Strings.Unbounded;   use Ada.Strings.Unbounded;
 with Ada.Text_IO;
 
 with Glib.Error;
@@ -13,9 +14,6 @@ with Glib.Spawn;     use Glib.Spawn;
 with Gtkada.Types;
 
 with Interfaces.C;
-
-with TOML;           use TOML;
-with TOML.File_IO;
 
 with Players;        use Players;
 with Session;        use Session;
@@ -27,56 +25,6 @@ package body Players is
 
    function system (command : C.char_array) return C.int
      with Import, Convention => C;
-
-   procedure Load_Player_Config (Filename : String) is
-      Toml_Parse_Result : Read_Result;
-   begin
-      Toml_Parse_Result := TOML.File_IO.Load_File (Filename);
-      if not Toml_Parse_Result.Success then
-         raise Could_Not_Parse with To_String (Toml_Parse_Result.Message);
-      end if;
-
-      declare
-         Val : TOML_Value;
-      begin
-         Val := Get_Or_Null (Toml_Parse_Result.Value, "players");
-         if Val.Is_Null then
-            raise Incomplete_Configuration with "Missing [players] section";
-         end if;
-
-         if Has (Val, "description") then
-            Active_Players_Config.Config_Desc := As_Unbounded_String (Get (Val, "description"));
-         else
-            raise Incomplete_Configuration with "Config Description not configured";
-         end if;
-
-         if Has (Val, "midi_player") then
-            Active_Players_Config.MIDI_Player := As_Unbounded_String (Get (Val, "midi_player"));
-         else
-            raise Incomplete_Configuration with "MIDI Player not configured";
-         end if;
-
-         if Has (Val, "mp3_player") then
-            Active_Players_Config.MP3_Player := As_Unbounded_String (Get (Val, "mp3_player"));
-         else
-            raise Incomplete_Configuration with "MP3 Player not configured";
-         end if;
-
-         if Has (Val, "ogg_player") then
-            Active_Players_Config.OGG_Player := As_Unbounded_String (Get (Val, "ogg_player"));
-         else
-            raise Incomplete_Configuration with "OGG Player not configured";
-         end if;
-
-         if Has (Val, "wav_player") then
-            Active_Players_Config.WAV_Player := As_Unbounded_String (Get (Val, "wav_player"));
-         else
-            raise Incomplete_Configuration with "WAV Player not configured";
-         end if;
-         Active_Players_Config.WAV_Player := As_Unbounded_String (Get (Val, "wav_player"));
-
-      end; --  declare
-   end Load_Player_Config;
 
    --  function Play_MIDI (Filename : String) return Process_Id is
    --     PID : Process_Id;
@@ -97,37 +45,49 @@ package body Players is
       --  OK : Boolean;
       Okay : Glib.Gboolean;
       PErr : aliased Glib.Error.GError;
-      Argv : aliased Gtkada.Types.Chars_Ptr_Array := (0 .. 5 => <>);
+      Argv : aliased Gtkada.Types.Chars_Ptr_Array := (0 .. 15 => <>);
       Env  : aliased Gtkada.Types.Chars_Ptr_Array := (0 .. 5 => <>);
 
-      procedure Prepare_Mpg123_Arguments (argv : out Gtkada.Types.Chars_Ptr_Array) is
+      procedure Prepare_Ffplay_Arguments (argv : out Gtkada.Types.Chars_Ptr_Array) is
       begin
-         argv (0) := Gtkada.Types.New_String (To_String (Active_Players_Config.MP3_Player));
-         argv (1) := Gtkada.Types.New_String ("-q");
-         argv (2) := Gtkada.Types.New_String ("-o");
-         argv (3) := Gtkada.Types.New_String ("pulse");
-         --  argv (3) := Gtkada.Types.New_String ("--no-control");
-         argv (4) := Gtkada.Types.New_String (Media_File);
-         argv (5) := Gtkada.Types.Null_Ptr;
-      end Prepare_Mpg123_Arguments;
+         argv (0) := Gtkada.Types.New_String ("ffplay");
+         argv (1) := Gtkada.Types.New_String ("-hide_banner");
+         argv (2) := Gtkada.Types.New_String ("-nodisp");
+         argv (3) := Gtkada.Types.New_String ("-autoexit");
+         argv (4) := Gtkada.Types.New_String ("-loglevel");
+         argv (5) := Gtkada.Types.New_String ("quiet");
+         argv (6) := Gtkada.Types.New_String (Media_File);
+         argv (7) := Gtkada.Types.Null_Ptr;
+      end Prepare_Ffplay_Arguments;
 
-      procedure Prepare_Paplay_Arguments (argv : out Gtkada.Types.Chars_Ptr_Array) is
-      begin
-         argv (0) := Gtkada.Types.New_String (To_String (Active_Players_Config.WAV_Player));
-         --  argv (1) := Gtkada.Types.New_String ("-q");
-         --  argv (2) := Gtkada.Types.New_String ("-o");
-         --  argv (3) := Gtkada.Types.New_String ("jack");
-         --  argv (3) := Gtkada.Types.New_String ("--no-control");
-         argv (1) := Gtkada.Types.New_String (Media_File);
-         argv (2) := Gtkada.Types.Null_Ptr;
-      end Prepare_Paplay_Arguments;
+      --  procedure Prepare_Mpg123_Arguments (argv : out Gtkada.Types.Chars_Ptr_Array) is
+      --  begin
+      --     argv (0) := Gtkada.Types.New_String (To_String (Active_Players_Config.MP3_Player));
+      --     argv (1) := Gtkada.Types.New_String ("-q");
+      --     argv (2) := Gtkada.Types.New_String ("-o");
+      --     argv (3) := Gtkada.Types.New_String ("pulse");
+      --     --  argv (3) := Gtkada.Types.New_String ("--no-control");
+      --     argv (4) := Gtkada.Types.New_String (Media_File);
+      --     argv (5) := Gtkada.Types.Null_Ptr;
+      --  end Prepare_Mpg123_Arguments;
+
+      --  procedure Prepare_Paplay_Arguments (argv : out Gtkada.Types.Chars_Ptr_Array) is
+      --  begin
+      --     argv (0) := Gtkada.Types.New_String (To_String (Active_Players_Config.WAV_Player));
+      --     --  argv (1) := Gtkada.Types.New_String ("-q");
+      --     --  argv (2) := Gtkada.Types.New_String ("-o");
+      --     --  argv (3) := Gtkada.Types.New_String ("jack");
+      --     --  argv (3) := Gtkada.Types.New_String ("--no-control");
+      --     argv (1) := Gtkada.Types.New_String (Media_File);
+      --     argv (2) := Gtkada.Types.Null_Ptr;
+      --  end Prepare_Paplay_Arguments;
 
       procedure Prepare_Env (argv : out Gtkada.Types.Chars_Ptr_Array) is
       begin
          if not Ada.Environment_Variables.Exists (PulseAudio_Env_Dir) then
             raise PulseAudio_Not_Found;
          end if;
-         argv (0) := Gtkada.Types.New_String ( PulseAudio_Env_Dir & "=" & Ada.Environment_Variables.Value (PulseAudio_Env_Dir));
+         argv (0) := Gtkada.Types.New_String (PulseAudio_Env_Dir & "=" & Ada.Environment_Variables.Value (PulseAudio_Env_Dir));
          argv (1) := Gtkada.Types.Null_Ptr;
       end Prepare_Env;
 
@@ -139,14 +99,10 @@ package body Players is
       --  -- ...THAT WORKED
 
       case Track.File_Type is
+         when FLAC | MP3 | OGG | WAV =>
+            Prepare_Ffplay_Arguments (Argv);
          when MIDI =>
 null;
-         when MP3  =>
-            Prepare_Mpg123_Arguments (Argv);
-         when OGG  =>
-null;
-         when WAV  =>
-            Prepare_Paplay_Arguments (Argv);
          when UNKNOWN => raise Unknown_Media_Type;
       end case;
 
@@ -176,7 +132,7 @@ null;
       if Player_PID /= 0 then
          Running := Ada.Directories.Exists ("/proc/" & Trim (Player_PID'Image, Left));
          if not Running then
-            Player_PID := 0;  --  N.B. Clear the PID if the process has died
+            Player_PID := 0;  --  N.B. Clear the PID if the process has finished
          end if;
       end if;
       return Running;
@@ -186,9 +142,12 @@ null;
       command : aliased constant C.char_array := C.To_C ("kill " & Player_PID'Image);
       Unused_rc : C.int;
    begin
-      --  This is just gross - there must be a better way...
-      Unused_rc := system (command);
-      Glib.Spawn.Spawn_Close_Pid (Player_PID);
+      if Player_Active then
+         --  This is just gross - there must be a better way...
+         Unused_rc := system (command);
+         Glib.Spawn.Spawn_Close_Pid (Player_PID);
+         Player_PID := 0;
+      end if;
    end Stop_Playing;
 
 end Players;

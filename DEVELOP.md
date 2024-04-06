@@ -12,11 +12,6 @@ The embedded icon was generated with this command, run from the top-level dir...
 `Icon Browser` from Mint menu, or `gtk3-icon-browser`
 
 ## Required Libraries
-* libcsfml-dev and its dependents
-
-On 2024-04-03, current Linux Mint I had to specify the exact
-version of the crate via...
-`alr with asfml=2.5.1`
 
 ## Pain Points
 
@@ -26,7 +21,3 @@ The whole `spawn_async` thing took ages to figure out.  As usual, it seemed impo
 There's no complementary function to kill a process spawned by the above function.
 
 ? Maybe `aShell` would make life easier?
-
-### Players
-It turns out that PulseAudio is not 'visible' to non-desktop applications.
-Jack therefore becomes mandatory, which seems a shame.

@@ -127,6 +127,7 @@ package body GUI is
    procedure Stop_Btn_CB (Self : access Gtk.Button.Gtk_Button_Record'Class) is
       pragma Unreferenced (Self);
    begin
+      Currently_Active := False;
       Stop_Playing;
    end Stop_Btn_CB;
 
@@ -140,101 +141,6 @@ package body GUI is
       Currently_Selected_Track := Track_Num;
       Tracks_Grid.Get_Child_At (1, Gint (Track_Num)).Set_Opacity (0.5);
    end Track_Select_Btn_CB;
-
-   procedure Players_Load_CB (Self : access Gtk.Menu_Item.Gtk_Menu_Item_Record'Class) is
-      pragma Unreferenced (Self);
-      Filename : constant String :=
-         Gtkada.File_Selection.File_Selection_Dialog (Title => App_Title & " Players Configuration",
-                                                      Dir_Only => False,
-                                                      Must_Exist => True);
-      Unused_Buttons : Gtkada.Dialogs.Message_Dialog_Buttons;
-   begin
-      if Filename'Length > 1 then
-         Players.Load_Player_Config (Filename);
-         Unused_Buttons := Message_Dialog (Msg => To_String (Active_Players_Config.Config_Desc),
-                                           Title => App_Title & " Players Configuration Loaded",
-                                           Buttons => Button_OK);
-      end if;
-   exception
-      when E : others =>
-         Unused_Buttons := Message_Dialog (Msg => "Could not load Players TOML file.  " & Exception_Message (E),
-                                           Dialog_Type => Warning,
-                                           Title => App_Title & " - Error");
-   end Players_Load_CB;
-
-   procedure Players_Edit_CB (Self : access Gtk.Menu_Item.Gtk_Menu_Item_Record'Class) is
-      pragma Unreferenced (Self);
-      Dialog : Gtk_Dialog;
-      Dlg_Box   : Gtk.Box.Gtk_Box;
-      Dlg_Grid  : Gtk.Grid.Gtk_Grid;
-      Name_Label, MP3_Label, OGG_Label, WAV_Label, MIDI_Label : Gtk.Label.Gtk_Label;
-      Name_Entry, MP3_Entry, OGG_Entry, WAV_Entry, MIDI_Entry : Gtk.GEntry.Gtk_Entry;
-      Cancel_Unused, Save_Unused : Gtk.Widget.Gtk_Widget;
-   begin
-      Gtk_New (Dialog);
-      Dialog.Set_Destroy_With_Parent (True);
-      Dialog.Set_Modal (True);
-      Dialog.Set_Title (App_Title & " - Edit Players");
-      Dlg_Box := Dialog.Get_Content_Area;
-      Gtk_New (Dlg_Grid);
-
-      Gtk.Label.Gtk_New (Name_Label, "Description: ");
-      Dlg_Grid.Attach (Child => Name_Label, Left => 0, Top => 0);
-      Gtk.GEntry.Gtk_New (Name_Entry);
-      Name_Entry.Set_Width_Chars (40);
-      Dlg_Grid.Attach (Child => Name_Entry, Left => 1, Top => 0);
-      if Active_Players_Config.Config_Desc /= Null_Unbounded_String then
-         Name_Entry.Set_Text (To_String (Active_Players_Config.Config_Desc));
-      end if;
-
-      Gtk.Label.Gtk_New (MIDI_Label, "MIDI Player: ");
-      Dlg_Grid.Attach (Child => MIDI_Label, Left => 0, Top => 1);
-      Gtk.GEntry.Gtk_New (MIDI_Entry);
-      MIDI_Entry.Set_Width_Chars (40);
-      Dlg_Grid.Attach (Child => MIDI_Entry, Left => 1, Top => 1);
-      if Active_Players_Config.MIDI_Player /= Null_Unbounded_String then
-         MIDI_Entry.Set_Text (To_String (Active_Players_Config.MIDI_Player));
-      end if;
-
-      Gtk.Label.Gtk_New (MP3_Label, "MP3 Player: ");
-      Dlg_Grid.Attach (Child => MP3_Label, Left => 0, Top => 2);
-      Gtk.GEntry.Gtk_New (MP3_Entry);
-      MP3_Entry.Set_Width_Chars (40);
-      Dlg_Grid.Attach (Child => MP3_Entry, Left => 1, Top => 2);
-      if Active_Players_Config.MP3_Player /= Null_Unbounded_String then
-         MP3_Entry.Set_Text (To_String (Active_Players_Config.MP3_Player));
-      end if;
-
-      Gtk.Label.Gtk_New (OGG_Label, "OGG Player: ");
-      Dlg_Grid.Attach (Child => OGG_Label, Left => 0, Top => 3);
-      Gtk.GEntry.Gtk_New (OGG_Entry);
-      OGG_Entry.Set_Width_Chars (40);
-      Dlg_Grid.Attach (Child => OGG_Entry, Left => 1, Top => 3);
-      if Active_Players_Config.OGG_Player /= Null_Unbounded_String then
-         OGG_Entry.Set_Text (To_String (Active_Players_Config.OGG_Player));
-      end if;
-
-      Gtk.Label.Gtk_New (WAV_Label, "WAV Player: ");
-      Dlg_Grid.Attach (Child => WAV_Label, Left => 0, Top => 4);
-      Gtk.GEntry.Gtk_New (WAV_Entry);
-      WAV_Entry.Set_Width_Chars (40);
-      Dlg_Grid.Attach (Child => WAV_Entry, Left => 1, Top => 4);
-      if Active_Players_Config.WAV_Player /= Null_Unbounded_String then
-         WAV_Entry.Set_Text (To_String (Active_Players_Config.WAV_Player));
-      end if;
-
-      Dlg_Box.Pack_Start (Child => Dlg_Grid, Padding => 5);
-
-      Cancel_Unused := Dialog.Add_Button ("Cancel", Gtk_Response_Cancel);
-      Save_Unused := Dialog.Add_Button ("Save", Gtk_Response_Accept);
-      Dialog.Set_Default_Response (Gtk_Response_Accept);
-      Dialog.Show_All;
-
-      if Dialog.Run = Gtk_Response_Accept then
-null; --  TODO Actually save players config
-      end if;
-      Dialog.Destroy;
-   end Players_Edit_CB;
 
    procedure Display_Tracks is
       Track_Row : Gint := 1;
@@ -321,7 +227,7 @@ null; --  TODO Actually save players config
    procedure Advance_Selected_Track is
    begin
       --  Only try to advance if we are not already at the last track
-      if Currently_Selected_Track < Integer (Active_Session.Tracks.Length) then
+      if Currently_Selected_Track > 0 and then Currently_Selected_Track < Integer (Active_Session.Tracks.Length) then
          Select_Btn_Arr (Currently_Selected_Track + 1).Clicked;
       end if;
    end Advance_Selected_Track;
@@ -339,11 +245,6 @@ null; --  TODO Actually save players config
             Currently_Active := False;
          end if;
          Active_Label.Set_Text ("Not Playing");
-      end if;
-      
-
-      if Active_Players_Config.Config_Desc /= Null_Unbounded_String then
-         Players_Label.Set_Text (To_String (Active_Players_Config.Config_Desc));
       end if;
 
       SB.Queue_Draw;
@@ -365,11 +266,10 @@ null; --  TODO Actually save players config
    function Create_Menu_Bar return Gtk.Menu_Bar.Gtk_Menu_Bar is
       Menu_Bar : Gtk.Menu_Bar.Gtk_Menu_Bar;
       Sep_Item : Gtk.Separator_Menu_Item.Gtk_Separator_Menu_Item;
-      File_Menu, Edit_Menu, Session_Menu, Players_Menu, Help_Menu : Gtk.Menu.Gtk_Menu;
+      File_Menu, Edit_Menu, Session_Menu, Help_Menu : Gtk.Menu.Gtk_Menu;
       Menu_Item : Gtk.Menu_Item.Gtk_Menu_Item;
-      Logging_Item, Expect_Item,
+      Logging_Item,
       Session_Load_Item,
-      Players_Load_Item, Players_Edit_Item,
       Quit_Item,
       Paste_Item,
       About_Item : Gtk.Menu_Item.Gtk_Menu_Item;
@@ -387,13 +287,6 @@ null; --  TODO Actually save players config
       Gtk_New (Logging_Item, "Logging");
       File_Menu.Append (Logging_Item);
       --  Logging_Item.On_Activate (Logging_CB'Access);
-
-      Gtk_New (Sep_Item);
-      File_Menu.Append (Sep_Item);
-
-      Gtk_New (Expect_Item, "Run mini-Expect Script");
-      File_Menu.Append (Expect_Item);
-      --  Expect_Item.On_Activate (Expect_CB'Access);
 
       Gtk_New (Sep_Item);
       File_Menu.Append (Sep_Item);
@@ -443,27 +336,6 @@ null; --  TODO Actually save players config
       Gtk_New (Session_Load_Item, "Load Session");
       Session_Menu.Append (Session_Load_Item);
       Session_Load_Item.On_Activate (Session_Load_CB'Access);
-
-      --  Players
-
-      Gtk_New (Menu_Item, "Players");
-      Menu_Bar.Append (Menu_Item);
-      Gtk_New (Players_Menu);
-      Menu_Item.Set_Submenu (Players_Menu);
-
-      --  Players Load
-      Gtk_New (Players_Load_Item, "Load Configuration");
-      Players_Menu.Append (Players_Load_Item);
-      Players_Load_Item.On_Activate (Players_Load_CB'Access);
-
-      --  Players Config
-      Gtk_New (Players_Edit_Item, "Edit Configuration");
-      Players_Menu.Append (Players_Edit_Item);
-      Players_Edit_Item.On_Activate (Players_Edit_CB'Access);
-
-      --  --  Players Save
-      --  Gtk_New (Players_Save_Item, "Save Configuration");
-      --  Players_Menu.Append (Players_Save_Item);
 
       --  Help
 
@@ -521,11 +393,11 @@ null; --  TODO Actually save players config
       Active_Frame.Add (Active_Label);
       Status_Box.Pack_Start (Active_Frame);
 
-      Gtk.Frame.Gtk_New (Players_Frame);
-      Gtk.Label.Gtk_New (Players_Label, "(Players Configuration not Loaded)");
-      Players_Frame.Add (Players_Label);
-      Status_Box.Pack_Start (Players_Frame);
-      Status_Box.Set_Hexpand (True);
+      --  Gtk.Frame.Gtk_New (Players_Frame);
+      --  Gtk.Label.Gtk_New (Players_Label, "(Players Configuration not Loaded)");
+      --  Players_Frame.Add (Players_Label);
+      --  Status_Box.Pack_Start (Players_Frame);
+      --  Status_Box.Set_Hexpand (True);
 
       SB_Timeout := SB_Timeout_P.Timeout_Add (SB_Update_MS, Update_Status_Box_CB'Access, Status_Box);
 
@@ -601,6 +473,7 @@ null; --  TODO Actually save players config
       App := Gtk_Application_New (App_ID, G_Application_Flags_None);
       App.On_Activate (App_Activate'Unrestricted_Access);
       Unused_Status := App.Run;
+      App.Unref;
    end Launch;
 
 end GUI;

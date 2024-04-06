@@ -2,7 +2,8 @@
 
 [players]
 description = "Normal laptop/USB-MIDI setup"
+flac_player = "ffplay"
 mp3_player = "mpg123"               # no path specified, must be on $PATH
-ogg_player = "ogg123"
+ogg_player = "paplay"
 wav_player = "paplay"       # specific path specified
 midi_player = "aplaymidi -p 20:0"   # port argument supplied
