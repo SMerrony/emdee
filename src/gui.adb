@@ -146,7 +146,7 @@ package body GUI is
       Track_Row : Gint := 1;
       Row       : Integer;
       Col       : Gint;
-      Track_Down_Btn, Track_Del_Btn, Track_Up_Btn : Gtk.Button.Gtk_Button;
+      Track_Down_Btn, Track_Del_Btn, Track_Up_Btn, Track_File_Btn : Gtk.Button.Gtk_Button;
       Row_Label : Gtk.Label.Gtk_Label;
       Title_Entry, Comment_Entry : Gtk.GEntry.Gtk_Entry;
    begin
@@ -154,7 +154,7 @@ package body GUI is
       while Tracks_Grid.Get_Child_At (0, 1) /= null loop
          Tracks_Grid.Remove_Row (1);
       end loop;
-      
+
       for Track of Active_Session.Tracks loop
          Col := 0;
 
@@ -177,14 +177,21 @@ package body GUI is
          Tracks_Grid.Attach (Title_Entry, Col, Track_Row);
          Col := Col + 1;
 
+         Gtk.GEntry.Gtk_New (Comment_Entry);
+         Comment_Entry.Set_Width_Chars (40);
+         Comment_Entry.Set_Text (To_String (Track.Comment));
+         Tracks_Grid.Attach (Comment_Entry, Col, Track_Row);
+         Col := Col + 1;
+
+         Gtk.Button.Gtk_New_From_Icon_Name (Track_File_Btn, "folder-symbolic", Icon_Size_Button);
+         Track_File_Btn.Set_Tooltip_Text (To_String (Track.Path));
+         Tracks_Grid.Attach (Track_File_Btn, Col, Track_Row);
+         Col := Col + 1;
+
          if Integer (Track_Row) < Integer (Active_Session.Tracks.Length) then
             Gtk.Button.Gtk_New_From_Icon_Name (Track_Down_Btn, "go-down-symbolic", Icon_Size_Button);
             Tracks_Grid.Attach (Track_Down_Btn, Col, Track_Row);
          end if;
-         Col := Col + 1;
-
-         Gtk.Button.Gtk_New_From_Icon_Name (Track_Del_Btn, "edit-delete", Icon_Size_Button);
-         Tracks_Grid.Attach (Track_Del_Btn, Col, Track_Row);
          Col := Col + 1;
 
          if Track_Row > 1 then
@@ -193,10 +200,8 @@ package body GUI is
          end if;
          Col := Col + 1;
 
-         Gtk.GEntry.Gtk_New (Comment_Entry);
-         Comment_Entry.Set_Width_Chars (40);
-         Comment_Entry.Set_Text (To_String (Track.Comment));
-         Tracks_Grid.Attach (Comment_Entry, Col, Track_Row);
+         Gtk.Button.Gtk_New_From_Icon_Name (Track_Del_Btn, "edit-delete", Icon_Size_Button);
+         Tracks_Grid.Attach (Track_Del_Btn, Col, Track_Row);
          Col := Col + 1;
 
          Track_Row := Track_Row + 1;
@@ -271,12 +276,11 @@ package body GUI is
    function Create_Menu_Bar return Gtk.Menu_Bar.Gtk_Menu_Bar is
       Menu_Bar : Gtk.Menu_Bar.Gtk_Menu_Bar;
       Sep_Item : Gtk.Separator_Menu_Item.Gtk_Separator_Menu_Item;
-      File_Menu, Edit_Menu, Session_Menu, Help_Menu : Gtk.Menu.Gtk_Menu;
+      File_Menu, Session_Menu, Help_Menu : Gtk.Menu.Gtk_Menu;
       Menu_Item : Gtk.Menu_Item.Gtk_Menu_Item;
       Logging_Item,
-      Session_Load_Item,
+      Session_Load_Item, Session_Save_Item, Session_Create_Item,
       Quit_Item,
-      Paste_Item,
       About_Item : Gtk.Menu_Item.Gtk_Menu_Item;
    begin
       --  Log (DEBUG, "Starting to Create_Menu_Bar");
@@ -300,36 +304,6 @@ package body GUI is
       File_Menu.Append (Quit_Item);
       Quit_Item.On_Activate (Quit_CB'Access);
 
-      --  Edit
-
-      Gtk_New (Menu_Item, "Edit");
-      Menu_Bar.Append (Menu_Item);
-      Gtk_New (Edit_Menu);
-      Menu_Item.Set_Submenu (Edit_Menu);
-      Gtk_New (Paste_Item, "Paste");
-      Edit_Menu.Append (Paste_Item);
-      --  Paste_Item.On_Activate (Paste_CB'Access);
-
-      --  --  View
-      --  Gtk_New (Menu_Item, "View");
-      --  Menu_Bar.Append (Menu_Item);
-      --  Gtk_New (View_Menu);
-      --  Menu_Item.Set_Submenu (View_Menu);
-
-      --  Gtk_New (History_Item, "History");
-      --  View_Menu.Append (History_Item);
-      --  History_Item.On_Activate (View_History_CB'Access);
-
-      --  Gtk_New (Sep_Item);
-      --  View_Menu.Append (Sep_Item);
-      --  Gtk_New (Load_Template_Item, "Load Func. Key Template");
-      --  View_Menu.Append (Load_Template_Item);
-      --  --  Load_Template_Item.On_Activate (Load_Template_CB'Access);
-      --  Gtk_New (Hide_Template_Item, "Hide Func. Key Template");
-      --  View_Menu.Append (Hide_Template_Item);
-      --  Hide_Template_Item.Set_Sensitive (False);
-      --  --  Hide_Template_Item.On_Activate (Hide_Template_CB'Access);
-
       --  Session
 
       Gtk_New (Menu_Item, "Session");
@@ -341,6 +315,19 @@ package body GUI is
       Gtk_New (Session_Load_Item, "Load Session");
       Session_Menu.Append (Session_Load_Item);
       Session_Load_Item.On_Activate (Session_Load_CB'Access);
+      
+      --  Session Save
+      Gtk_New (Session_Save_Item, "Save Session");
+      Session_Menu.Append (Session_Save_Item);
+      --  Session_Save_Item.On_Activate (Session_Save_CB'Access);
+
+      Gtk_New (Sep_Item);
+      Session_Menu.Append (Sep_Item);
+
+      --  Session Create
+      Gtk_New (Session_Create_Item, "Create New Session");
+      Session_Menu.Append (Session_Create_Item);
+      --  Session_Create_Item.On_Activate (Session_Create_CB'Access);
 
       --  Help
 
@@ -348,7 +335,7 @@ package body GUI is
       Menu_Bar.Append (Menu_Item);
       Gtk_New (Help_Menu);
       Menu_Item.Set_Submenu (Help_Menu);
-
+      --  About
       Gtk_New (About_Item, "About");
       Help_Menu.Append (About_Item);
       About_Item.On_Activate (About_CB'Access);

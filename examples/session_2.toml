@@ -1,0 +1,22 @@
+# Sample eMDee session TOML file
+
+[session]
+description = "MJC Summer Concert - Choir - Short Version"
+comment = "For the MJC Summer concert in the main hall (my laptop, their piano, main stage PA)"
+updated = 2024-04-07T08:50:12
+
+[[track]]
+title = "C'est si bon"
+path = "/home/steve/Desktop/MJC_Saix_MP3/Accompaniments/CestSiBon_SAH_Accpt.mid"
+comment = "MIDI - A little faster in the dry acoustic"
+tempo = 1.05                 # increase tempo by 5%
+
+[[track]]
+title = "Afrique Adieu"
+path = "/home/steve/Desktop/MJC_Saix_MP3/Accompaniments/AfriqueAdieu_Accpt.wav"
+comment = "WAV version"
+
+[[track]]
+title = "Golden Earrings"
+path = "/home/steve/Desktop/MJC_Saix_MP3/Accompaniments/06-GoldenEarrings.flac"
+comment = "FLAC version"
