@@ -11,7 +11,7 @@ package Players is
    PulseAudio_Not_Found,
    Unknown_Media_Type : exception;
 
-   PulseAudio_Env_Dir : constant String := "XDG_RUNTIME_DIR";
+   --  PulseAudio_Env_Dir : constant String := "XDG_RUNTIME_DIR";
 
    Currently_Playing_Track : Integer := 1;
 

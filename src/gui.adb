@@ -30,7 +30,7 @@ with Gtk.Menu_Item;           use Gtk.Menu_Item;
 with Gtk.Separator_Menu_Item; use Gtk.Separator_Menu_Item;
 with Gtk.Style_Provider;
 with Gtk.Style_Context;       use Gtk.Style_Context;
-with Gtk.Widget;
+with Gtk.Widget;              use Gtk.Widget;
 
 with Gtkada.Dialogs;          use Gtkada.Dialogs;
 with Gtkada.File_Selection;
@@ -150,6 +150,11 @@ package body GUI is
       Row_Label : Gtk.Label.Gtk_Label;
       Title_Entry, Comment_Entry : Gtk.GEntry.Gtk_Entry;
    begin
+      --  clear out any existing items
+      while Tracks_Grid.Get_Child_At (0, 1) /= null loop
+         Tracks_Grid.Remove_Row (1);
+      end loop;
+      
       for Track of Active_Session.Tracks loop
          Col := 0;
 
@@ -384,7 +389,7 @@ package body GUI is
 
    function Create_Status_Box return Gtk_Box is
       Status_Box : Gtk_Box;
-      Active_Frame, Players_Frame : Gtk.Frame.Gtk_Frame;
+      Active_Frame : Gtk.Frame.Gtk_Frame;
    begin
       Gtk_New (Status_Box, Gtk.Enums.Orientation_Horizontal, 2);
 

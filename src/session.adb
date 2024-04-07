@@ -13,6 +13,8 @@ package body Session is
          raise Could_Not_Parse with To_String (Toml_Parse_Result.Message);
       end if;
 
+      Active_Session.Tracks.Clear;
+
       declare
          Top_Keys : constant TOML.Key_Array := Toml_Parse_Result.Value.Keys;
       begin
