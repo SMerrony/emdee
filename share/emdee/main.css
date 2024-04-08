@@ -12,7 +12,10 @@ grid label {
    margin: 8px;
 }
 
-.selected {
-   background-color: pink;
+entry#highlit {
+   color: red;
 }
 
+spinbutton#highlit {
+   color: red;
+}

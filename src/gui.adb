@@ -17,8 +17,10 @@ with Glib.Application;        use Glib.Application;
 with Glib.Error;              use Glib.Error;
 
 with Gtk.About_Dialog;        use Gtk.About_Dialog;
+with Gtk.Adjustment;
 with Gtk.Box;                 use Gtk.Box;
 with Gtk.Button;              use Gtk.Button;
+with Gtk.Check_Button;
 with Gtk.Container;
 with Gtk.Dialog;              use Gtk.Dialog;
 with Gtk.Enums;               use Gtk.Enums;
@@ -28,6 +30,7 @@ with Gtk.Menu_Bar;            use Gtk.Menu_Bar;
 with Gtk.Menu_Item;           use Gtk.Menu_Item;
 --  with Gtk.Radio_Button;
 with Gtk.Separator_Menu_Item; use Gtk.Separator_Menu_Item;
+with Gtk.Spin_Button;
 with Gtk.Style_Provider;
 with Gtk.Style_Context;       use Gtk.Style_Context;
 with Gtk.Widget;              use Gtk.Widget;
@@ -136,19 +139,37 @@ package body GUI is
       Track_Num : constant Integer := Integer'Value (Name (8 .. Name'Last));
    begin
       if Currently_Selected_Track /= -1 then
-         Tracks_Grid.Get_Child_At (1, Gint (Currently_Selected_Track)).Set_Opacity (1.0);
+         --  Tracks_Grid.Get_Child_At (1, Gint (Currently_Selected_Track)).Set_Opacity (0.5);
+         Tracks_Grid.Get_Child_At (Title_Col, Gint (Currently_Selected_Track)).Set_Name ("not-highlit");
+         Tracks_Grid.Get_Child_At (Comment_Col, Gint (Currently_Selected_Track)).Set_Name ("not-highlit");
+         Tracks_Grid.Get_Child_At (Vol_Col, Gint (Currently_Selected_Track)).Set_Name ("not-highlit");
       end if;
       Currently_Selected_Track := Track_Num;
-      Tracks_Grid.Get_Child_At (1, Gint (Track_Num)).Set_Opacity (0.5);
+      --  Tracks_Grid.Get_Child_At (1, Gint (Track_Num)).Set_Opacity (1.0);
+      Tracks_Grid.Get_Child_At (Title_Col, Gint (Track_Num)).Set_Name ("highlit");
+      Tracks_Grid.Get_Child_At (Comment_Col, Gint (Track_Num)).Set_Name ("highlit");
+      Tracks_Grid.Get_Child_At (Vol_Col, Gint (Track_Num)).Set_Name ("highlit");
    end Track_Select_Btn_CB;
 
+   procedure Display_Track_Headers is
+
+   begin
+      Tracks_Grid.Attach (Gtk_Label_New ("#"), Row_Col, 0);
+      Tracks_Grid.Attach (Gtk_Label_New ("Title"), Title_Col, 0);
+      Tracks_Grid.Attach (Gtk_Label_New ("Skip"), Skip_Col, 0);
+      Tracks_Grid.Attach (Gtk_Label_New ("Comment"), Comment_Col, 0);
+      Tracks_Grid.Attach (Gtk_Label_New ("Volume (%)"), Vol_Col, 0);
+   end Display_Track_Headers;
+
    procedure Display_Tracks is
-      Track_Row : Gint := 1;
-      Row       : Integer;
-      Col       : Gint;
+      Track_Row  : Gint := 1;
+      Row        : Integer;
       Track_Down_Btn, Track_Del_Btn, Track_Up_Btn, Track_File_Btn : Gtk.Button.Gtk_Button;
-      Row_Label : Gtk.Label.Gtk_Label;
+      Skip_Check : Gtk.Check_Button.Gtk_Check_Button;
+      Row_Label  : Gtk.Label.Gtk_Label;
       Title_Entry, Comment_Entry : Gtk.GEntry.Gtk_Entry;
+      Vol_Adj    : Gtk.Adjustment.Gtk_Adjustment;
+      Vol_Spin   : Gtk.Spin_Button.Gtk_Spin_Button;
    begin
       --  clear out any existing items
       while Tracks_Grid.Get_Child_At (0, 1) /= null loop
@@ -156,53 +177,64 @@ package body GUI is
       end loop;
 
       for Track of Active_Session.Tracks loop
-         Col := 0;
-
-         Gtk.Label.Gtk_New (Row_Label, Track_Row 'Img);
-         Tracks_Grid.Attach (Row_Label, Col, Track_Row);
-         Col := Col + 1;
+         Gtk.Label.Gtk_New (Row_Label, Track_Row'Img);
+         Row_Label.Set_Halign (Align_Center);
+         Tracks_Grid.Attach (Row_Label, Row_Col, Track_Row);
 
          if Track.Path /= Null_Unbounded_String then
             Row := Integer (Track_Row);
             Gtk.Button.Gtk_New_From_Icon_Name (Select_Btn_Arr (Row), "go-next-symbolic", Icon_Size_Button);
             Select_Btn_Arr (Row).Set_Name ("Select" & Row'Image);
             Select_Btn_Arr (Row).On_Clicked (Track_Select_Btn_CB'Access);
-            Tracks_Grid.Attach (Select_Btn_Arr (Row), Col, Track_Row);
+            Tracks_Grid.Attach (Select_Btn_Arr (Row), Select_Col, Track_Row);
          end if;
-         Col := Col + 1;
 
          Gtk.GEntry.Gtk_New (Title_Entry);
          Title_Entry.Set_Width_Chars (25);
          Title_Entry.Set_Text (To_String (Track.Title));
-         Tracks_Grid.Attach (Title_Entry, Col, Track_Row);
-         Col := Col + 1;
+         Tracks_Grid.Attach (Title_Entry, Title_Col, Track_Row);
+
+         Gtk.Check_Button.Gtk_New (Skip_Check, "");
+         Skip_Check.Set_Active (Track.Skip);
+         Skip_Check.Set_Halign (Align_Center);
+         Tracks_Grid.Attach (Skip_Check, Skip_Col, Track_Row);
 
          Gtk.GEntry.Gtk_New (Comment_Entry);
          Comment_Entry.Set_Width_Chars (40);
          Comment_Entry.Set_Text (To_String (Track.Comment));
-         Tracks_Grid.Attach (Comment_Entry, Col, Track_Row);
-         Col := Col + 1;
+         Tracks_Grid.Attach (Comment_Entry, Comment_Col, Track_Row);
+
+         Gtk.Adjustment.Gtk_New (
+            Adjustment     => Vol_Adj,
+            Value          => Gdouble (Track.Volume),
+            Lower          => 0.0,
+            Upper          => 100.0,
+            Step_Increment => 1.0,
+            Page_Increment => 5.0,
+            Page_Size      => 0.0);
+         Gtk.Spin_Button.Gtk_New (
+            Spin_Button => Vol_Spin,
+            Adjustment  => Vol_Adj,
+            Climb_Rate  => 0.1,
+            The_Digits  => 0);
+         Tracks_Grid.Attach (Vol_Spin, Vol_Col, Track_Row);
 
          Gtk.Button.Gtk_New_From_Icon_Name (Track_File_Btn, "folder-symbolic", Icon_Size_Button);
          Track_File_Btn.Set_Tooltip_Text (To_String (Track.Path));
-         Tracks_Grid.Attach (Track_File_Btn, Col, Track_Row);
-         Col := Col + 1;
+         Tracks_Grid.Attach (Track_File_Btn, File_Col, Track_Row);
 
          if Integer (Track_Row) < Integer (Active_Session.Tracks.Length) then
             Gtk.Button.Gtk_New_From_Icon_Name (Track_Down_Btn, "go-down-symbolic", Icon_Size_Button);
-            Tracks_Grid.Attach (Track_Down_Btn, Col, Track_Row);
+            Tracks_Grid.Attach (Track_Down_Btn, Down_Col, Track_Row);
          end if;
-         Col := Col + 1;
 
          if Track_Row > 1 then
             Gtk.Button.Gtk_New_From_Icon_Name (Track_Up_Btn, "go-up-symbolic", Icon_Size_Button);
-            Tracks_Grid.Attach (Track_Up_Btn, Col, Track_Row);
+            Tracks_Grid.Attach (Track_Up_Btn, Up_Col, Track_Row);
          end if;
-         Col := Col + 1;
 
          Gtk.Button.Gtk_New_From_Icon_Name (Track_Del_Btn, "edit-delete", Icon_Size_Button);
-         Tracks_Grid.Attach (Track_Del_Btn, Col, Track_Row);
-         Col := Col + 1;
+         Tracks_Grid.Attach (Track_Del_Btn, Del_Col, Track_Row);
 
          Track_Row := Track_Row + 1;
       end loop;
@@ -315,7 +347,7 @@ package body GUI is
       Gtk_New (Session_Load_Item, "Load Session");
       Session_Menu.Append (Session_Load_Item);
       Session_Load_Item.On_Activate (Session_Load_CB'Access);
-      
+
       --  Session Save
       Gtk_New (Session_Save_Item, "Save Session");
       Session_Menu.Append (Session_Save_Item);
@@ -439,6 +471,7 @@ package body GUI is
       --  Tracks Grid
       Gtk_New (Tracks_Grid);
       Main_Box.Pack_Start (Child => Tracks_Grid);
+      Display_Track_Headers;
 
       --  Status Bar
       Main_Box.Pack_End (Child => Create_Status_Box, Expand => False);

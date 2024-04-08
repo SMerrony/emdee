@@ -57,9 +57,9 @@ package body Session is
                         Track.Tempo := 1.0;
                      end if;
                      if Has (Toml_Track, "volume") then
-                        Track.Volume := Float (As_Float (Get (Toml_Track, "volume")).Value);
+                        Track.Volume := Integer (As_Integer (Get (Toml_Track, "volume")));
                      else
-                        Track.Volume := 1.0;
+                        Track.Volume := 100;
                      end if;
                      if Has (Toml_Track, "skip") then
                         Track.Skip := As_Boolean (Get (Toml_Track, "skip"));

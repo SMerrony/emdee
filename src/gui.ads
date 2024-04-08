@@ -31,6 +31,18 @@ package GUI is
 
    Max_Tracks  : constant Integer := 99;
 
+   --  Track display column ordering
+   Row_Col     : constant Glib.Gint := 0;
+   Select_Col  : constant Glib.Gint := 1;
+   Title_Col   : constant Glib.Gint := 2;
+   Skip_Col    : constant Glib.Gint := 3;
+   Comment_Col : constant Glib.Gint := 4;
+   Vol_Col     : constant Glib.Gint := 5;
+   File_Col    : constant Glib.Gint := 6;
+   Down_Col    : constant Glib.Gint := 7;
+   Up_Col      : constant Glib.Gint := 8;
+   Del_Col     : constant Glib.Gint := 9;
+
    type Select_Btn_Arr_T is array (1 .. Max_Tracks) of Gtk.Button.Gtk_Button;
 
    App         : Gtk_Application;

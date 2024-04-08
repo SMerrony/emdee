@@ -16,7 +16,7 @@ title = "C'est Magnifique"
 skip = true                 # this track will be skipped 
 path = "/home/steve/Desktop/MJC_Saix_MP3/Accompaniments/CestMagnifique_Accpt.mp3"
 comment = "*Good for encore!*"
-volume = 0.95               # reduce volume by 5%
+volume = 95               # reduce volume by 5%
 
 [[track]]
 title = "Mon coq est mort"
@@ -34,4 +34,5 @@ comment = "WAV version"
 [[track]]
 title = "Golden Earrings"
 path = "/home/steve/Desktop/MJC_Saix_MP3/Accompaniments/06-GoldenEarrings.flac"
-comment = "FLAC version"
+comment = "FLAC version, half volume!"
+volume = 50
