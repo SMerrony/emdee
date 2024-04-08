@@ -30,6 +30,7 @@ path = "/home/steve/Desktop/MJC_Saix_MP3/Accompaniments/LaJavanaise_Accpt.mp3"
 title = "Afrique Adieu"
 path = "/home/steve/Desktop/MJC_Saix_MP3/Accompaniments/AfriqueAdieu_Accpt.wav"
 comment = "WAV version"
+skip = true
 
 [[track]]
 title = "Golden Earrings"

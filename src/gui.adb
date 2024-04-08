@@ -267,10 +267,15 @@ package body GUI is
    end Session_Load_CB;
 
    procedure Advance_Selected_Track is
+      Candidate_Track : Integer := Currently_Selected_Track;
    begin
-      --  Only try to advance if we are not already at the last track
-      if Currently_Selected_Track > 0 and then Currently_Selected_Track < Integer (Active_Session.Tracks.Length) then
-         Select_Btn_Arr (Currently_Selected_Track + 1).Clicked;
+      if Currently_Selected_Track < (Integer (Active_Session.Tracks.Length)) then --  Not already at end
+         loop
+            Candidate_Track := Candidate_Track + 1;
+            exit when Candidate_Track = Integer (Active_Session.Tracks.Length);
+            exit when not Active_Session.Tracks (Candidate_Track).Skip;
+         end loop;
+         Select_Btn_Arr (Candidate_Track).Clicked;
       end if;
    end Advance_Selected_Track;
 
