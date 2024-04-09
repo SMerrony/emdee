@@ -39,13 +39,14 @@ package body Players is
    procedure Play_Track is
       use Glib;
       Track : constant Track_T := Active_Session.Tracks (Currently_Playing_Track);
+      Volume : constant String := Track.Volume'Image;
       Media_File : constant String := To_String (Track.Path);
 
       --  OK : Boolean;
       Okay : Glib.Gboolean;
       PErr : aliased Glib.Error.GError;
       Argv : aliased Gtkada.Types.Chars_Ptr_Array := (0 .. 15 => <>);
-      
+
       procedure Prepare_Ffplay_Arguments (argv : out Gtkada.Types.Chars_Ptr_Array) is
       begin
          argv (0) := Gtkada.Types.New_String ("ffplay");
@@ -54,8 +55,10 @@ package body Players is
          argv (3) := Gtkada.Types.New_String ("-autoexit");
          argv (4) := Gtkada.Types.New_String ("-loglevel");
          argv (5) := Gtkada.Types.New_String ("quiet");
-         argv (6) := Gtkada.Types.New_String (Media_File);
-         argv (7) := Gtkada.Types.Null_Ptr;
+         argv (6) := Gtkada.Types.New_String ("-volume");
+         argv (7) := Gtkada.Types.New_String (Volume);
+         argv (8) := Gtkada.Types.New_String (Media_File);
+         argv (9) := Gtkada.Types.Null_Ptr;
       end Prepare_Ffplay_Arguments;
 
       --  procedure Prepare_Mpg123_Arguments (argv : out Gtkada.Types.Chars_Ptr_Array) is

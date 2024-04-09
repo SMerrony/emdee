@@ -35,5 +35,5 @@ skip = true
 [[track]]
 title = "Golden Earrings"
 path = "/home/steve/Desktop/MJC_Saix_MP3/Accompaniments/06-GoldenEarrings.flac"
-comment = "FLAC version, half volume!"
-volume = 50
+comment = "FLAC version, quarter volume!"
+volume = 25

@@ -121,6 +121,10 @@ package body GUI is
          Unused_Buttons := Message_Dialog (Msg => "No track is selected",
                                            Title => App_Title & " Cannot Play",
                                            Buttons => Button_OK);
+      elsif Active_Session.Tracks (Currently_Selected_Track).Path = Null_Unbounded_String then
+         Unused_Buttons := Message_Dialog (Msg => "Track has no media file to play",
+                                           Title => App_Title & " Cannot Play",
+                                           Buttons => Button_OK); 
       else
          Currently_Playing_Track := Currently_Selected_Track;
          Play_Track;
@@ -181,13 +185,11 @@ package body GUI is
          Row_Label.Set_Halign (Align_Center);
          Tracks_Grid.Attach (Row_Label, Row_Col, Track_Row);
 
-         if Track.Path /= Null_Unbounded_String then
-            Row := Integer (Track_Row);
-            Gtk.Button.Gtk_New_From_Icon_Name (Select_Btn_Arr (Row), "go-next-symbolic", Icon_Size_Button);
-            Select_Btn_Arr (Row).Set_Name ("Select" & Row'Image);
-            Select_Btn_Arr (Row).On_Clicked (Track_Select_Btn_CB'Access);
-            Tracks_Grid.Attach (Select_Btn_Arr (Row), Select_Col, Track_Row);
-         end if;
+         Row := Integer (Track_Row);
+         Gtk.Button.Gtk_New_From_Icon_Name (Select_Btn_Arr (Row), "go-next-symbolic", Icon_Size_Button);
+         Select_Btn_Arr (Row).Set_Name ("Select" & Row'Image);
+         Select_Btn_Arr (Row).On_Clicked (Track_Select_Btn_CB'Access);
+         Tracks_Grid.Attach (Select_Btn_Arr (Row), Select_Col, Track_Row);
 
          Gtk.GEntry.Gtk_New (Title_Entry);
          Title_Entry.Set_Width_Chars (25);
