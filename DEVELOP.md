@@ -18,6 +18,14 @@ The embedded icon was generated with this command, run from the top-level dir...
 ### Spawn
 The whole `spawn_async` thing took ages to figure out.  As usual, it seemed impossible to find a simple example to follow.  
 
+For future referencem this simple example worked...
+```
+      --  -- THIS WORKS...
+      --  OK := Spawn_Command_Line_Async (Gtkada.Types.New_String (To_String (Active_Players_Config.MP3_Player) &
+      --                                                           " " & Media_File), Err);
+      --  -- ...THAT WORKED
+```
+
 There's no complementary function to kill a process spawned by the above function.
 
 ? Maybe `aShell` would make life easier?

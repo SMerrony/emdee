@@ -36,52 +36,38 @@ package body Players is
    function Spawn_Async is
       new Generic_Spawn_Async (User_Data => Integer);
 
+   function Prepare_Ffplay_Arguments (Media_File : String;
+                                      Volume : Integer)
+                                      return Gtkada.Types.Chars_Ptr_Array is
+      Volume_Str : constant String := Trim (Volume'Image, Left);
+      argv : Gtkada.Types.Chars_Ptr_Array (0 .. 15);
+   begin
+      argv (0) := Gtkada.Types.New_String ("ffplay");
+      argv (1) := Gtkada.Types.New_String ("-hide_banner");
+      argv (2) := Gtkada.Types.New_String ("-nodisp");
+      argv (3) := Gtkada.Types.New_String ("-autoexit");
+      argv (4) := Gtkada.Types.New_String ("-loglevel");
+      argv (5) := Gtkada.Types.New_String ("quiet");
+      argv (6) := Gtkada.Types.New_String ("-volume");
+      argv (7) := Gtkada.Types.New_String (Volume_Str);
+      argv (8) := Gtkada.Types.New_String (Media_File);
+      argv (9) := Gtkada.Types.Null_Ptr;
+      return argv;
+   end Prepare_Ffplay_Arguments;
+
    procedure Play_Track is
       use Glib;
-      Track : constant Track_T := Active_Session.Tracks (Currently_Playing_Track);
-      Volume : constant String := Track.Volume'Image;
+      Track      : constant Track_T := Active_Session.Tracks (Currently_Playing_Track);
       Media_File : constant String := To_String (Track.Path);
-
-      --  OK : Boolean;
       Okay : Glib.Gboolean;
       PErr : aliased Glib.Error.GError;
       Argv : aliased Gtkada.Types.Chars_Ptr_Array := (0 .. 15 => <>);
 
-      procedure Prepare_Ffplay_Arguments (argv : out Gtkada.Types.Chars_Ptr_Array) is
-      begin
-         argv (0) := Gtkada.Types.New_String ("ffplay");
-         argv (1) := Gtkada.Types.New_String ("-hide_banner");
-         argv (2) := Gtkada.Types.New_String ("-nodisp");
-         argv (3) := Gtkada.Types.New_String ("-autoexit");
-         argv (4) := Gtkada.Types.New_String ("-loglevel");
-         argv (5) := Gtkada.Types.New_String ("quiet");
-         argv (6) := Gtkada.Types.New_String ("-volume");
-         argv (7) := Gtkada.Types.New_String (Volume);
-         argv (8) := Gtkada.Types.New_String (Media_File);
-         argv (9) := Gtkada.Types.Null_Ptr;
-      end Prepare_Ffplay_Arguments;
-
-      --  procedure Prepare_Mpg123_Arguments (argv : out Gtkada.Types.Chars_Ptr_Array) is
-      --  begin
-      --     argv (0) := Gtkada.Types.New_String (To_String (Active_Players_Config.MP3_Player));
-      --     argv (1) := Gtkada.Types.New_String ("-q");
-      --     argv (2) := Gtkada.Types.New_String ("-o");
-      --     argv (3) := Gtkada.Types.New_String ("pulse");
-      --     --  argv (3) := Gtkada.Types.New_String ("--no-control");
-      --     argv (4) := Gtkada.Types.New_String (Media_File);
-      --     argv (5) := Gtkada.Types.Null_Ptr;
-      --  end Prepare_Mpg123_Arguments;
-
    begin
-
-      --  -- THIS WORKS...
-      --  OK := Spawn_Command_Line_Async (Gtkada.Types.New_String (To_String (Active_Players_Config.MP3_Player) &
-      --                                                           " " & Media_File), Err);
-      --  -- ...THAT WORKED
-
       case Track.File_Type is
          when FLAC | MP3 | OGG | WAV =>
-            Prepare_Ffplay_Arguments (Argv);
+            --  Prepare_Ffplay_Arguments (Argv);
+            Argv := Prepare_Ffplay_Arguments (Media_File, Track.Volume);
          when MIDI =>
 null;
          when UNKNOWN => raise Unknown_Media_Type;
@@ -100,9 +86,7 @@ null;
       if Okay = 0 then
          Ada.Text_IO.Put_Line ("ERROR");
       end if;
-
       Ada.Text_IO.Put_Line ("DEBUG: PID:" & Player_PID'Image);
-
    end Play_Track;
 
    function Player_Active return Boolean is
