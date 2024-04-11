@@ -17,10 +17,11 @@ Additional controls may be added to specific tracks such as volume level, tempo 
 * Tracks may be marked for skipping in performance
 * Controls are provided to Play, Stop, and Restart
 * Audio tracks may have a volume modifier
-* MIDI tracks may have a tempo modifier
 * Dummy or 'placeholder' tracks may be inserted to remind MD of a cappella pieces etc.
 
 Third-party 'helper' applications are used to actually play the tracks, initially...
 * `ffplay` for FLAC, MP3, OGG and WAV
+* ~~~`pactl` to control player volume on-the-fly~~~
 * `aplaymidi` for MIDI files on an external device such as a synthesizer, keyboard, or digital piano
 
+You must ensure those applications are installed on your system for `eMDee` to work.

@@ -21,6 +21,7 @@ with Gtk.Adjustment;
 with Gtk.Box;                 use Gtk.Box;
 with Gtk.Button;              use Gtk.Button;
 with Gtk.Check_Button;
+with Gtk.Check_Menu_Item;     use Gtk.Check_Menu_Item;
 with Gtk.Container;
 with Gtk.Dialog;              use Gtk.Dialog;
 with Gtk.Enums;               use Gtk.Enums;
@@ -124,12 +125,36 @@ package body GUI is
       elsif Active_Session.Tracks (Currently_Selected_Track).Path = Null_Unbounded_String then
          Unused_Buttons := Message_Dialog (Msg => "Track has no media file to play",
                                            Title => App_Title & " Cannot Play",
-                                           Buttons => Button_OK); 
+                                           Buttons => Button_OK);
       else
          Currently_Playing_Track := Currently_Selected_Track;
          Play_Track;
       end if;
    end Play_Btn_CB;
+
+   procedure Louder_Btn_CB (Self : access Gtk.Button.Gtk_Button_Record'Class) is
+      pragma Unreferenced (Self);
+      Vol : constant Natural := Get_System_Volume;
+   begin
+      if Vol < 91 then
+         Adjust_System_Volume (Vol + 10);
+      end if;
+   end Louder_Btn_CB;
+
+   procedure Vol_Reset_Btn_CB (Self : access Gtk.Button.Gtk_Button_Record'Class) is
+      pragma Unreferenced (Self);
+   begin
+      Adjust_System_Volume (100);
+   end Vol_Reset_Btn_CB;
+
+   procedure Quieter_Btn_CB (Self : access Gtk.Button.Gtk_Button_Record'Class) is
+      pragma Unreferenced (Self);
+      Vol : constant Natural := Get_System_Volume;
+   begin
+      if Vol > 9 then
+         Adjust_System_Volume (Vol - 10);
+      end if;
+   end Quieter_Btn_CB;
 
    procedure Stop_Btn_CB (Self : access Gtk.Button.Gtk_Button_Record'Class) is
       pragma Unreferenced (Self);
@@ -154,6 +179,13 @@ package body GUI is
       Tracks_Grid.Get_Child_At (Comment_Col, Gint (Track_Num)).Set_Name ("highlit");
       Tracks_Grid.Get_Child_At (Vol_Col, Gint (Track_Num)).Set_Name ("highlit");
    end Track_Select_Btn_CB;
+
+   procedure Track_Modifiers_CB (Self : access Gtk_Check_Menu_Item_Record'Class) is
+
+   begin
+      Show_Track_Modifiers := Self.Get_Active;
+      Display_Tracks;
+   end Track_Modifiers_CB;
 
    procedure Display_Track_Headers is
 
@@ -221,22 +253,26 @@ package body GUI is
             The_Digits  => 0);
          Tracks_Grid.Attach (Vol_Spin, Vol_Col, Track_Row);
 
-         Gtk.Button.Gtk_New_From_Icon_Name (Track_File_Btn, "folder-symbolic", Icon_Size_Button);
-         Track_File_Btn.Set_Tooltip_Text (To_String (Track.Path));
-         Tracks_Grid.Attach (Track_File_Btn, File_Col, Track_Row);
+         if Show_Track_Modifiers then
 
-         if Integer (Track_Row) < Integer (Active_Session.Tracks.Length) then
-            Gtk.Button.Gtk_New_From_Icon_Name (Track_Down_Btn, "go-down-symbolic", Icon_Size_Button);
-            Tracks_Grid.Attach (Track_Down_Btn, Down_Col, Track_Row);
+            Gtk.Button.Gtk_New_From_Icon_Name (Track_File_Btn, "folder-symbolic", Icon_Size_Button);
+            Track_File_Btn.Set_Tooltip_Text (To_String (Track.Path));
+            Tracks_Grid.Attach (Track_File_Btn, File_Col, Track_Row);
+
+            if Integer (Track_Row) < Integer (Active_Session.Tracks.Length) then
+               Gtk.Button.Gtk_New_From_Icon_Name (Track_Down_Btn, "go-down-symbolic", Icon_Size_Button);
+               Tracks_Grid.Attach (Track_Down_Btn, Down_Col, Track_Row);
+            end if;
+
+            if Track_Row > 1 then
+               Gtk.Button.Gtk_New_From_Icon_Name (Track_Up_Btn, "go-up-symbolic", Icon_Size_Button);
+               Tracks_Grid.Attach (Track_Up_Btn, Up_Col, Track_Row);
+            end if;
+
+            Gtk.Button.Gtk_New_From_Icon_Name (Track_Del_Btn, "edit-delete", Icon_Size_Button);
+            Tracks_Grid.Attach (Track_Del_Btn, Del_Col, Track_Row);
+
          end if;
-
-         if Track_Row > 1 then
-            Gtk.Button.Gtk_New_From_Icon_Name (Track_Up_Btn, "go-up-symbolic", Icon_Size_Button);
-            Tracks_Grid.Attach (Track_Up_Btn, Up_Col, Track_Row);
-         end if;
-
-         Gtk.Button.Gtk_New_From_Icon_Name (Track_Del_Btn, "edit-delete", Icon_Size_Button);
-         Tracks_Grid.Attach (Track_Del_Btn, Del_Col, Track_Row);
 
          Track_Row := Track_Row + 1;
       end loop;
@@ -321,6 +357,7 @@ package body GUI is
       Session_Load_Item, Session_Save_Item, Session_Create_Item,
       Quit_Item,
       About_Item : Gtk.Menu_Item.Gtk_Menu_Item;
+      Track_Modifiers_Check_Item : Gtk.Check_Menu_Item.Gtk_Check_Menu_Item;
    begin
       --  Log (DEBUG, "Starting to Create_Menu_Bar");
       Gtk_New (Menu_Bar);
@@ -368,6 +405,14 @@ package body GUI is
       Session_Menu.Append (Session_Create_Item);
       --  Session_Create_Item.On_Activate (Session_Create_CB'Access);
 
+      Session_Menu.Append (Sep_Item);
+
+      --  Modifiers visible
+      Gtk_New (Track_Modifiers_Check_Item, "Show Track Modifiers");
+      Track_Modifiers_Check_Item.Set_Active (Show_Track_Modifiers);
+      Session_Menu.Append (Track_Modifiers_Check_Item);
+      Track_Modifiers_Check_Item.On_Toggled (Track_Modifiers_CB'Access);
+
       --  Help
 
       Gtk_New (Menu_Item, "Help");
@@ -384,31 +429,61 @@ package body GUI is
 
    function Create_Controls_Grid return Gtk_Grid is
       Controls_Grid : Gtk_Grid;
-      Play_Btn, Stop_Btn, Restart_Btn, Next_Btn : Gtk.Button.Gtk_Button;
+      Spacer_Lab    : Gtk_Label;
+      Play_Btn, Pause_Btn, Stop_Btn, Restart_Btn, Next_Btn, Quieter_Btn, Vol_Reset_Btn, Louder_Btn : Gtk.Button.Gtk_Button;
    begin
       Gtk_New (Controls_Grid);
       Controls_Grid.Set_Column_Spacing (10);
+      Controls_Grid.Set_Column_Homogeneous (True);
+      Gtk.Label.Gtk_New (Spacer_Lab, "");
+
       Gtk.Button.Gtk_New_From_Icon_Name (Play_Btn, "media-playback-start", Icon_Size_Dialog);
       Play_Btn.Set_Image_Position (Pos_Top);
       Play_Btn.Set_Label ("Play");
       Play_Btn.On_Clicked (Play_Btn_CB'Access);
       Controls_Grid.Attach (Play_Btn, 0, 0);
 
+      Gtk.Button.Gtk_New_From_Icon_Name (Pause_Btn, "media-playback-pause", Icon_Size_Dialog);
+      Pause_Btn.Set_Image_Position (Pos_Top);
+      Pause_Btn.Set_Label ("Pause");
+      --  Pause_Btn.On_Clicked (Pause_Btn_CB'Access);
+      Controls_Grid.Attach (Pause_Btn, 1, 0);
+
       Gtk.Button.Gtk_New_From_Icon_Name (Stop_Btn, "media-playback-stop", Icon_Size_Dialog);
       Stop_Btn.Set_Image_Position (Pos_Top);
       Stop_Btn.Set_Label ("Stop");
       Stop_Btn.On_Clicked (Stop_Btn_CB'Access);
-      Controls_Grid.Attach (Stop_Btn, 1, 0);
+      Controls_Grid.Attach (Stop_Btn, 2, 0);
 
       Gtk.Button.Gtk_New_From_Icon_Name (Restart_Btn, "media-playlist-repeat", Icon_Size_Dialog);
       Restart_Btn.Set_Image_Position (Pos_Top);
       Restart_Btn.Set_Label ("Restart!");
-      Controls_Grid.Attach (Restart_Btn, 2, 0);
+      Controls_Grid.Attach (Restart_Btn, 3, 0);
 
       Gtk.Button.Gtk_New_From_Icon_Name (Next_Btn, "media-skip-forward", Icon_Size_Dialog);
       Next_Btn.Set_Image_Position (Pos_Top);
       Next_Btn.Set_Label ("Next");
-      Controls_Grid.Attach (Next_Btn, 3, 0);
+      Controls_Grid.Attach (Next_Btn, 4, 0);
+
+      Controls_Grid.Attach (Spacer_Lab, 5, 0);
+
+      Gtk.Button.Gtk_New_From_Icon_Name (Quieter_Btn, "audio-volume-low", Icon_Size_Dialog);
+      Quieter_Btn.Set_Image_Position (Pos_Top);
+      Quieter_Btn.Set_Label ("Vol -");
+      Quieter_Btn.On_Clicked (Quieter_Btn_CB'Access);
+      Controls_Grid.Attach (Quieter_Btn, 6, 0);
+
+      Gtk.Button.Gtk_New_From_Icon_Name (Vol_Reset_Btn, "audio-volume-medium", Icon_Size_Dialog);
+      Vol_Reset_Btn.Set_Image_Position (Pos_Top);
+      Vol_Reset_Btn.Set_Label ("Reset ");
+      Vol_Reset_Btn.On_Clicked (Vol_Reset_Btn_CB'Access);
+      Controls_Grid.Attach (Vol_Reset_Btn, 7, 0);
+
+      Gtk.Button.Gtk_New_From_Icon_Name (Louder_Btn, "audio-volume-high", Icon_Size_Dialog);
+      Louder_Btn.Set_Image_Position (Pos_Top);
+      Louder_Btn.Set_Label ("Vol +");
+      Louder_Btn.On_Clicked (Louder_Btn_CB'Access);
+      Controls_Grid.Attach (Louder_Btn, 8, 0);
 
       return Controls_Grid;
    end Create_Controls_Grid;
@@ -466,12 +541,12 @@ package body GUI is
       Gtk.GEntry.Gtk_New (Session_Desc_Entry);
       Gtk_New (Session_Label, " Session: ");
       Session_Header_Grid.Attach (Child => Session_Label, Left => 0, Top => 0);
-      Session_Desc_Entry.Set_Width_Chars (80);
+      Session_Desc_Entry.Set_Width_Chars (60);
       Session_Header_Grid.Attach (Child => Session_Desc_Entry, Left => 1, Top => 0);
       Gtk_New (Comment_Label, " Notes: ");
       Session_Header_Grid.Attach (Child => Comment_Label, Left => 0, Top => 1);
       Gtk.GEntry.Gtk_New (Session_Comment_Entry);
-      Session_Comment_Entry.Set_Width_Chars (132);
+      Session_Comment_Entry.Set_Width_Chars (80);
       Session_Header_Grid.Attach (Child => Session_Comment_Entry, Left => 1, Top => 1);
       Main_Box.Pack_Start (Child => Session_Header_Grid, Expand => False);
 

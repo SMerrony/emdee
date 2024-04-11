@@ -11,7 +11,6 @@ package Track is
       Title,
       Path,
       Comment   : Unbounded_String;
-      Tempo     : Float;
       Volume    : Integer;
       Skip      : Boolean;
       File_Type : Media_Type;

@@ -8,8 +8,7 @@ updated = 2024-03-29T08:50:12
 [[track]]
 title = "C'est si bon"
 path = "/home/steve/Desktop/MJC_Saix_MP3/Accompaniments/CestSiBon_SAH_Accpt.mid"
-comment = "MIDI - A little faster in the dry acoustic"
-tempo = 1.05                 # increase tempo by 5%
+comment = "MIDI"
 
 [[track]]
 title = "C'est Magnifique"

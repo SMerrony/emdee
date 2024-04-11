@@ -7,6 +7,7 @@ with Ada.Strings.Fixed;       use Ada.Strings.Fixed;
 with Ada.Strings.Unbounded;   use Ada.Strings.Unbounded;
 with Ada.Text_IO;
 
+with Glib;           use Glib;
 with Glib.Error;
 with Glib.Spawn;     use Glib.Spawn;
 
@@ -25,66 +26,111 @@ package body Players is
    function system (command : C.char_array) return C.int
      with Import, Convention => C;
 
-   --  function Play_MIDI (Filename : String) return Process_Id is
-   --     PID : Process_Id;
-   --  begin
-   --     PID := Non_Blocking_Spawn (Program_Name => To_String (Active_Players_Config.WAV_Player),
-   --                                Args => (new String'("-q"), new String'(Filename)));
-   --     return PID;
-   --  end Play_MIDI;
-
    function Spawn_Async is
       new Generic_Spawn_Async (User_Data => Integer);
+   --  function Spawn_Async_With_Fds is
+   --     new Generic_Spawn_Async_With_Fds (User_Data => Integer);
 
-   function Prepare_Ffplay_Arguments (Media_File : String;
-                                      Volume : Integer)
-                                      return Gtkada.Types.Chars_Ptr_Array is
+   function Prepare_Ffplay_Arguments (Media_File : String; Volume : Integer)
+                                     return Gtkada.Types.Chars_Ptr_Array is
       Volume_Str : constant String := Trim (Volume'Image, Left);
-      argv : Gtkada.Types.Chars_Ptr_Array (0 .. 15);
+      Argv_Arr : Gtkada.Types.Chars_Ptr_Array (0 .. 15);
    begin
-      argv (0) := Gtkada.Types.New_String ("ffplay");
-      argv (1) := Gtkada.Types.New_String ("-hide_banner");
-      argv (2) := Gtkada.Types.New_String ("-nodisp");
-      argv (3) := Gtkada.Types.New_String ("-autoexit");
-      argv (4) := Gtkada.Types.New_String ("-loglevel");
-      argv (5) := Gtkada.Types.New_String ("quiet");
-      argv (6) := Gtkada.Types.New_String ("-volume");
-      argv (7) := Gtkada.Types.New_String (Volume_Str);
-      argv (8) := Gtkada.Types.New_String (Media_File);
-      argv (9) := Gtkada.Types.Null_Ptr;
-      return argv;
+      Argv_Arr (0) := Gtkada.Types.New_String ("ffplay");
+      Argv_Arr (1) := Gtkada.Types.New_String ("-hide_banner");
+      Argv_Arr (2) := Gtkada.Types.New_String ("-nodisp");
+      Argv_Arr (3) := Gtkada.Types.New_String ("-autoexit");
+      Argv_Arr (4) := Gtkada.Types.New_String ("-loglevel");
+      Argv_Arr (5) := Gtkada.Types.New_String ("quiet");
+      Argv_Arr (6) := Gtkada.Types.New_String ("-volume");
+      Argv_Arr (7) := Gtkada.Types.New_String (Volume_Str);
+      Argv_Arr (8) := Gtkada.Types.New_String (Media_File);
+      Argv_Arr (9) := Gtkada.Types.Null_Ptr;
+      return Argv_Arr;
    end Prepare_Ffplay_Arguments;
 
-   procedure Play_Track is
-      use Glib;
-      Track      : constant Track_T := Active_Session.Tracks (Currently_Playing_Track);
-      Media_File : constant String := To_String (Track.Path);
-      Okay : Glib.Gboolean;
-      PErr : aliased Glib.Error.GError;
-      Argv : aliased Gtkada.Types.Chars_Ptr_Array := (0 .. 15 => <>);
-
+   function Prepare_Aplaymidi_Arguments (Media_File : String) return Gtkada.Types.Chars_Ptr_Array is
+      Argv_Arr : Gtkada.Types.Chars_Ptr_Array (0 .. 15);
    begin
-      case Track.File_Type is
-         when FLAC | MP3 | OGG | WAV =>
-            --  Prepare_Ffplay_Arguments (Argv);
-            Argv := Prepare_Ffplay_Arguments (Media_File, Track.Volume);
-         when MIDI =>
-null;
-         when UNKNOWN => raise Unknown_Media_Type;
-      end case;
+      Argv_Arr (0) := Gtkada.Types.New_String ("aplaymidi");
+      Argv_Arr (1) := Gtkada.Types.New_String ("-p");
+      Argv_Arr (2) := Gtkada.Types.New_String ("<PORT>");  --  FIXME MIDI port number
+      Argv_Arr (3) := Gtkada.Types.New_String (Media_File);
+      Argv_Arr (4) := Gtkada.Types.Null_Ptr;
+      return Argv_Arr;
+   end Prepare_Aplaymidi_Arguments;
 
+   function Prepare_Pactl_Set_Vol_Arguments (New_Vol : Natural) return Gtkada.Types.Chars_Ptr_Array is
+      Argv_Arr : Gtkada.Types.Chars_Ptr_Array (0 .. 15);
+      Vol_Str  : constant String := Trim (New_Vol'Image, Both) & "%";
+   begin
+      Argv_Arr (0) := Gtkada.Types.New_String ("pactl");
+      Argv_Arr (1) := Gtkada.Types.New_String ("set-sink-volume");
+      Argv_Arr (2) := Gtkada.Types.New_String ("@DEFAULT_SINK@");
+      Argv_Arr (3) := Gtkada.Types.New_String (Vol_Str);
+      Argv_Arr (4) := Gtkada.Types.Null_Ptr;
+      return Argv_Arr;
+   end Prepare_Pactl_Set_Vol_Arguments;
+
+   procedure Adjust_System_Volume (Vol_Pct : Natural) is
+      Argv : aliased Gtkada.Types.Chars_Ptr_Array := (0 .. 15 => <>);
+      Okay : Gboolean;
+      PErr : aliased Glib.Error.GError;
+   begin
+      Argv := Prepare_Pactl_Set_Vol_Arguments (Vol_Pct);
       Okay := Spawn_Async (Working_Directory => Gtkada.Types.Null_Ptr,
                            Argv => Argv'Access,
-                           Envp => null,  --  Inherit our env, critical that XDG_RUNTIME_DIR exists
+                           Envp => null,  --  Inherit our env
                            Flags => G_Spawn_Search_Path, --  + G_Spawn_Do_Not_Reap_Child,
                            Child_Setup => null,
                            Data => null,
-                           Child_Pid => Player_PID'Access,
+                           Child_Pid => null,
                            Error => PErr'Access
                            );
+      if Okay = 0 then
+         Ada.Text_IO.Put_Line ("pactl ERROR");
+      else
+         Current_System_Volume_Pct := Vol_Pct;
+      end if;
+   end Adjust_System_Volume;
+
+   function Get_System_Volume return Natural is (Current_System_Volume_Pct);
+
+   procedure Play_Track is
+      Track      : constant Track_T := Active_Session.Tracks (Currently_Playing_Track);
+      Media_File : constant String := To_String (Track.Path);
+      Okay : Gboolean;
+      PErr : aliased Glib.Error.GError;
+      Argv : aliased Gtkada.Types.Chars_Ptr_Array := (0 .. 15 => <>);
+   begin
+      case Track.File_Type is
+         when FLAC | MP3 | OGG | WAV =>
+            Argv := Prepare_Ffplay_Arguments (Media_File, Track.Volume);
+            Okay := Spawn_Async (Working_Directory => Gtkada.Types.Null_Ptr,
+                                 Argv => Argv'Access,
+                                 Envp => null,  --  Inherit our env
+                                 Flags => G_Spawn_Search_Path, --  + G_Spawn_Do_Not_Reap_Child,
+                                 Child_Setup => null,
+                                 Data => null,
+                                 Child_Pid => Player_PID'Access,
+                                 Error => PErr'Access
+                                 );
+         when MIDI =>
+            Argv := Prepare_Aplaymidi_Arguments (Media_File);
+            Okay := Spawn_Async (Working_Directory => Gtkada.Types.Null_Ptr,
+                                 Argv => Argv'Access,
+                                 Envp => null,  --  Inherit our env
+                                 Flags => G_Spawn_Search_Path, --  + G_Spawn_Do_Not_Reap_Child,
+                                 Child_Setup => null,
+                                 Data => null,
+                                 Child_Pid => Player_PID'Access,
+                                 Error => PErr'Access
+                                 );
+         when UNKNOWN => raise Unknown_Media_Type;
+      end case;
 
       if Okay = 0 then
-         Ada.Text_IO.Put_Line ("ERROR");
+         Ada.Text_IO.Put_Line ("PLAYER ERROR");
       end if;
       Ada.Text_IO.Put_Line ("DEBUG: PID:" & Player_PID'Image);
    end Play_Track;

@@ -21,11 +21,34 @@ The whole `spawn_async` thing took ages to figure out.  As usual, it seemed impo
 For future referencem this simple example worked...
 ```
       --  -- THIS WORKS...
-      --  OK := Spawn_Command_Line_Async (Gtkada.Types.New_String (To_String (Active_Players_Config.MP3_Player) &
-      --                                                           " " & Media_File), Err);
+      OK := Spawn_Command_Line_Async (Gtkada.Types.New_String (To_String (Active_Players_Config.MP3_Player) &
+                                                                 " " & Media_File), Err);
       --  -- ...THAT WORKED
+```
+
+This also worked...
+```
+   function Spawn_Async is
+      new Generic_Spawn_Async (User_Data => Integer);
+
+...
+
+      Okay := Spawn_Async (Working_Directory => Gtkada.Types.Null_Ptr,
+                           Argv => Argv'Access,
+                           Envp => null,  --  Inherit our env, critical that XDG_RUNTIME_DIR exists
+                           Flags => G_Spawn_Search_Path, --  + G_Spawn_Do_Not_Reap_Child,
+                           Child_Setup => null,
+                           Data => null,
+                           Child_Pid => Player_PID'Access,
+                           Error => PErr'Access
+                           );
 ```
 
 There's no complementary function to kill a process spawned by the above function.
 
-? Maybe `aShell` would make life easier?
+? Maybe the `spawn_glib` Alire package would make life easier?
+
+### PulseAudio Volume
+It seems a new virtual interface is created for every app that plays music, the master volume
+control does nothing to those interfaces.
+

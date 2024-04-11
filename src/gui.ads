@@ -52,6 +52,7 @@ package GUI is
    Session_Header_Grid,
    Tracks_Grid : Gtk.Grid.Gtk_Grid;
    Select_Btn_Arr : Select_Btn_Arr_T;
+   Show_Track_Modifiers : Boolean := True;
 
    Session_Desc_Entry,
    Session_Comment_Entry : Gtk.GEntry.Gtk_Entry;
@@ -68,5 +69,9 @@ package GUI is
    CSS_Provider : constant Gtk.Css_Provider.Gtk_Css_Provider := Gtk.Css_Provider.Gtk_Css_Provider_New;
 
    procedure Launch;
+
+private
+
+   procedure Display_Tracks;
 
 end GUI;

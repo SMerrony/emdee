@@ -51,11 +51,6 @@ package body Session is
                      else
                         Track.Comment := Null_Unbounded_String;
                      end if;
-                     if Has (Toml_Track, "tempo") then
-                        Track.Tempo := Float (As_Float (Get (Toml_Track, "tempo")).Value);
-                     else
-                        Track.Tempo := 1.0;
-                     end if;
                      if Has (Toml_Track, "volume") then
                         Track.Volume := Integer (As_Integer (Get (Toml_Track, "volume")));
                      else
