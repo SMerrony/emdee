@@ -27,7 +27,11 @@ package body Session is
                begin
                   Active_Session.Desc      := As_Unbounded_String (Get (Session_Table, "description"));
                   Active_Session.Comment   := As_Unbounded_String (Get (Session_Table, "comment"));
-                  Active_Session.MIDI_Port := As_Unbounded_String (Get (Session_Table, "midiport"));
+                  if Has (Session_Table, "midiport") then
+                     Active_Session.MIDI_Port := As_Unbounded_String (Get (Session_Table, "midiport"));
+                  else
+                     Active_Session.MIDI_Port := Null_Unbounded_String;
+                  end if;
                   Active_Session.Updated   := As_Local_Datetime (Get (Session_Table, "updated"));
                end;
 

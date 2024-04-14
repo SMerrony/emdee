@@ -15,7 +15,7 @@ Additional controls may be added to specific tracks such as volume level, tempo 
 * Tracks may be audio (FLAC, MP3, OGG, WAV) or MIDI files
 * Tracks may be re-ordered
 * Tracks may be marked for skipping in performance
-* Controls are provided to Play, Stop, and Restart
+* Controls are provided to Play, Stop
 * Audio tracks may have a volume modifier
 * Dummy or 'placeholder' tracks may be inserted to remind MD of a cappella pieces etc.
 
@@ -25,3 +25,5 @@ Third-party 'helper' applications are used to actually play the tracks, initiall
 * `aplaymidi` for MIDI files on an external device such as a synthesizer, keyboard, or digital piano
 
 You must ensure those applications are installed on your system for `eMDee` to work.
+
+When a MIDI file is manually stopped from playing, an all-notes-off MIDI file is sent to the player to prevent stuck notes.

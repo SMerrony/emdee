@@ -2,6 +2,7 @@
 --  SPDX-FileCopyrightText: Copyright 2024 Stephen Merrony
 
 with Ada.Directories;
+with Ada.Sequential_IO;
 with Ada.Strings;             use Ada.Strings;
 with Ada.Strings.Fixed;       use Ada.Strings.Fixed;
 with Ada.Strings.Unbounded;   use Ada.Strings.Unbounded;
@@ -13,8 +14,10 @@ with Glib.Spawn;     use Glib.Spawn;
 
 with Gtkada.Types;
 
+with Interfaces;
 with Interfaces.C;
 
+with Embedded;       use Embedded;
 with Players;        use Players;
 with Session;        use Session;
 with Track;          use Track;
@@ -30,6 +33,22 @@ package body Players is
       new Generic_Spawn_Async (User_Data => Integer);
    --  function Spawn_Async_With_Fds is
    --     new Generic_Spawn_Async_With_Fds (User_Data => Integer);
+
+   procedure Create_Notes_Off_MIDI is
+      File_Emb : constant Embedded.Content_Type := Embedded.Get_Content (Notes_Off_Embedded);
+      package IO is new Ada.Sequential_IO (Interfaces.Unsigned_8);
+      MIDI_Filename : constant String := Notes_Off_Embedded;
+      MIDI_File : IO.File_Type;
+   begin
+      if Ada.Directories.Exists (MIDI_Filename) then
+         Ada.Directories.Delete_File (MIDI_Filename);
+      end if;
+      IO.Create (File => MIDI_File, Name => MIDI_Filename);
+      for Val of File_Emb.Content.all loop
+         IO.Write (MIDI_File, Interfaces.Unsigned_8 (Val));
+      end loop;
+      IO.Close (MIDI_File);
+   end Create_Notes_Off_MIDI;
 
    function Prepare_Ffplay_Arguments (Media_File : String; Volume : Integer)
                                      return Gtkada.Types.Chars_Ptr_Array is
@@ -150,12 +169,27 @@ package body Players is
    procedure Stop_Playing is
       command : aliased constant C.char_array := C.To_C ("kill " & Player_PID'Image);
       Unused_rc : C.int;
+      Unused_Okay : Gboolean;
+      PErr : aliased Glib.Error.GError;
+      Argv : aliased Gtkada.Types.Chars_Ptr_Array := (0 .. 15 => <>);
    begin
       if Player_Active then
          --  This is just gross - there must be a better way...
          Unused_rc := system (command);
          Glib.Spawn.Spawn_Close_Pid (Player_PID);
          Player_PID := 0;
+         if Active_Session.Tracks (Currently_Playing_Track).File_Type = MIDI then
+            Argv := Prepare_Aplaymidi_Arguments (To_String (Active_Session.MIDI_Port), Notes_Off_Embedded);
+            Unused_Okay := Spawn_Async (Working_Directory => Gtkada.Types.Null_Ptr,
+                                 Argv => Argv'Access,
+                                 Envp => null,  --  Inherit our env
+                                 Flags => G_Spawn_Search_Path, --  + G_Spawn_Do_Not_Reap_Child,
+                                 Child_Setup => null,
+                                 Data => null,
+                                 Child_Pid => Player_PID'Access,
+                                 Error => PErr'Access
+                                 );
+         end if;
       end if;
    end Stop_Playing;
 

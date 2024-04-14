@@ -44,6 +44,7 @@ with Interfaces;
 with Embedded;                use Embedded;
 with Players;                 use Players;
 with Session;                 use Session;
+with Track;                   use Track;
 
 package body GUI is
 
@@ -124,6 +125,10 @@ package body GUI is
                                            Buttons => Button_OK);
       elsif Active_Session.Tracks (Currently_Selected_Track).Path = Null_Unbounded_String then
          Unused_Buttons := Message_Dialog (Msg => "Track has no media file to play",
+                                           Title => App_Title & " Cannot Play",
+                                           Buttons => Button_OK);
+      elsif Active_Session.Tracks (Currently_Selected_Track).File_Type = MIDI and then Active_Session.MIDI_Port = Null_Unbounded_String then
+         Unused_Buttons := Message_Dialog (Msg => "No MIDI Port has been set in this session",
                                            Title => App_Title & " Cannot Play",
                                            Buttons => Button_OK);
       else
@@ -309,6 +314,9 @@ package body GUI is
          Session.Load_Session (Filename);
          Session_Desc_Entry.Set_Text (To_String (Active_Session.Desc));
          Session_Comment_Entry.Set_Text (To_String (Active_Session.Comment));
+         if Active_Session.MIDI_Port /= Null_Unbounded_String then
+            Create_Notes_Off_MIDI;
+         end if;
          if Active_Session.Tracks.Length > 0 then
             Display_Tracks;
          end if;
