@@ -328,6 +328,38 @@ package body GUI is
                                            Title => App_Title & " - Error");
    end Session_Load_CB;
 
+   procedure Session_MIDI_CB (Self : access Gtk.Menu_Item.Gtk_Menu_Item_Record'Class) is
+      pragma Unreferenced (Self);
+      Dialog : Gtk_Dialog;
+      Dlg_Box   : Gtk.Box.Gtk_Box;
+      Dlg_Port_Label : Gtk.Label.Gtk_Label;
+      Port_Entry : Gtk.GEntry.Gtk_Entry;
+      Cancel_Unused, Save_Unused : Gtk.Widget.Gtk_Widget;
+      Unused_Buttons : Gtkada.Dialogs.Message_Dialog_Buttons;
+   begin
+      Gtk_New (Dialog);
+      Dialog.Set_Destroy_With_Parent (True);
+      Dialog.Set_Modal (True);
+      Dialog.Set_Title (App_Title & " - Session MIDI Port");
+      Dlg_Box := Dialog.Get_Content_Area;
+      Gtk.Label.Gtk_New (Dlg_Port_Label, "MIDI Out Port:");
+      Dlg_Box.Pack_Start (Child => Dlg_Port_Label, Expand => True, Fill => True, Padding => 5);
+      Gtk.GEntry.Gtk_New (The_Entry => Port_Entry);
+      if Active_Session.MIDI_Port /= Null_Unbounded_String then
+         Port_Entry.Set_Text (To_String (Active_Session.MIDI_Port));
+      end if;
+      Port_Entry.Set_Tooltip_Text ("MIDI port suitable for aplaymidi to use in form nn:n.  Use aplaymidi -l to see list");
+      Dlg_Box.Pack_Start (Child => Port_Entry, Expand => True, Fill => True, Padding => 5);
+      Cancel_Unused := Dialog.Add_Button ("Cancel", Gtk_Response_Cancel);
+      Save_Unused := Dialog.Add_Button ("Save", Gtk_Response_Accept);
+      Dialog.Set_Default_Response (Gtk_Response_Accept);
+      Dialog.Show_All;
+      if Dialog.Run = Gtk_Response_Accept then
+         null; --  TODO write MIDI port to TOML
+      end if;
+      Dialog.Destroy;
+   end Session_MIDI_CB;
+
    procedure Select_Next_Track is
       Candidate_Track : Integer := Currently_Selected_Track;
    begin
@@ -394,7 +426,7 @@ package body GUI is
       File_Menu, Session_Menu, Help_Menu : Gtk.Menu.Gtk_Menu;
       Menu_Item : Gtk.Menu_Item.Gtk_Menu_Item;
       Logging_Item,
-      Session_Load_Item, Session_Save_Item, Session_Create_Item,
+      Session_Load_Item, Session_Save_Item, Session_Create_Item, Session_MIDI_Item,
       Quit_Item,
       About_Item : Gtk.Menu_Item.Gtk_Menu_Item;
       Track_Modifiers_Check_Item : Gtk.Check_Menu_Item.Gtk_Check_Menu_Item;
@@ -427,6 +459,11 @@ package body GUI is
       Gtk_New (Session_Menu);
       Menu_Item.Set_Submenu (Session_Menu);
 
+      --  Session Create
+      Gtk_New (Session_Create_Item, "Create New Session");
+      Session_Menu.Append (Session_Create_Item);
+      --  Session_Create_Item.On_Activate (Session_Create_CB'Access);
+
       --  Session Load
       Gtk_New (Session_Load_Item, "Load Session");
       Session_Menu.Append (Session_Load_Item);
@@ -437,13 +474,13 @@ package body GUI is
       Session_Menu.Append (Session_Save_Item);
       --  Session_Save_Item.On_Activate (Session_Save_CB'Access);
 
+      --  Session MIDI Settings
+      Gtk_New (Session_MIDI_Item, "MIDI Settings");
+      Session_Menu.Append (Session_MIDI_Item);
+      Session_MIDI_Item.On_Activate (Session_MIDI_CB'Access);
+
       Gtk_New (Sep_Item);
       Session_Menu.Append (Sep_Item);
-
-      --  Session Create
-      Gtk_New (Session_Create_Item, "Create New Session");
-      Session_Menu.Append (Session_Create_Item);
-      --  Session_Create_Item.On_Activate (Session_Create_CB'Access);
 
       Gtk_New (Sep_Item);
       Session_Menu.Append (Sep_Item);
