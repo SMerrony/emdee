@@ -49,52 +49,52 @@ package body Players is
       return Argv_Arr;
    end Prepare_Ffplay_Arguments;
 
-   function Prepare_Aplaymidi_Arguments (Media_File : String) return Gtkada.Types.Chars_Ptr_Array is
+   function Prepare_Aplaymidi_Arguments (Midi_Port : String; Media_File : String) return Gtkada.Types.Chars_Ptr_Array is
       Argv_Arr : Gtkada.Types.Chars_Ptr_Array (0 .. 15);
    begin
       Argv_Arr (0) := Gtkada.Types.New_String ("aplaymidi");
       Argv_Arr (1) := Gtkada.Types.New_String ("-p");
-      Argv_Arr (2) := Gtkada.Types.New_String ("<PORT>");  --  FIXME MIDI port number
+      Argv_Arr (2) := Gtkada.Types.New_String (Midi_Port);
       Argv_Arr (3) := Gtkada.Types.New_String (Media_File);
       Argv_Arr (4) := Gtkada.Types.Null_Ptr;
       return Argv_Arr;
    end Prepare_Aplaymidi_Arguments;
 
-   function Prepare_Pactl_Set_Vol_Arguments (New_Vol : Natural) return Gtkada.Types.Chars_Ptr_Array is
-      Argv_Arr : Gtkada.Types.Chars_Ptr_Array (0 .. 15);
-      Vol_Str  : constant String := Trim (New_Vol'Image, Both) & "%";
-   begin
-      Argv_Arr (0) := Gtkada.Types.New_String ("pactl");
-      Argv_Arr (1) := Gtkada.Types.New_String ("set-sink-volume");
-      Argv_Arr (2) := Gtkada.Types.New_String ("@DEFAULT_SINK@");
-      Argv_Arr (3) := Gtkada.Types.New_String (Vol_Str);
-      Argv_Arr (4) := Gtkada.Types.Null_Ptr;
-      return Argv_Arr;
-   end Prepare_Pactl_Set_Vol_Arguments;
+   --  function Prepare_Pactl_Set_Vol_Arguments (New_Vol : Natural) return Gtkada.Types.Chars_Ptr_Array is
+   --     Argv_Arr : Gtkada.Types.Chars_Ptr_Array (0 .. 15);
+   --     Vol_Str  : constant String := Trim (New_Vol'Image, Both) & "%";
+   --  begin
+   --     Argv_Arr (0) := Gtkada.Types.New_String ("pactl");
+   --     Argv_Arr (1) := Gtkada.Types.New_String ("set-sink-volume");
+   --     Argv_Arr (2) := Gtkada.Types.New_String ("@DEFAULT_SINK@");
+   --     Argv_Arr (3) := Gtkada.Types.New_String (Vol_Str);
+   --     Argv_Arr (4) := Gtkada.Types.Null_Ptr;
+   --     return Argv_Arr;
+   --  end Prepare_Pactl_Set_Vol_Arguments;
 
-   procedure Adjust_System_Volume (Vol_Pct : Natural) is
-      Argv : aliased Gtkada.Types.Chars_Ptr_Array := (0 .. 15 => <>);
-      Okay : Gboolean;
-      PErr : aliased Glib.Error.GError;
-   begin
-      Argv := Prepare_Pactl_Set_Vol_Arguments (Vol_Pct);
-      Okay := Spawn_Async (Working_Directory => Gtkada.Types.Null_Ptr,
-                           Argv => Argv'Access,
-                           Envp => null,  --  Inherit our env
-                           Flags => G_Spawn_Search_Path, --  + G_Spawn_Do_Not_Reap_Child,
-                           Child_Setup => null,
-                           Data => null,
-                           Child_Pid => null,
-                           Error => PErr'Access
-                           );
-      if Okay = 0 then
-         Ada.Text_IO.Put_Line ("pactl ERROR");
-      else
-         Current_System_Volume_Pct := Vol_Pct;
-      end if;
-   end Adjust_System_Volume;
+   --  procedure Adjust_System_Volume (Vol_Pct : Natural) is
+   --     Argv : aliased Gtkada.Types.Chars_Ptr_Array := (0 .. 15 => <>);
+   --     Okay : Gboolean;
+   --     PErr : aliased Glib.Error.GError;
+   --  begin
+   --     Argv := Prepare_Pactl_Set_Vol_Arguments (Vol_Pct);
+   --     Okay := Spawn_Async (Working_Directory => Gtkada.Types.Null_Ptr,
+   --                          Argv => Argv'Access,
+   --                          Envp => null,  --  Inherit our env
+   --                          Flags => G_Spawn_Search_Path, --  + G_Spawn_Do_Not_Reap_Child,
+   --                          Child_Setup => null,
+   --                          Data => null,
+   --                          Child_Pid => null,
+   --                          Error => PErr'Access
+   --                          );
+   --     if Okay = 0 then
+   --        Ada.Text_IO.Put_Line ("pactl ERROR");
+   --     else
+   --        Current_System_Volume_Pct := Vol_Pct;
+   --     end if;
+   --  end Adjust_System_Volume;
 
-   function Get_System_Volume return Natural is (Current_System_Volume_Pct);
+   --  function Get_System_Volume return Natural is (Current_System_Volume_Pct);
 
    procedure Play_Track is
       Track      : constant Track_T := Active_Session.Tracks (Currently_Playing_Track);
@@ -116,7 +116,7 @@ package body Players is
                                  Error => PErr'Access
                                  );
          when MIDI =>
-            Argv := Prepare_Aplaymidi_Arguments (Media_File);
+            Argv := Prepare_Aplaymidi_Arguments (To_String (Active_Session.MIDI_Port), Media_File);
             Okay := Spawn_Async (Working_Directory => Gtkada.Types.Null_Ptr,
                                  Argv => Argv'Access,
                                  Envp => null,  --  Inherit our env

@@ -18,6 +18,7 @@ package Session is
    type Session_T is record
       Desc,
       Comment : Unbounded_String;
+      MIDI_Port : Unbounded_String;
       Updated : TOML.Any_Local_Datetime;
       Tracks  : Track_Vectors.Vector;
    end record;

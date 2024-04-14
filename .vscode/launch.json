@@ -12,7 +12,8 @@
             "args": [],
             "cwd": "${workspaceFolder}",
             "stopAtEntry": false,
-            "preLaunchTask": "ada: Build current project"
+            "preLaunchTask": "ada: Build current project",
+            "env": {"G_DEBUG": "fatal-warnings"}
         },
     ]
 }

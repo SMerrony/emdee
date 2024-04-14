@@ -132,29 +132,29 @@ package body GUI is
       end if;
    end Play_Btn_CB;
 
-   procedure Louder_Btn_CB (Self : access Gtk.Button.Gtk_Button_Record'Class) is
-      pragma Unreferenced (Self);
-      Vol : constant Natural := Get_System_Volume;
-   begin
-      if Vol < 91 then
-         Adjust_System_Volume (Vol + 10);
-      end if;
-   end Louder_Btn_CB;
+   --  procedure Louder_Btn_CB (Self : access Gtk.Button.Gtk_Button_Record'Class) is
+   --     pragma Unreferenced (Self);
+   --     Vol : constant Natural := Get_System_Volume;
+   --  begin
+   --     if Vol < 91 then
+   --        Adjust_System_Volume (Vol + 10);
+   --     end if;
+   --  end Louder_Btn_CB;
 
-   procedure Vol_Reset_Btn_CB (Self : access Gtk.Button.Gtk_Button_Record'Class) is
-      pragma Unreferenced (Self);
-   begin
-      Adjust_System_Volume (100);
-   end Vol_Reset_Btn_CB;
+   --  procedure Vol_Reset_Btn_CB (Self : access Gtk.Button.Gtk_Button_Record'Class) is
+   --     pragma Unreferenced (Self);
+   --  begin
+   --     Adjust_System_Volume (100);
+   --  end Vol_Reset_Btn_CB;
 
-   procedure Quieter_Btn_CB (Self : access Gtk.Button.Gtk_Button_Record'Class) is
-      pragma Unreferenced (Self);
-      Vol : constant Natural := Get_System_Volume;
-   begin
-      if Vol > 9 then
-         Adjust_System_Volume (Vol - 10);
-      end if;
-   end Quieter_Btn_CB;
+   --  procedure Quieter_Btn_CB (Self : access Gtk.Button.Gtk_Button_Record'Class) is
+   --     pragma Unreferenced (Self);
+   --     Vol : constant Natural := Get_System_Volume;
+   --  begin
+   --     if Vol > 9 then
+   --        Adjust_System_Volume (Vol - 10);
+   --     end if;
+   --  end Quieter_Btn_CB;
 
    procedure Stop_Btn_CB (Self : access Gtk.Button.Gtk_Button_Record'Class) is
       pragma Unreferenced (Self);
@@ -162,6 +162,22 @@ package body GUI is
       Currently_Active := False;
       Stop_Playing;
    end Stop_Btn_CB;
+
+   procedure Next_Btn_CB (Self : access Gtk.Button.Gtk_Button_Record'Class) is
+      pragma Unreferenced (Self);
+   begin
+      Currently_Active := False;
+      Stop_Playing;
+      Select_Next_Track;
+   end Next_Btn_CB;
+
+   procedure Previous_Btn_CB (Self : access Gtk.Button.Gtk_Button_Record'Class) is
+      pragma Unreferenced (Self);
+   begin
+      Currently_Active := False;
+      Stop_Playing;
+      Select_Previous_Track;
+   end Previous_Btn_CB;
 
    procedure Track_Select_Btn_CB (Self : access Gtk.Button.Gtk_Button_Record'Class) is
       Name : constant UTF8_String := Self.Get_Name;
@@ -304,10 +320,10 @@ package body GUI is
                                            Title => App_Title & " - Error");
    end Session_Load_CB;
 
-   procedure Advance_Selected_Track is
+   procedure Select_Next_Track is
       Candidate_Track : Integer := Currently_Selected_Track;
    begin
-      if Currently_Selected_Track < (Integer (Active_Session.Tracks.Length)) then --  Not already at end
+      if Currently_Selected_Track /= -1 and then Currently_Selected_Track < (Integer (Active_Session.Tracks.Length)) then --  Not already at end
          loop
             Candidate_Track := Candidate_Track + 1;
             exit when Candidate_Track = Integer (Active_Session.Tracks.Length);
@@ -315,25 +331,39 @@ package body GUI is
          end loop;
          Select_Btn_Arr (Candidate_Track).Clicked;
       end if;
-   end Advance_Selected_Track;
+   end Select_Next_Track;
+
+   procedure Select_Previous_Track is
+      Candidate_Track : Integer := Currently_Selected_Track;
+   begin
+      if Currently_Selected_Track /= -1 and then Currently_Selected_Track > 1 then --  Not already at start
+         loop
+            Candidate_Track := Candidate_Track - 1;
+            exit when Candidate_Track = Integer (Active_Session.Tracks.Length);
+            exit when not Active_Session.Tracks (Candidate_Track).Skip;
+         end loop;
+         Select_Btn_Arr (Candidate_Track).Clicked;
+      end if;
+   end Select_Previous_Track;
 
    function Update_Status_Box_CB (SB : Gtk.Box.Gtk_Box) return Boolean is
    begin
-      Gdk.Threads.Enter;
-
-      if Player_Active then
-         Active_Label.Set_Text ("Playing: " & To_String (Active_Session.Tracks (Currently_Playing_Track).Title));
-         Currently_Active := True;
-      else
-         if Currently_Active then  --  we have transitioned from playing to not playing
-            Advance_Selected_Track;
-            Currently_Active := False;
-         end if;
-         Active_Label.Set_Text ("Not Playing");
+      if Shutting_Down then
+         return False;
       end if;
 
-      SB.Queue_Draw;
-
+      Gdk.Threads.Enter;
+         if Player_Active then
+            Active_Label.Set_Text ("Playing: " & To_String (Active_Session.Tracks (Currently_Playing_Track).Title));
+            Currently_Active := True;
+         else
+            if Currently_Active then  --  we have transitioned from playing to not playing
+               Select_Next_Track;
+               Currently_Active := False;
+            end if;
+            Active_Label.Set_Text ("Not Playing");
+         end if;
+         SB.Queue_Draw;
       Gdk.Threads.Leave;
       return True;
    end Update_Status_Box_CB;
@@ -341,6 +371,8 @@ package body GUI is
    procedure Quit_CB (Self : access Gtk.Menu_Item.Gtk_Menu_Item_Record'Class) is
       pragma Unreferenced (Self);
    begin
+      Shutting_Down := True;
+      delay 0.5;
       --  Removing the main window closes the application...
       App.Remove_Window (Main_Window);
    end Quit_CB;
@@ -405,6 +437,7 @@ package body GUI is
       Session_Menu.Append (Session_Create_Item);
       --  Session_Create_Item.On_Activate (Session_Create_CB'Access);
 
+      Gtk_New (Sep_Item);
       Session_Menu.Append (Sep_Item);
 
       --  Modifiers visible
@@ -430,7 +463,8 @@ package body GUI is
    function Create_Controls_Grid return Gtk_Grid is
       Controls_Grid : Gtk_Grid;
       Spacer_Lab    : Gtk_Label;
-      Play_Btn, Pause_Btn, Stop_Btn, Restart_Btn, Next_Btn, Quieter_Btn, Vol_Reset_Btn, Louder_Btn : Gtk.Button.Gtk_Button;
+      Play_Btn, Stop_Btn, Previous_Btn, Next_Btn : Gtk.Button.Gtk_Button;
+      --  Quieter_Btn, Vol_Reset_Btn, Louder_Btn : Gtk.Button.Gtk_Button;
    begin
       Gtk_New (Controls_Grid);
       Controls_Grid.Set_Column_Spacing (10);
@@ -443,11 +477,11 @@ package body GUI is
       Play_Btn.On_Clicked (Play_Btn_CB'Access);
       Controls_Grid.Attach (Play_Btn, 0, 0);
 
-      Gtk.Button.Gtk_New_From_Icon_Name (Pause_Btn, "media-playback-pause", Icon_Size_Dialog);
-      Pause_Btn.Set_Image_Position (Pos_Top);
-      Pause_Btn.Set_Label ("Pause");
-      --  Pause_Btn.On_Clicked (Pause_Btn_CB'Access);
-      Controls_Grid.Attach (Pause_Btn, 1, 0);
+      --  Gtk.Button.Gtk_New_From_Icon_Name (Pause_Btn, "media-playback-pause", Icon_Size_Dialog);
+      --  Pause_Btn.Set_Image_Position (Pos_Top);
+      --  Pause_Btn.Set_Label ("Pause");
+      --  --  Pause_Btn.On_Clicked (Pause_Btn_CB'Access);
+      --  Controls_Grid.Attach (Pause_Btn, 1, 0);
 
       Gtk.Button.Gtk_New_From_Icon_Name (Stop_Btn, "media-playback-stop", Icon_Size_Dialog);
       Stop_Btn.Set_Image_Position (Pos_Top);
@@ -455,35 +489,37 @@ package body GUI is
       Stop_Btn.On_Clicked (Stop_Btn_CB'Access);
       Controls_Grid.Attach (Stop_Btn, 2, 0);
 
-      Gtk.Button.Gtk_New_From_Icon_Name (Restart_Btn, "media-playlist-repeat", Icon_Size_Dialog);
-      Restart_Btn.Set_Image_Position (Pos_Top);
-      Restart_Btn.Set_Label ("Restart!");
-      Controls_Grid.Attach (Restart_Btn, 3, 0);
+      Gtk.Button.Gtk_New_From_Icon_Name (Previous_Btn, "media-skip-backward", Icon_Size_Dialog);
+      Previous_Btn.Set_Image_Position (Pos_Top);
+      Previous_Btn.Set_Label ("Previous");
+      Previous_Btn.On_Clicked (Previous_Btn_CB'Access);
+      Controls_Grid.Attach (Previous_Btn, 3, 0);
 
       Gtk.Button.Gtk_New_From_Icon_Name (Next_Btn, "media-skip-forward", Icon_Size_Dialog);
       Next_Btn.Set_Image_Position (Pos_Top);
       Next_Btn.Set_Label ("Next");
+      Next_Btn.On_Clicked (Next_Btn_CB'Access);
       Controls_Grid.Attach (Next_Btn, 4, 0);
 
-      Controls_Grid.Attach (Spacer_Lab, 5, 0);
+      --  Controls_Grid.Attach (Spacer_Lab, 5, 0);
 
-      Gtk.Button.Gtk_New_From_Icon_Name (Quieter_Btn, "audio-volume-low", Icon_Size_Dialog);
-      Quieter_Btn.Set_Image_Position (Pos_Top);
-      Quieter_Btn.Set_Label ("Vol -");
-      Quieter_Btn.On_Clicked (Quieter_Btn_CB'Access);
-      Controls_Grid.Attach (Quieter_Btn, 6, 0);
+      --  Gtk.Button.Gtk_New_From_Icon_Name (Quieter_Btn, "audio-volume-low", Icon_Size_Dialog);
+      --  Quieter_Btn.Set_Image_Position (Pos_Top);
+      --  Quieter_Btn.Set_Label ("Vol -");
+      --  Quieter_Btn.On_Clicked (Quieter_Btn_CB'Access);
+      --  Controls_Grid.Attach (Quieter_Btn, 6, 0);
 
-      Gtk.Button.Gtk_New_From_Icon_Name (Vol_Reset_Btn, "audio-volume-medium", Icon_Size_Dialog);
-      Vol_Reset_Btn.Set_Image_Position (Pos_Top);
-      Vol_Reset_Btn.Set_Label ("Reset ");
-      Vol_Reset_Btn.On_Clicked (Vol_Reset_Btn_CB'Access);
-      Controls_Grid.Attach (Vol_Reset_Btn, 7, 0);
+      --  Gtk.Button.Gtk_New_From_Icon_Name (Vol_Reset_Btn, "audio-volume-medium", Icon_Size_Dialog);
+      --  Vol_Reset_Btn.Set_Image_Position (Pos_Top);
+      --  Vol_Reset_Btn.Set_Label ("Reset ");
+      --  Vol_Reset_Btn.On_Clicked (Vol_Reset_Btn_CB'Access);
+      --  Controls_Grid.Attach (Vol_Reset_Btn, 7, 0);
 
-      Gtk.Button.Gtk_New_From_Icon_Name (Louder_Btn, "audio-volume-high", Icon_Size_Dialog);
-      Louder_Btn.Set_Image_Position (Pos_Top);
-      Louder_Btn.Set_Label ("Vol +");
-      Louder_Btn.On_Clicked (Louder_Btn_CB'Access);
-      Controls_Grid.Attach (Louder_Btn, 8, 0);
+      --  Gtk.Button.Gtk_New_From_Icon_Name (Louder_Btn, "audio-volume-high", Icon_Size_Dialog);
+      --  Louder_Btn.Set_Image_Position (Pos_Top);
+      --  Louder_Btn.Set_Label ("Vol +");
+      --  Louder_Btn.On_Clicked (Louder_Btn_CB'Access);
+      --  Controls_Grid.Attach (Louder_Btn, 8, 0);
 
       return Controls_Grid;
    end Create_Controls_Grid;

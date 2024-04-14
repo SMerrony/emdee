@@ -25,9 +25,10 @@ package body Session is
                declare
                   Session_Table : constant TOML_Value := Get (Toml_Parse_Result.Value, "session");
                begin
-                  Active_Session.Desc    := As_Unbounded_String (Get (Session_Table, "description"));
-                  Active_Session.Comment := As_Unbounded_String (Get (Session_Table, "comment"));
-                  Active_Session.Updated := As_Local_Datetime (Get (Session_Table, "updated"));
+                  Active_Session.Desc      := As_Unbounded_String (Get (Session_Table, "description"));
+                  Active_Session.Comment   := As_Unbounded_String (Get (Session_Table, "comment"));
+                  Active_Session.MIDI_Port := As_Unbounded_String (Get (Session_Table, "midiport"));
+                  Active_Session.Updated   := As_Local_Datetime (Get (Session_Table, "updated"));
                end;
 
             elsif To_String (Top_Keys (TK)) = "track" then

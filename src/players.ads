@@ -20,11 +20,7 @@ package Players is
    procedure Play_Track;
    procedure Stop_Playing;
    function  Player_Active return Boolean; --  May update PID
-   procedure Adjust_System_Volume (Vol_Pct : Natural);
-   function  Get_System_Volume return Natural;
 
 private
-
-   Current_System_Volume_Pct : Natural := 100;
 
 end Players;

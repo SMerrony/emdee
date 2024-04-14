@@ -57,6 +57,8 @@ package GUI is
    Session_Desc_Entry,
    Session_Comment_Entry : Gtk.GEntry.Gtk_Entry;
 
+   Shutting_Down : Boolean := False;
+
    --  Status Bar items...
    Active_Label,
    Players_Label : Gtk_Label;
@@ -72,6 +74,8 @@ package GUI is
 
 private
 
+   procedure Select_Next_Track;
+   procedure Select_Previous_Track;
    procedure Display_Tracks;
 
 end GUI;

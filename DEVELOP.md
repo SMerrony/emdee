@@ -5,6 +5,8 @@
 The embedded icon was generated with this command, run from the top-level dir...
 `are --lang=Ada -o src --resource=Embedded --name-access --fileset='**/*.*' share/emdee`
 
+The all notes off midi file was created using csvmidi.
+
 ## Examine Style (CSS) of Running Application
 `GTK_DEBUG=interactive bin/emdee`
 
@@ -45,8 +47,6 @@ This also worked...
 ```
 
 There's no complementary function to kill a process spawned by the above function.
-
-? Maybe the `spawn_glib` Alire package would make life easier?
 
 ### PulseAudio Volume
 It seems a new virtual interface is created for every app that plays music, the master volume
