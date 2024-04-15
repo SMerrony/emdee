@@ -17,20 +17,23 @@ package Session is
 
    type Session_T is record
       Desc,
-      Comment : Unbounded_String;
+      Comment   : Unbounded_String;
       MIDI_Port : Unbounded_String;
-      Updated : TOML.Any_Local_Datetime;
-      Tracks  : Track_Vectors.Vector;
+      Updated   : TOML.Any_Local_Datetime;
+      Tracks    : Track_Vectors.Vector;
+      Filename  : Unbounded_String;       --  Not stored in TOML
    end record;
 
    Active_Session : Session_T;
 
    --  TOML exceptions
+   Already_Exists,
    Could_Not_Parse,
    Duplicate_Configuration,
    Incomplete_Configuration,
    Unknown_Configuration_Item : exception;
 
    procedure Load_Session (Filename : String);
+   procedure Save_Session (Filename : String);
 
 end Session;

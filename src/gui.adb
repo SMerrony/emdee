@@ -211,7 +211,7 @@ package body GUI is
    procedure Display_Track_Headers is
 
    begin
-      Tracks_Grid.Attach (Gtk_Label_New ("#"), Row_Col, 0);
+      --  Tracks_Grid.Attach (Gtk_Label_New ("#"), Row_Col, 0);
       Tracks_Grid.Attach (Gtk_Label_New ("Title"), Title_Col, 0);
       Tracks_Grid.Attach (Gtk_Label_New ("Skip"), Skip_Col, 0);
       Tracks_Grid.Attach (Gtk_Label_New ("Comment"), Comment_Col, 0);
@@ -302,16 +302,17 @@ package body GUI is
       Tracks_Grid.Show_All;
    end Display_Tracks;
 
-   procedure Session_Load_CB (Self : access Gtk.Menu_Item.Gtk_Menu_Item_Record'Class) is
+   procedure Session_Open_CB (Self : access Gtk.Menu_Item.Gtk_Menu_Item_Record'Class) is
       pragma Unreferenced (Self);
       Filename : constant String :=
-         Gtkada.File_Selection.File_Selection_Dialog (Title => App_Title & " Load Session",
+         Gtkada.File_Selection.File_Selection_Dialog (Title => App_Title & " Open Session",
                                                       Dir_Only => False,
                                                       Must_Exist => True);
       Unused_Buttons : Gtkada.Dialogs.Message_Dialog_Buttons;
    begin
       if Filename'Length > 1 then
          Session.Load_Session (Filename);
+         Active_Session.Filename := To_Unbounded_String (Filename);
          Session_Desc_Entry.Set_Text (To_String (Active_Session.Desc));
          Session_Comment_Entry.Set_Text (To_String (Active_Session.Comment));
          if Active_Session.MIDI_Port /= Null_Unbounded_String then
@@ -323,10 +324,43 @@ package body GUI is
       end if;
    exception
       when E : others =>
-         Unused_Buttons := Message_Dialog (Msg => "Could not load Session TOML file.  " & Exception_Message (E),
+         Unused_Buttons := Message_Dialog (Msg => "Could not open Session TOML file.  " & Exception_Message (E),
                                            Dialog_Type => Warning,
                                            Title => App_Title & " - Error");
-   end Session_Load_CB;
+         Active_Session.Filename := Null_Unbounded_String;
+   end Session_Open_CB;
+
+   procedure Session_Save_CB (Self : access Gtk.Menu_Item.Gtk_Menu_Item_Record'Class) is
+      pragma Unreferenced (Self);
+      Unused_Buttons : Gtkada.Dialogs.Message_Dialog_Buttons;
+   begin
+      if Active_Session.Filename = Null_Unbounded_String then
+         Unused_Buttons := Message_Dialog (Msg => "No Session has been loaded, cannot save.",
+                                           Dialog_Type => Warning,
+                                           Title => App_Title & " - Error");
+      else
+         Session.Save_Session (To_String (Active_Session.Filename));
+      end if;
+   end Session_Save_CB;
+
+   procedure Session_Save_As_CB (Self : access Gtk.Menu_Item.Gtk_Menu_Item_Record'Class) is
+      pragma Unreferenced (Self);
+      Filename : constant String :=
+         Gtkada.File_Selection.File_Selection_Dialog (Title => App_Title & " - Save Session As...",
+                                                      Dir_Only => False,
+                                                      Must_Exist => False);
+      Unused_Buttons : Gtkada.Dialogs.Message_Dialog_Buttons;
+   begin
+      if Filename'Length > 0 then
+         if Ada.Directories.Exists (Filename) then
+            Unused_Buttons := Message_Dialog (Msg => "Session TOML file already exists, use 'Save' to overwrite.",
+                                              Dialog_Type => Warning,
+                                              Title => App_Title & " - Oops");
+         else
+            Session.Save_Session (Filename);
+         end if;
+      end if;
+   end Session_Save_As_CB;
 
    procedure Session_MIDI_CB (Self : access Gtk.Menu_Item.Gtk_Menu_Item_Record'Class) is
       pragma Unreferenced (Self);
@@ -417,6 +451,13 @@ package body GUI is
       App.Remove_Window (Main_Window);
    end Quit_CB;
 
+   procedure Window_Closed_CB (Self : access Gtk.Widget.Gtk_Widget_Record'Class) is
+      pragma Unreferenced (Self);
+   begin
+      Shutting_Down := True;  --  Time for Update_Status_Box_CB to finish up
+      delay 0.5;
+   end Window_Closed_CB;
+
    --  --------  --
    --  BUILDERS  --
 
@@ -425,8 +466,7 @@ package body GUI is
       Sep_Item : Gtk.Separator_Menu_Item.Gtk_Separator_Menu_Item;
       File_Menu, Session_Menu, Help_Menu : Gtk.Menu.Gtk_Menu;
       Menu_Item : Gtk.Menu_Item.Gtk_Menu_Item;
-      Logging_Item,
-      Session_Load_Item, Session_Save_Item, Session_Create_Item, Session_MIDI_Item,
+      Session_Open_Item, Session_Save_Item, Session_Save_As_Item, Session_Create_Item, Session_MIDI_Item,
       Quit_Item,
       About_Item : Gtk.Menu_Item.Gtk_Menu_Item;
       Track_Modifiers_Check_Item : Gtk.Check_Menu_Item.Gtk_Check_Menu_Item;
@@ -441,9 +481,25 @@ package body GUI is
       Gtk_New (File_Menu);
       Menu_Item.Set_Submenu (File_Menu);
 
-      Gtk_New (Logging_Item, "Logging");
-      File_Menu.Append (Logging_Item);
-      --  Logging_Item.On_Activate (Logging_CB'Access);
+      --  Session Create
+      Gtk_New (Session_Create_Item, "New Session");
+      File_Menu.Append (Session_Create_Item);
+      --  Session_Create_Item.On_Activate (Session_Create_CB'Access);
+
+      --  Session Open
+      Gtk_New (Session_Open_Item, "Open Session");
+      File_Menu.Append (Session_Open_Item);
+      Session_Open_Item.On_Activate (Session_Open_CB'Access);
+
+      --  Session Save
+      Gtk_New (Session_Save_Item, "Save Session");
+      File_Menu.Append (Session_Save_Item);
+      Session_Save_Item.On_Activate (Session_Save_CB'Access);
+
+      --  Session Save As
+      Gtk_New (Session_Save_As_Item, "Save Session As...");
+      File_Menu.Append (Session_Save_As_Item);
+      Session_Save_As_Item.On_Activate (Session_Save_As_CB'Access);
 
       Gtk_New (Sep_Item);
       File_Menu.Append (Sep_Item);
@@ -458,21 +514,6 @@ package body GUI is
       Menu_Bar.Append (Menu_Item);
       Gtk_New (Session_Menu);
       Menu_Item.Set_Submenu (Session_Menu);
-
-      --  Session Create
-      Gtk_New (Session_Create_Item, "Create New Session");
-      Session_Menu.Append (Session_Create_Item);
-      --  Session_Create_Item.On_Activate (Session_Create_CB'Access);
-
-      --  Session Load
-      Gtk_New (Session_Load_Item, "Load Session");
-      Session_Menu.Append (Session_Load_Item);
-      Session_Load_Item.On_Activate (Session_Load_CB'Access);
-
-      --  Session Save
-      Gtk_New (Session_Save_Item, "Save Session");
-      Session_Menu.Append (Session_Save_Item);
-      --  Session_Save_Item.On_Activate (Session_Save_CB'Access);
 
       --  Session MIDI Settings
       Gtk_New (Session_MIDI_Item, "MIDI Settings");
@@ -653,6 +694,8 @@ package body GUI is
       Apply_Css (Main_Window, +CSS_Provider);
 
       Main_Window.Show_All;
+
+      Main_Window.On_Destroy (Window_Closed_CB'Unrestricted_Access);
    end App_Activate;
 
    procedure Launch is

@@ -1,6 +1,8 @@
 --  SPDX-License-Identifier: GPL-3.0-or-later
 --  SPDX-FileCopyrightText: Copyright 2024 Stephen Merrony
 
+with Ada.Text_IO;
+
 with TOML.File_IO;
 
 package body Session is
@@ -32,7 +34,7 @@ package body Session is
                   else
                      Active_Session.MIDI_Port := Null_Unbounded_String;
                   end if;
-                  Active_Session.Updated   := As_Local_Datetime (Get (Session_Table, "updated"));
+                  --  Active_Session.Updated   := As_Local_Datetime (Get (Session_Table, "updated"));
                end;
 
             elsif To_String (Top_Keys (TK)) = "track" then
@@ -76,5 +78,40 @@ package body Session is
 
       end; --  declare
    end Load_Session;
+
+   procedure Save_Session (Filename : String) is
+      Toml_Sess           : TOML_Value; --  The overall TOML structure
+      Toml_Session_Table,
+      Toml_Track_Array,
+      Toml_Track_Table    : TOML_Value;
+      File                : Ada.Text_IO.File_Type;
+   begin
+
+      Ada.Text_IO.Create (File => File, Mode => Ada.Text_IO.Out_File, Name => Filename);
+
+      Toml_Sess := Create_Table; --  Top-level container
+
+      Toml_Session_Table := Create_Table;
+      Toml_Session_Table.Set (Key => "description", Entry_Value => Create_String (Value => Active_Session.Desc));
+      Toml_Session_Table.Set (Key => "comment", Entry_Value => Create_String (Value => Active_Session.Comment));
+      Toml_Session_Table.Set (Key => "midiport", Entry_Value => Create_String (Value => Active_Session.MIDI_Port));
+      --  TODO add "updated" field
+      Toml_Sess.Set (Key => "session", Entry_Value => Toml_Session_Table);
+
+      Toml_Track_Array := Create_Array;
+      for Track of Active_Session.Tracks loop
+         Toml_Track_Table := Create_Table;
+         Toml_Track_Table.Set (Key => "title", Entry_Value => Create_String (Value => Track.Title));
+         Toml_Track_Table.Set (Key => "path", Entry_Value => Create_String (Value => Track.Path));
+         Toml_Track_Table.Set (Key => "comment", Entry_Value => Create_String (Value => Track.Comment));
+         Toml_Track_Table.Set (Key => "volume", Entry_Value => Create_Integer (Value => Any_Integer (Track.Volume)));
+         Toml_Track_Table.Set (Key => "skip", Entry_Value => Create_Boolean (Value => Track.Skip));
+         Toml_Track_Array.Append (Item => Toml_Track_Table);
+      end loop;
+      Toml_Sess.Set (Key => "track", Entry_Value => Toml_Track_Array);
+
+      TOML.File_IO.Dump_To_File (Toml_Sess, File);
+      Ada.Text_IO.Close (File);
+   end Save_Session;
 
 end Session;

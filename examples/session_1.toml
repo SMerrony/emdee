@@ -4,7 +4,6 @@
 description = "MJC Summer Concert - Choir"
 comment = "For the MJC Summer concert in the main hall (my laptop, their piano, main stage PA)"
 midiport = "128:0"
-updated = 2024-03-29T08:50:12
 
 [[track]]
 title = "C'est si bon"
