@@ -13,7 +13,7 @@ comment = "*Good for encore!*"
 path = "/home/steve/Desktop/MJC_Saix_MP3/Accompaniments/CestMagnifique_Accpt.mp3"
 skip = true
 title = "C'est Magnifique"
-volume = 95
+volume = 90
 [[track]]
 comment = "No accompaniment, give note F"
 path = ""

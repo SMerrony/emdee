@@ -241,14 +241,19 @@ package body GUI is
    end Track_Skip_Check_CB;
 
    procedure Track_Modifiers_CB (Self : access Gtk_Check_Menu_Item_Record'Class) is
-
    begin
       Show_Track_Modifiers := Self.Get_Active;
       Display_Tracks;
    end Track_Modifiers_CB;
 
-   procedure Display_Track_Headers is
+   procedure Track_Vol_Changed_CB (Self : access Gtk.Spin_Button.Gtk_Spin_Button_Record'Class) is
+      Name      : constant UTF8_String := Self.Get_Name;
+      Track_Num : constant Integer     := Integer'Value (Name (8 .. Name'Last));
+   begin
+      Active_Session.Tracks (Track_Num).Volume := Integer (Self.Get_Value_As_Int);
+   end Track_Vol_Changed_CB;
 
+   procedure Display_Track_Headers is
    begin
       --  Tracks_Grid.Attach (Gtk_Label_New ("#"), Row_Col, 0);
       Tracks_Grid.Attach (Gtk_Label_New ("Title"), Title_Col, 0);
@@ -300,16 +305,20 @@ package body GUI is
          Comment_Entry.Set_Text (To_String (Track.Comment));
          Tracks_Grid.Attach (Comment_Entry, Comment_Col, Track_Row);
 
-         Gtk.Adjustment.Gtk_New (
-            Adjustment     => Vol_Adj,
-            Value          => Gdouble (Track.Volume),
-            Lower          => 0.0,
-            Upper          => 100.0,
-            Step_Increment => 1.0,
-            Page_Increment => 5.0,
-            Page_Size      => 0.0);
-         Gtk.Spin_Button.Gtk_New (Spin_Button => Vol_Spin, Adjustment => Vol_Adj, Climb_Rate => 0.1, The_Digits => 0);
-         Tracks_Grid.Attach (Vol_Spin, Vol_Col, Track_Row);
+         if Track.File_Type /= MIDI then
+            Gtk.Adjustment.Gtk_New (
+               Adjustment     => Vol_Adj,
+               Value          => Gdouble (Track.Volume),
+               Lower          => 0.0,
+               Upper          => 100.0,
+               Step_Increment => 1.0,
+               Page_Increment => 5.0,
+               Page_Size      => 0.0);
+            Gtk.Spin_Button.Gtk_New (Spin_Button => Vol_Spin, Adjustment => Vol_Adj, Climb_Rate => 0.1, The_Digits => 0);
+            Vol_Spin.Set_Name ("VolAdj" & Row'Image);
+            Vol_Spin.On_Value_Changed (Track_Vol_Changed_CB'Access);
+            Tracks_Grid.Attach (Vol_Spin, Vol_Col, Track_Row);
+         end if;
 
          if Show_Track_Modifiers then
 
