@@ -34,6 +34,7 @@ with Gtk.Separator_Menu_Item; use Gtk.Separator_Menu_Item;
 with Gtk.Spin_Button;
 with Gtk.Style_Provider;
 with Gtk.Style_Context;       use Gtk.Style_Context;
+with Gtk.Toggle_Button;
 with Gtk.Widget;              use Gtk.Widget;
 
 with Gtkada.Dialogs;          use Gtkada.Dialogs;
@@ -184,9 +185,40 @@ package body GUI is
       Select_Previous_Track;
    end Previous_Btn_CB;
 
+   procedure Track_Delete_Btn_CB (Self : access Gtk.Button.Gtk_Button_Record'Class) is
+      Name      : constant UTF8_String := Self.Get_Name;
+      Track_Num : constant Integer     := Integer'Value (Name (8 .. Name'Last));
+      Buttons   : Gtkada.Dialogs.Message_Dialog_Buttons;
+   begin
+      Buttons := Message_Dialog (Msg => "Are you sure you want to remove this track?",
+                                 Dialog_Type => Confirmation,
+                                 Buttons => Button_No or Button_Yes,
+                                 Title => App_Title & " - Delete Track");
+      if Buttons = Button_Yes then
+         Active_Session.Tracks.Delete (Track_Num);
+         Display_Tracks;  --  N.B. Can't simply delete the row as numbering needs updating.
+      end if;
+   end Track_Delete_Btn_CB;
+
+   procedure Track_Down_Btn_CB (Self : access Gtk.Button.Gtk_Button_Record'Class) is
+      Name      : constant UTF8_String := Self.Get_Name;
+      Track_Num : constant Integer     := Integer'Value (Name (8 .. Name'Last));
+   begin
+      Active_Session.Tracks.Swap (Track_Num, Track_Num + 1);
+      Display_Tracks;
+   end Track_Down_Btn_CB;
+
+   procedure Track_Up_Btn_CB (Self : access Gtk.Button.Gtk_Button_Record'Class) is
+      Name      : constant UTF8_String := Self.Get_Name;
+      Track_Num : constant Integer     := Integer'Value (Name (8 .. Name'Last));
+   begin
+      Active_Session.Tracks.Swap (Track_Num, Track_Num - 1);
+      Display_Tracks;
+   end Track_Up_Btn_CB;
+
    procedure Track_Select_Btn_CB (Self : access Gtk.Button.Gtk_Button_Record'Class) is
-      Name : constant UTF8_String := Self.Get_Name;
-      Track_Num : constant Integer := Integer'Value (Name (8 .. Name'Last));
+      Name      : constant UTF8_String := Self.Get_Name;
+      Track_Num : constant Integer     := Integer'Value (Name (8 .. Name'Last));
    begin
       if Currently_Selected_Track /= -1 then
          --  Tracks_Grid.Get_Child_At (1, Gint (Currently_Selected_Track)).Set_Opacity (0.5);
@@ -200,6 +232,13 @@ package body GUI is
       Tracks_Grid.Get_Child_At (Comment_Col, Gint (Track_Num)).Set_Name ("highlit");
       Tracks_Grid.Get_Child_At (Vol_Col, Gint (Track_Num)).Set_Name ("highlit");
    end Track_Select_Btn_CB;
+
+   procedure Track_Skip_Check_CB (Self : access Gtk.Toggle_Button.Gtk_Toggle_Button_Record'Class) is
+      Name      : constant UTF8_String := Self.Get_Name;
+      Track_Num : constant Integer     := Integer'Value (Name (8 .. Name'Last));
+   begin
+      Active_Session.Tracks (Track_Num).Skip := Self.Get_Active;
+   end Track_Skip_Check_CB;
 
    procedure Track_Modifiers_CB (Self : access Gtk_Check_Menu_Item_Record'Class) is
 
@@ -252,6 +291,8 @@ package body GUI is
          Gtk.Check_Button.Gtk_New (Skip_Check, "");
          Skip_Check.Set_Active (Track.Skip);
          Skip_Check.Set_Halign (Align_Center);
+         Skip_Check.Set_Name ("SkipIt" & Row'Image);
+         Skip_Check.On_Toggled (Track_Skip_Check_CB'Access);
          Tracks_Grid.Attach (Skip_Check, Skip_Col, Track_Row);
 
          Gtk.GEntry.Gtk_New (Comment_Entry);
@@ -267,11 +308,7 @@ package body GUI is
             Step_Increment => 1.0,
             Page_Increment => 5.0,
             Page_Size      => 0.0);
-         Gtk.Spin_Button.Gtk_New (
-            Spin_Button => Vol_Spin,
-            Adjustment  => Vol_Adj,
-            Climb_Rate  => 0.1,
-            The_Digits  => 0);
+         Gtk.Spin_Button.Gtk_New (Spin_Button => Vol_Spin, Adjustment => Vol_Adj, Climb_Rate => 0.1, The_Digits => 0);
          Tracks_Grid.Attach (Vol_Spin, Vol_Col, Track_Row);
 
          if Show_Track_Modifiers then
@@ -282,15 +319,21 @@ package body GUI is
 
             if Integer (Track_Row) < Integer (Active_Session.Tracks.Length) then
                Gtk.Button.Gtk_New_From_Icon_Name (Track_Down_Btn, "go-down-symbolic", Icon_Size_Button);
+               Track_Down_Btn.Set_Name ("MoveDn" & Row'Image);
+               Track_Down_Btn.On_Clicked (Track_Down_Btn_CB'Access);
                Tracks_Grid.Attach (Track_Down_Btn, Down_Col, Track_Row);
             end if;
 
             if Track_Row > 1 then
                Gtk.Button.Gtk_New_From_Icon_Name (Track_Up_Btn, "go-up-symbolic", Icon_Size_Button);
+               Track_Up_Btn.Set_Name ("MoveUp" & Row'Image);
+               Track_Up_Btn.On_Clicked (Track_Up_Btn_CB'Access);
                Tracks_Grid.Attach (Track_Up_Btn, Up_Col, Track_Row);
             end if;
 
             Gtk.Button.Gtk_New_From_Icon_Name (Track_Del_Btn, "edit-delete", Icon_Size_Button);
+            Track_Del_Btn.Set_Name ("Delete" & Row'Image);
+            Track_Del_Btn.On_Clicked (Track_Delete_Btn_CB'Access);
             Tracks_Grid.Attach (Track_Del_Btn, Del_Col, Track_Row);
 
          end if;
