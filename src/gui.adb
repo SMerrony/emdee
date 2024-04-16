@@ -350,6 +350,7 @@ package body GUI is
       Row_Label  : Gtk.Label.Gtk_Label;
       Title_Entry,
       Comment_Entry : Gtk.GEntry.Gtk_Entry;
+      MIDI_Label : Gtk.Label.Gtk_Label;
       Vol_Adj    : Gtk.Adjustment.Gtk_Adjustment;
       Vol_Spin   : Gtk.Spin_Button.Gtk_Spin_Button;
    begin
@@ -388,7 +389,10 @@ package body GUI is
          Comment_Entry.Set_Name ("Comment" & Row'Image);
          Tracks_Grid.Attach (Comment_Entry, Comment_Col, Track_Row);
 
-         if Track.File_Type /= MIDI then
+         if Track.File_Type = MIDI then
+            MIDI_Label := Gtk_Label_New ("MIDI");
+            Tracks_Grid.Attach (MIDI_Label, Vol_Col, Track_Row);
+         else
             Gtk.Adjustment.Gtk_New (
                Adjustment     => Vol_Adj,
                Value          => Gdouble (Track.Volume),
