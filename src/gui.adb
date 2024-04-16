@@ -5,11 +5,9 @@ with Ada.Containers;          use Ada.Containers;
 with Ada.Directories;
 with Ada.Exceptions;          use Ada.Exceptions;
 with Ada.Sequential_IO;
---  with Ada.Streams;
 with Ada.Strings.Unbounded;   use Ada.Strings.Unbounded;
 with Ada.Text_IO;
 
---  with Gdk.Screen;
 with Gdk.Threads;
 
 with Glib;                    use Glib;
@@ -25,7 +23,6 @@ with Gtk.Check_Button;
 with Gtk.Check_Menu_Item;     use Gtk.Check_Menu_Item;
 with Gtk.Container;
 with Gtk.Dialog;              use Gtk.Dialog;
---  with Gtk.Entry_Buffer;
 with Gtk.Enums;               use Gtk.Enums;
 with Gtk.Frame;
 with Gtk.Menu;                use Gtk.Menu;
@@ -40,7 +37,7 @@ with Gtk.Toggle_Button;
 with Gtk.Widget;              use Gtk.Widget;
 
 with Gtkada.Dialogs;          use Gtkada.Dialogs;
-with Gtkada.File_Selection;
+with Gtkada.File_Selection;   use Gtkada.File_Selection;
 
 with Interfaces;
 
@@ -240,6 +237,20 @@ package body GUI is
       Display_Tracks;
    end Track_Up_Btn_CB;
 
+   procedure Track_File_Btn_CB (Self : access Gtk.Button.Gtk_Button_Record'Class) is
+      Name      : constant UTF8_String := Self.Get_Name;
+      Track_Num : constant Integer     := Integer'Value (Name (8 .. Name'Last));
+      Filename  : constant String      := To_String (Active_Session.Tracks (Track_Num).Path);
+      Dir       : constant String      := Ada.Directories.Containing_Directory (Filename);
+      New_File  : constant String      := File_Selection_Dialog (Title => App_Title & " - Track File",
+                                                                 Default_Dir => Dir,
+                                                                 Must_Exist => True);
+   begin
+      if New_File /= "" then
+         Active_Session.Tracks (Track_Num).Path := To_Unbounded_String (New_File);
+      end if;
+   end Track_File_Btn_CB;
+
    procedure Track_Select_Btn_CB (Self : access Gtk.Button.Gtk_Button_Record'Class) is
       Name      : constant UTF8_String := Self.Get_Name;
       Track_Num : constant Integer     := Integer'Value (Name (8 .. Name'Last));
@@ -350,6 +361,8 @@ package body GUI is
 
             Gtk.Button.Gtk_New_From_Icon_Name (Track_File_Btn, "folder-symbolic", Icon_Size_Button);
             Track_File_Btn.Set_Tooltip_Text (To_String (Track.Path));
+            Track_File_Btn.Set_Name ("FilSel" & Row'Image);
+            Track_File_Btn.On_Clicked (Track_File_Btn_CB'Access);
             Tracks_Grid.Attach (Track_File_Btn, File_Col, Track_Row);
 
             if Integer (Track_Row) < Integer (Active_Session.Tracks.Length) then
