@@ -52,10 +52,11 @@ package GUI is
    Session_Header_Grid,
    Tracks_Grid : Gtk.Grid.Gtk_Grid;
    Select_Btn_Arr : Select_Btn_Arr_T;
-   Show_Track_Modifiers : Boolean := True;
+   Show_Track_Modifiers : Boolean := False;
 
    Session_Desc_Entry,
    Session_Comment_Entry : Gtk.GEntry.Gtk_Entry;
+   New_Track_Entry_Row   : Glib.Gint;
 
    Shutting_Down : Boolean := False;
 
@@ -77,5 +78,6 @@ private
    procedure Select_Next_Track;
    procedure Select_Previous_Track;
    procedure Display_Tracks;
+   procedure Display_Empty_Track (Track_Row : Glib.Gint);
 
 end GUI;

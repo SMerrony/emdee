@@ -93,7 +93,7 @@ package body GUI is
    procedure Update_Text_Fields is
       --  This proc should be called before saving a sesssion or moving Tracks
       --  to ensure the Active_Session is in sync with the screen contents.
-      --  N.B. It would be better to do these updates whenever the text fields
+      --  N.B. It would be more robust to do these updates whenever the text fields
       --       are changed by the user, but I couldn't find the right event(s)...
       Track_Row  : Gint := 1;
    begin
@@ -251,6 +251,47 @@ package body GUI is
       end if;
    end Track_File_Btn_CB;
 
+   procedure New_Track_File_Btn_CB (Self : access Gtk.Button.Gtk_Button_Record'Class) is
+      pragma Unreferenced (Self);
+      --  Name      : constant UTF8_String := Self.Get_Name;
+      --  Track_Num : constant Integer     := Integer'Value (Name (8 .. Name'Last));
+      --  Filename  : constant String      := To_String (Active_Session.Tracks (Track_Num).Path);
+      --  Dir       : constant String      := Ada.Directories.Containing_Directory (Filename);
+      New_File  : constant String      := File_Selection_Dialog (Title => App_Title & " - Track File",
+                                                               --    Default_Dir => Dir,
+                                                                 Must_Exist => True);
+   begin
+      if New_File /= "" then
+         New_Track.Path := To_Unbounded_String (New_File);
+      end if;
+   end New_Track_File_Btn_CB;
+
+   procedure Track_Insert_Btn_CB (Self : access Gtk.Button.Gtk_Button_Record'Class) is
+      pragma Unreferenced (Self);
+   begin
+      New_Track.Title := To_Unbounded_String (
+                           Gtk.GEntry.Gtk_Entry (
+                              Tracks_Grid.Get_Child_At (Title_Col, New_Track_Entry_Row)).Get_Text);
+      New_Track.Comment := To_Unbounded_String (
+                              Gtk.GEntry.Gtk_Entry (
+                                 Tracks_Grid.Get_Child_At (Comment_Col, New_Track_Entry_Row)).Get_Text);
+      New_Track.Skip := Gtk.Toggle_Button.Gtk_Toggle_Button (
+                                 Tracks_Grid.Get_Child_At (Skip_Col, New_Track_Entry_Row)).Get_Active;
+      New_Track.Volume := Integer (Gtk.Spin_Button.Gtk_Spin_Button (
+                                    Tracks_Grid.Get_Child_At (Vol_Col, New_Track_Entry_Row)).Get_Value_As_Int);
+      if New_Track.Path = Null_Unbounded_String and then
+         Message_Dialog ("You have not selected an audio or MIDI file, do you want to save this track?",
+                         Confirmation,
+                         Button_No or Button_Yes) = Button_No
+      then
+         return; --  Nothing is done
+      end if;
+      New_Track.File_Type := Guess_Media_Type (To_String (New_Track.Path));
+      Active_Session.Tracks.Append (New_Item => New_Track);
+      Update_Text_Fields;
+      Display_Tracks;
+   end Track_Insert_Btn_CB;
+
    procedure Track_Select_Btn_CB (Self : access Gtk.Button.Gtk_Button_Record'Class) is
       Name      : constant UTF8_String := Self.Get_Name;
       Track_Num : constant Integer     := Integer'Value (Name (8 .. Name'Last));
@@ -278,6 +319,7 @@ package body GUI is
    procedure Track_Modifiers_CB (Self : access Gtk_Check_Menu_Item_Record'Class) is
    begin
       Show_Track_Modifiers := Self.Get_Active;
+      Update_Text_Fields;
       Display_Tracks;
    end Track_Modifiers_CB;
 
@@ -300,15 +342,19 @@ package body GUI is
    procedure Display_Tracks is
       Track_Row  : Gint := 1;
       Row        : Integer;
-      Track_Down_Btn, Track_Del_Btn, Track_Up_Btn, Track_File_Btn : Gtk.Button.Gtk_Button;
+      Track_Down_Btn,
+      Track_Del_Btn,
+      Track_Up_Btn,
+      Track_File_Btn : Gtk.Button.Gtk_Button;
       Skip_Check : Gtk.Check_Button.Gtk_Check_Button;
       Row_Label  : Gtk.Label.Gtk_Label;
-      Title_Entry, Comment_Entry : Gtk.GEntry.Gtk_Entry;
+      Title_Entry,
+      Comment_Entry : Gtk.GEntry.Gtk_Entry;
       Vol_Adj    : Gtk.Adjustment.Gtk_Adjustment;
       Vol_Spin   : Gtk.Spin_Button.Gtk_Spin_Button;
    begin
-      --  clear out any existing items
-      while Tracks_Grid.Get_Child_At (0, 1) /= null loop
+      --  clear out any existing items, ASSUMES rows are contiguous
+      while Tracks_Grid.Get_Child_At (Title_Col, 1) /= null loop
          Tracks_Grid.Remove_Row (1);
       end loop;
 
@@ -389,9 +435,58 @@ package body GUI is
          Track_Row := Track_Row + 1;
       end loop;
 
+      --  Empty track for adding to Session...
+      if Show_Track_Modifiers then
+         Display_Empty_Track (Track_Row);
+      end if;
+
       Apply_Css (Tracks_Grid, +CSS_Provider);
       Tracks_Grid.Show_All;
    end Display_Tracks;
+
+   procedure Display_Empty_Track (Track_Row : Glib.Gint) is
+   --  Display an empty row for entering a new track
+      Track_File_Btn,
+      Track_Insert_Btn : Gtk.Button.Gtk_Button;
+      Skip_Check : Gtk.Check_Button.Gtk_Check_Button;
+      Title_Entry,
+      Comment_Entry : Gtk.GEntry.Gtk_Entry;
+      Vol_Adj    : Gtk.Adjustment.Gtk_Adjustment;
+      Vol_Spin   : Gtk.Spin_Button.Gtk_Spin_Button;
+   begin
+      New_Track_Entry_Row := Track_Row;
+
+      Gtk.GEntry.Gtk_New (Title_Entry);
+      Title_Entry.Set_Width_Chars (25);
+      Tracks_Grid.Attach (Title_Entry, Title_Col, Track_Row);
+
+      Gtk.Check_Button.Gtk_New (Skip_Check, "");
+      Skip_Check.Set_Halign (Align_Center);
+      Tracks_Grid.Attach (Skip_Check, Skip_Col, Track_Row);
+
+      Gtk.GEntry.Gtk_New (Comment_Entry);
+      Comment_Entry.Set_Width_Chars (40);
+      Tracks_Grid.Attach (Comment_Entry, Comment_Col, Track_Row);
+
+      Gtk.Adjustment.Gtk_New (
+            Adjustment     => Vol_Adj,
+            Value          => Gdouble (100),
+            Lower          => 0.0,
+            Upper          => 100.0,
+            Step_Increment => 1.0,
+            Page_Increment => 5.0,
+            Page_Size      => 0.0);
+      Gtk.Spin_Button.Gtk_New (Spin_Button => Vol_Spin, Adjustment => Vol_Adj, Climb_Rate => 0.1, The_Digits => 0);
+      Tracks_Grid.Attach (Vol_Spin, Vol_Col, Track_Row);
+
+      Gtk.Button.Gtk_New_From_Icon_Name (Track_File_Btn, "folder-symbolic", Icon_Size_Button);
+      Track_File_Btn.On_Clicked (New_Track_File_Btn_CB'Access);
+      Tracks_Grid.Attach (Track_File_Btn, File_Col, Track_Row);
+
+      Track_Insert_Btn := Gtk.Button.Gtk_Button_New_With_Label ("Insert");
+      Track_Insert_Btn.On_Clicked (Track_Insert_Btn_CB'Access);
+      Tracks_Grid.Attach (Track_Insert_Btn, File_Col + 1, Track_Row, 3);
+   end Display_Empty_Track;
 
    procedure Session_Open_CB (Self : access Gtk.Menu_Item.Gtk_Menu_Item_Record'Class) is
       pragma Unreferenced (Self);
@@ -620,7 +715,7 @@ package body GUI is
       Session_Menu.Append (Sep_Item);
 
       --  Modifiers visible
-      Gtk_New (Track_Modifiers_Check_Item, "Show Track Modifiers");
+      Gtk_New (Track_Modifiers_Check_Item, "Allow Track Editing");
       Track_Modifiers_Check_Item.Set_Active (Show_Track_Modifiers);
       Session_Menu.Append (Track_Modifiers_Check_Item);
       Track_Modifiers_Check_Item.On_Toggled (Track_Modifiers_CB'Access);

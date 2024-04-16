@@ -10,11 +10,13 @@ package Track is
    type Track_T is record
       Title,
       Path,
-      Comment   : Unbounded_String;
+      Comment   : Unbounded_String := Null_Unbounded_String;
       Volume    : Integer;
       Skip      : Boolean;
       File_Type : Media_Type;
    end record;
+
+   New_Track : Track_T;
 
    function Guess_Media_Type (Filename : String) return Media_Type;
 

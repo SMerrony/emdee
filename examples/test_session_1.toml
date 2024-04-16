@@ -33,6 +33,12 @@ skip = true
 title = "Afrique Adieu"
 volume = 100
 [[track]]
+comment = "Count intro!"
+path = "/home/steve/Desktop/MJC_Saix_MP3/Accompaniments/LAigleNoir_Accpt.mp3"
+skip = false
+title = "L'aigle noir"
+volume = 100
+[[track]]
 comment = "FLAC version, quarter volume!"
 path = "/home/steve/Desktop/MJC_Saix_MP3/Accompaniments/06-GoldenEarrings.flac"
 skip = false
