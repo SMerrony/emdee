@@ -15,6 +15,7 @@ with Gdk.Threads;
 with Glib;                    use Glib;
 with Glib.Application;        use Glib.Application;
 with Glib.Error;              use Glib.Error;
+--  with Glib.Object;
 
 with Gtk.About_Dialog;        use Gtk.About_Dialog;
 with Gtk.Adjustment;
@@ -24,6 +25,7 @@ with Gtk.Check_Button;
 with Gtk.Check_Menu_Item;     use Gtk.Check_Menu_Item;
 with Gtk.Container;
 with Gtk.Dialog;              use Gtk.Dialog;
+--  with Gtk.Entry_Buffer;
 with Gtk.Enums;               use Gtk.Enums;
 with Gtk.Frame;
 with Gtk.Menu;                use Gtk.Menu;
@@ -90,6 +92,26 @@ package body GUI is
       Ada.Directories.Delete_File (Tmp_Filename);
       return IP;
    end Create_Icon_Pixbuf;
+
+   procedure Update_Text_Fields is
+      --  This proc should be called before saving a sesssion or moving Tracks
+      --  to ensure the Active_Session is in sync with the screen contents.
+      --  N.B. It would be better to do these updates whenever the text fields
+      --       are changed by the user, but I couldn't find the right event(s)...
+      Track_Row  : Gint := 1;
+   begin
+      Active_Session.Desc := To_Unbounded_String (Session_Desc_Entry.Get_Text);
+      Active_Session.Comment := To_Unbounded_String (Session_Comment_Entry.Get_Text);
+      for Track of Active_Session.Tracks loop
+         Track.Title := To_Unbounded_String (
+                           Gtk.GEntry.Gtk_Entry (
+                              Tracks_Grid.Get_Child_At (Title_Col, Track_Row)).Get_Text);
+         Track.Comment := To_Unbounded_String (
+                           Gtk.GEntry.Gtk_Entry (
+                              Tracks_Grid.Get_Child_At (Comment_Col, Track_Row)).Get_Text);
+         Track_Row := Track_Row + 1;
+      end loop;
+   end Update_Text_Fields;
 
    --  CALLBACKS
 
@@ -204,6 +226,7 @@ package body GUI is
       Name      : constant UTF8_String := Self.Get_Name;
       Track_Num : constant Integer     := Integer'Value (Name (8 .. Name'Last));
    begin
+      Update_Text_Fields;
       Active_Session.Tracks.Swap (Track_Num, Track_Num + 1);
       Display_Tracks;
    end Track_Down_Btn_CB;
@@ -212,6 +235,7 @@ package body GUI is
       Name      : constant UTF8_String := Self.Get_Name;
       Track_Num : constant Integer     := Integer'Value (Name (8 .. Name'Last));
    begin
+      Update_Text_Fields;
       Active_Session.Tracks.Swap (Track_Num, Track_Num - 1);
       Display_Tracks;
    end Track_Up_Btn_CB;
@@ -291,6 +315,7 @@ package body GUI is
          Gtk.GEntry.Gtk_New (Title_Entry);
          Title_Entry.Set_Width_Chars (25);
          Title_Entry.Set_Text (To_String (Track.Title));
+         Title_Entry.Set_Name ("Title" & Row'Image);
          Tracks_Grid.Attach (Title_Entry, Title_Col, Track_Row);
 
          Gtk.Check_Button.Gtk_New (Skip_Check, "");
@@ -303,6 +328,7 @@ package body GUI is
          Gtk.GEntry.Gtk_New (Comment_Entry);
          Comment_Entry.Set_Width_Chars (40);
          Comment_Entry.Set_Text (To_String (Track.Comment));
+         Comment_Entry.Set_Name ("Comment" & Row'Image);
          Tracks_Grid.Attach (Comment_Entry, Comment_Col, Track_Row);
 
          if Track.File_Type /= MIDI then
@@ -391,6 +417,7 @@ package body GUI is
                                            Dialog_Type => Warning,
                                            Title => App_Title & " - Error");
       else
+         Update_Text_Fields;
          Session.Save_Session (To_String (Active_Session.Filename));
       end if;
    end Session_Save_CB;
@@ -409,6 +436,7 @@ package body GUI is
                                               Dialog_Type => Warning,
                                               Title => App_Title & " - Oops");
          else
+            Update_Text_Fields;
             Session.Save_Session (Filename);
          end if;
       end if;
@@ -712,11 +740,14 @@ package body GUI is
 
       --  Session Info Header
       Gtk_New (Session_Header_Grid);
-      Gtk.GEntry.Gtk_New (Session_Desc_Entry);
+
       Gtk_New (Session_Label, " Session: ");
       Session_Header_Grid.Attach (Child => Session_Label, Left => 0, Top => 0);
+      Gtk.GEntry.Gtk_New (Session_Desc_Entry);
       Session_Desc_Entry.Set_Width_Chars (60);
+      --  Session_Desc_Entry.On_Focus_Out_Event ... TODO probably better than Update_Text_Fields
       Session_Header_Grid.Attach (Child => Session_Desc_Entry, Left => 1, Top => 0);
+
       Gtk_New (Comment_Label, " Notes: ");
       Session_Header_Grid.Attach (Child => Comment_Label, Left => 0, Top => 1);
       Gtk.GEntry.Gtk_New (Session_Comment_Entry);
