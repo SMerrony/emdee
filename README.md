@@ -1,3 +1,7 @@
+<a href="https://github.com/SMerrony/emdee">
+    <img src="https://github.com/SMerrony/emdee/blob/main/doc/emdee_icon.png" alt="eMDee logo" title="eMDee" align="right" height="60" />
+</a>
+
 # eMDee Musical Director's Assistant
 
 `eMDee` is a live performance assistant for musical directors which removes 
@@ -27,3 +31,7 @@ Third-party 'helper' applications are used to actually play the tracks, currentl
 You must ensure those applications are installed on your system for `eMDee` to work.
 
 When a MIDI file is manually stopped from playing, an all-notes-off MIDI file is sent to the player to prevent stuck notes.
+
+## Session Editing
+
+![eMDee main screen, editing tracks](doc/eMDee_0_1_0_Editing.png)
