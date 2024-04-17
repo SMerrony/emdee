@@ -4,6 +4,11 @@
 
 # eMDee Musical Director's Assistant
 
+![GitHub License](https://img.shields.io/github/license/SMerrony/emdee) ![GitHub Issues or Pull Requests](https://img.shields.io/github/issues/SMerrony/emdee) ![GitHub top language](https://img.shields.io/github/languages/top/SMerrony/emdee)
+
+
+
+
 `eMDee` is a live performance assistant for musical directors which removes 
 the need to have folders of tracks and command-line windows open in order to play backing tracks for performance groups such as singers, choirs, and theatre-groups.
 
