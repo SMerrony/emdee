@@ -7,6 +7,8 @@ The MD can plan in advance the order of performance; later, `eMDee` will facilit
 
 Additional controls may be added to specific tracks such as changing the volume level.
 
+![eMDee main screen, ready to perform!](doc/eMDee_0_1_0_Loaded.png)
+
 `eMDee` is designed for, and probably only runs on, GNU Linux systems such as Mint, Debian, Ubuntu, etc.
 
 ## Core Features
@@ -18,7 +20,7 @@ Additional controls may be added to specific tracks such as changing the volume 
 * Audio tracks may have a volume modifie
 * Dummy or 'placeholder' tracks may be inserted to remind MD of a cappella pieces etc.
 
-Third-party 'helper' applications are used to actually play the tracks, initially...
+Third-party 'helper' applications are used to actually play the tracks, currently...
 * `ffplay` for FLAC, MP3, OGG and WAV
 * `aplaymidi` for MIDI files on an external device such as a synthesizer, keyboard, or digital piano
 

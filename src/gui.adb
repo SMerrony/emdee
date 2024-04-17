@@ -2,6 +2,7 @@
 --  SPDX-FileCopyrightText: Copyright 2024 Stephen Merrony
 
 with Ada.Containers;          use Ada.Containers;
+with Ada.Characters.Latin_1;  use Ada.Characters.Latin_1;
 with Ada.Directories;
 with Ada.Exceptions;          use Ada.Exceptions;
 with Ada.Sequential_IO;
@@ -31,7 +32,7 @@ with Gtk.Menu_Item;           use Gtk.Menu_Item;
 with Gtk.Separator_Menu_Item; use Gtk.Separator_Menu_Item;
 with Gtk.Spin_Button;
 with Gtk.Style_Provider;
-with Gtk.Style_Context;       use Gtk.Style_Context;
+with Gtk.Style_Context;
 with Gtk.Toggle_Button;
 with Gtk.Widget;              use Gtk.Widget;
 
@@ -51,7 +52,7 @@ package body GUI is
 
    package FA is new Gtk.Container.Forall_User_Data (Gtk.Style_Provider.Gtk_Style_Provider);
 
-   procedure Apply_Css (Widget   : not null access Gtk.Widget.Gtk_Widget_Record'Class;
+   procedure Apply_Css (Widget   : not null access Gtk_Widget_Record'Class;
                         Provider : Gtk.Style_Provider.Gtk_Style_Provider) is
    --  Apply the given CSS to the widget (which may be a container)
    begin
@@ -71,7 +72,7 @@ package body GUI is
       package IO is new Ada.Sequential_IO (Interfaces.Unsigned_8);
       Tmp_Filename : constant String := "emdee_Icon.tmp";
       Tmp_File : IO.File_Type;
-      Error : aliased Glib.Error.GError;
+      Error : aliased GError;
    begin
       if Ada.Directories.Exists (Tmp_Filename) then
          Ada.Directories.Delete_File (Tmp_Filename);
@@ -100,10 +101,10 @@ package body GUI is
       Sess.Comment := To_Unbounded_String (Session_Comment_Entry.Get_Text);
       for Track of Sess.Tracks loop
          Track.Title := To_Unbounded_String (
-                           Gtk.GEntry.Gtk_Entry (
+                           Gtk_Entry (
                               Tracks_Grid.Get_Child_At (Title_Col, Track_Row)).Get_Text);
          Track.Comment := To_Unbounded_String (
-                           Gtk.GEntry.Gtk_Entry (
+                           Gtk_Entry (
                               Tracks_Grid.Get_Child_At (Comment_Col, Track_Row)).Get_Text);
          Track_Row := Track_Row + 1;
       end loop;
@@ -130,9 +131,9 @@ package body GUI is
       Dialog.Destroy;
    end About_CB;
 
-   procedure Play_Btn_CB (Self : access Gtk.Button.Gtk_Button_Record'Class) is
+   procedure Play_Btn_CB (Self : access Gtk_Button_Record'Class) is
       pragma Unreferenced (Self);
-      Unused_Buttons : Gtkada.Dialogs.Message_Dialog_Buttons;
+      Unused_Buttons : Message_Dialog_Buttons;
    begin
       if Player_Active then
          Unused_Buttons := Message_Dialog (Msg => "Already playing a track",
@@ -156,7 +157,7 @@ package body GUI is
       end if;
    end Play_Btn_CB;
 
-   --  procedure Louder_Btn_CB (Self : access Gtk.Button.Gtk_Button_Record'Class) is
+   --  procedure Louder_Btn_CB (Self : access Gtk_Button_Record'Class) is
    --     pragma Unreferenced (Self);
    --     Vol : constant Natural := Get_System_Volume;
    --  begin
@@ -165,13 +166,13 @@ package body GUI is
    --     end if;
    --  end Louder_Btn_CB;
 
-   --  procedure Vol_Reset_Btn_CB (Self : access Gtk.Button.Gtk_Button_Record'Class) is
+   --  procedure Vol_Reset_Btn_CB (Self : access Gtk_Button_Record'Class) is
    --     pragma Unreferenced (Self);
    --  begin
    --     Adjust_System_Volume (100);
    --  end Vol_Reset_Btn_CB;
 
-   --  procedure Quieter_Btn_CB (Self : access Gtk.Button.Gtk_Button_Record'Class) is
+   --  procedure Quieter_Btn_CB (Self : access Gtk_Button_Record'Class) is
    --     pragma Unreferenced (Self);
    --     Vol : constant Natural := Get_System_Volume;
    --  begin
@@ -180,14 +181,14 @@ package body GUI is
    --     end if;
    --  end Quieter_Btn_CB;
 
-   procedure Stop_Btn_CB (Self : access Gtk.Button.Gtk_Button_Record'Class) is
+   procedure Stop_Btn_CB (Self : access Gtk_Button_Record'Class) is
       pragma Unreferenced (Self);
    begin
       Currently_Active := False;
       Stop_Playing;
    end Stop_Btn_CB;
 
-   procedure Next_Btn_CB (Self : access Gtk.Button.Gtk_Button_Record'Class) is
+   procedure Next_Btn_CB (Self : access Gtk_Button_Record'Class) is
       pragma Unreferenced (Self);
    begin
       Currently_Active := False;
@@ -195,7 +196,7 @@ package body GUI is
       Select_Next_Track;
    end Next_Btn_CB;
 
-   procedure Previous_Btn_CB (Self : access Gtk.Button.Gtk_Button_Record'Class) is
+   procedure Previous_Btn_CB (Self : access Gtk_Button_Record'Class) is
       pragma Unreferenced (Self);
    begin
       Currently_Active := False;
@@ -203,23 +204,22 @@ package body GUI is
       Select_Previous_Track;
    end Previous_Btn_CB;
 
-   procedure Track_Delete_Btn_CB (Self : access Gtk.Button.Gtk_Button_Record'Class) is
+   procedure Track_Delete_Btn_CB (Self : access Gtk_Button_Record'Class) is
       Name      : constant UTF8_String := Self.Get_Name;
       Track_Num : constant Integer     := Integer'Value (Name (8 .. Name'Last));
-      Buttons   : Gtkada.Dialogs.Message_Dialog_Buttons;
+      Buttons   : Message_Dialog_Buttons;
    begin
       Buttons := Message_Dialog (Msg => "Are you sure you want to remove this track?",
                                  Dialog_Type => Confirmation,
                                  Buttons => Button_No or Button_Yes,
                                  Title => App_Title & " - Delete Track");
       if Buttons = Button_Yes then
-         Sess
-.Tracks.Delete (Track_Num);
+         Sess.Tracks.Delete (Track_Num);
          Display_Tracks;  --  N.B. Can't simply delete the row as numbering needs updating.
       end if;
    end Track_Delete_Btn_CB;
 
-   procedure Track_Down_Btn_CB (Self : access Gtk.Button.Gtk_Button_Record'Class) is
+   procedure Track_Down_Btn_CB (Self : access Gtk_Button_Record'Class) is
       Name      : constant UTF8_String := Self.Get_Name;
       Track_Num : constant Integer     := Integer'Value (Name (8 .. Name'Last));
    begin
@@ -228,7 +228,7 @@ package body GUI is
       Display_Tracks;
    end Track_Down_Btn_CB;
 
-   procedure Track_Up_Btn_CB (Self : access Gtk.Button.Gtk_Button_Record'Class) is
+   procedure Track_Up_Btn_CB (Self : access Gtk_Button_Record'Class) is
       Name      : constant UTF8_String := Self.Get_Name;
       Track_Num : constant Integer     := Integer'Value (Name (8 .. Name'Last));
    begin
@@ -237,22 +237,25 @@ package body GUI is
       Display_Tracks;
    end Track_Up_Btn_CB;
 
-   procedure Track_File_Btn_CB (Self : access Gtk.Button.Gtk_Button_Record'Class) is
+   procedure Track_File_Btn_CB (Self : access Gtk_Button_Record'Class) is
       Name      : constant UTF8_String := Self.Get_Name;
       Track_Num : constant Integer     := Integer'Value (Name (8 .. Name'Last));
       Filename  : constant String      := To_String (Sess.Tracks (Track_Num).Path);
-      Dir       : constant String      := Ada.Directories.Containing_Directory (Filename);
-      New_File  : constant String      := File_Selection_Dialog (Title => App_Title & " - Track File",
-                                                                 Default_Dir => Dir,
-                                                                 Must_Exist => True);
+      Dir,
+      New_File  : Unbounded_String := Null_Unbounded_String;
    begin
+      if Filename /= "" then
+         Dir := To_Unbounded_String (Ada.Directories.Containing_Directory (Filename));
+      end if;
+      New_File := To_Unbounded_String (File_Selection_Dialog (Title => App_Title & " - Track File",
+                                                              Default_Dir => To_String (Dir),
+                                                              Must_Exist => True));
       if New_File /= "" then
-         Sess
-.Tracks (Track_Num).Path := To_Unbounded_String (New_File);
+         Sess.Tracks (Track_Num).Path := New_File;
       end if;
    end Track_File_Btn_CB;
 
-   procedure New_Track_File_Btn_CB (Self : access Gtk.Button.Gtk_Button_Record'Class) is
+   procedure New_Track_File_Btn_CB (Self : access Gtk_Button_Record'Class) is
       pragma Unreferenced (Self);
       --  Name      : constant UTF8_String := Self.Get_Name;
       --  Track_Num : constant Integer     := Integer'Value (Name (8 .. Name'Last));
@@ -267,23 +270,22 @@ package body GUI is
       end if;
    end New_Track_File_Btn_CB;
 
-   procedure Track_Insert_Btn_CB (Self : access Gtk.Button.Gtk_Button_Record'Class) is
+   procedure Track_Insert_Btn_CB (Self : access Gtk_Button_Record'Class) is
       pragma Unreferenced (Self);
    begin
-      New_Track.Title := To_Unbounded_String (
-                           Gtk.GEntry.Gtk_Entry (
-                              Tracks_Grid.Get_Child_At (Title_Col, New_Track_Entry_Row)).Get_Text);
+      New_Track.Title   := To_Unbounded_String (
+                              Gtk_Entry (
+                                 Tracks_Grid.Get_Child_At (Title_Col, New_Track_Entry_Row)).Get_Text);
       New_Track.Comment := To_Unbounded_String (
-                              Gtk.GEntry.Gtk_Entry (
+                              Gtk_Entry (
                                  Tracks_Grid.Get_Child_At (Comment_Col, New_Track_Entry_Row)).Get_Text);
-      New_Track.Skip := Gtk.Toggle_Button.Gtk_Toggle_Button (
-                                 Tracks_Grid.Get_Child_At (Skip_Col, New_Track_Entry_Row)).Get_Active;
-      New_Track.Volume := Integer (Gtk.Spin_Button.Gtk_Spin_Button (
-                                    Tracks_Grid.Get_Child_At (Vol_Col, New_Track_Entry_Row)).Get_Value_As_Int);
+      New_Track.Skip    := Gtk.Toggle_Button.Gtk_Toggle_Button (
+                              Tracks_Grid.Get_Child_At (Skip_Col, New_Track_Entry_Row)).Get_Active;
+      New_Track.Volume  := Integer (Gtk.Spin_Button.Gtk_Spin_Button (
+                              Tracks_Grid.Get_Child_At (Vol_Col, New_Track_Entry_Row)).Get_Value_As_Int);
       if New_Track.Path = Null_Unbounded_String and then
          Message_Dialog ("You have not selected an audio or MIDI file, do you want to save this track?",
-                         Confirmation,
-                         Button_No or Button_Yes) = Button_No
+                         Confirmation, Button_No or Button_Yes) = Button_No
       then
          return; --  Nothing is done
       end if;
@@ -294,18 +296,16 @@ package body GUI is
       Tracks_Grid.Show_All;
    end Track_Insert_Btn_CB;
 
-   procedure Track_Select_Btn_CB (Self : access Gtk.Button.Gtk_Button_Record'Class) is
+   procedure Track_Select_Btn_CB (Self : access Gtk_Button_Record'Class) is
       Name      : constant UTF8_String := Self.Get_Name;
       Track_Num : constant Integer     := Integer'Value (Name (8 .. Name'Last));
    begin
       if Currently_Selected_Track /= -1 then
-         --  Tracks_Grid.Get_Child_At (1, Gint (Currently_Selected_Track)).Set_Opacity (0.5);
          Tracks_Grid.Get_Child_At (Title_Col, Gint (Currently_Selected_Track)).Set_Name ("not-highlit");
          Tracks_Grid.Get_Child_At (Comment_Col, Gint (Currently_Selected_Track)).Set_Name ("not-highlit");
          Tracks_Grid.Get_Child_At (Vol_Col, Gint (Currently_Selected_Track)).Set_Name ("not-highlit");
       end if;
       Currently_Selected_Track := Track_Num;
-      --  Tracks_Grid.Get_Child_At (1, Gint (Track_Num)).Set_Opacity (1.0);
       Tracks_Grid.Get_Child_At (Title_Col, Gint (Track_Num)).Set_Name ("highlit");
       Tracks_Grid.Get_Child_At (Comment_Col, Gint (Track_Num)).Set_Name ("highlit");
       Tracks_Grid.Get_Child_At (Vol_Col, Gint (Track_Num)).Set_Name ("highlit");
@@ -355,29 +355,29 @@ package body GUI is
       Track_Down_Btn,
       Track_Del_Btn,
       Track_Up_Btn,
-      Track_File_Btn : Gtk.Button.Gtk_Button;
+      Track_File_Btn : Gtk_Button;
       Skip_Check : Gtk.Check_Button.Gtk_Check_Button;
-      Row_Label  : Gtk.Label.Gtk_Label;
+      Row_Label  : Gtk_Label;
       Title_Entry,
-      Comment_Entry : Gtk.GEntry.Gtk_Entry;
-      MIDI_Label : Gtk.Label.Gtk_Label;
+      Comment_Entry : Gtk_Entry;
+      MIDI_Label : Gtk_Label;
       Vol_Adj    : Gtk.Adjustment.Gtk_Adjustment;
       Vol_Spin   : Gtk.Spin_Button.Gtk_Spin_Button;
    begin
       Clear_Tracks_Display;
 
       for Track of Sess.Tracks loop
-         Gtk.Label.Gtk_New (Row_Label, Track_Row'Img);
+         Gtk_New (Row_Label, Track_Row'Img);
          Row_Label.Set_Halign (Align_Center);
          Tracks_Grid.Attach (Row_Label, Row_Col, Track_Row);
 
          Row := Integer (Track_Row);
-         Gtk.Button.Gtk_New_From_Icon_Name (Select_Btn_Arr (Row), "go-next-symbolic", Icon_Size_Button);
+         Gtk_New_From_Icon_Name (Select_Btn_Arr (Row), "go-next-symbolic", Icon_Size_Button);
          Select_Btn_Arr (Row).Set_Name ("Select" & Row'Image);
          Select_Btn_Arr (Row).On_Clicked (Track_Select_Btn_CB'Access);
          Tracks_Grid.Attach (Select_Btn_Arr (Row), Select_Col, Track_Row);
 
-         Gtk.GEntry.Gtk_New (Title_Entry);
+         Gtk_New (Title_Entry);
          Title_Entry.Set_Width_Chars (25);
          Title_Entry.Set_Text (To_String (Track.Title));
          Title_Entry.Set_Name ("Title" & Row'Image);
@@ -390,7 +390,7 @@ package body GUI is
          Skip_Check.On_Toggled (Track_Skip_Check_CB'Access);
          Tracks_Grid.Attach (Skip_Check, Skip_Col, Track_Row);
 
-         Gtk.GEntry.Gtk_New (Comment_Entry);
+         Gtk_New (Comment_Entry);
          Comment_Entry.Set_Width_Chars (40);
          Comment_Entry.Set_Text (To_String (Track.Comment));
          Comment_Entry.Set_Name ("Comment" & Row'Image);
@@ -416,27 +416,27 @@ package body GUI is
 
          if Show_Track_Modifiers then
 
-            Gtk.Button.Gtk_New_From_Icon_Name (Track_File_Btn, "folder-symbolic", Icon_Size_Button);
+            Gtk_New_From_Icon_Name (Track_File_Btn, "folder-symbolic", Icon_Size_Button);
             Track_File_Btn.Set_Tooltip_Text (To_String (Track.Path));
             Track_File_Btn.Set_Name ("FilSel" & Row'Image);
             Track_File_Btn.On_Clicked (Track_File_Btn_CB'Access);
             Tracks_Grid.Attach (Track_File_Btn, File_Col, Track_Row);
 
             if Integer (Track_Row) < Integer (Sess.Tracks.Length) then
-               Gtk.Button.Gtk_New_From_Icon_Name (Track_Down_Btn, "go-down-symbolic", Icon_Size_Button);
+               Gtk_New_From_Icon_Name (Track_Down_Btn, "go-down-symbolic", Icon_Size_Button);
                Track_Down_Btn.Set_Name ("MoveDn" & Row'Image);
                Track_Down_Btn.On_Clicked (Track_Down_Btn_CB'Access);
                Tracks_Grid.Attach (Track_Down_Btn, Down_Col, Track_Row);
             end if;
 
             if Track_Row > 1 then
-               Gtk.Button.Gtk_New_From_Icon_Name (Track_Up_Btn, "go-up-symbolic", Icon_Size_Button);
+               Gtk_New_From_Icon_Name (Track_Up_Btn, "go-up-symbolic", Icon_Size_Button);
                Track_Up_Btn.Set_Name ("MoveUp" & Row'Image);
                Track_Up_Btn.On_Clicked (Track_Up_Btn_CB'Access);
                Tracks_Grid.Attach (Track_Up_Btn, Up_Col, Track_Row);
             end if;
 
-            Gtk.Button.Gtk_New_From_Icon_Name (Track_Del_Btn, "edit-delete", Icon_Size_Button);
+            Gtk_New_From_Icon_Name (Track_Del_Btn, "edit-delete", Icon_Size_Button);
             Track_Del_Btn.Set_Name ("Delete" & Row'Image);
             Track_Del_Btn.On_Clicked (Track_Delete_Btn_CB'Access);
             Tracks_Grid.Attach (Track_Del_Btn, Del_Col, Track_Row);
@@ -457,12 +457,12 @@ package body GUI is
 
    procedure Display_Empty_Track (Track_Row : Glib.Gint) is
    --  Display an empty row for entering a new track
-      Dummy_Label : Gtk.Label.Gtk_Label;
+      Dummy_Label : Gtk_Label;
       Track_File_Btn,
-      Track_Insert_Btn : Gtk.Button.Gtk_Button;
+      Track_Insert_Btn : Gtk_Button;
       Skip_Check : Gtk.Check_Button.Gtk_Check_Button;
       Title_Entry,
-      Comment_Entry : Gtk.GEntry.Gtk_Entry;
+      Comment_Entry : Gtk_Entry;
       Vol_Adj    : Gtk.Adjustment.Gtk_Adjustment;
       Vol_Spin   : Gtk.Spin_Button.Gtk_Spin_Button;
    begin
@@ -470,11 +470,11 @@ package body GUI is
 
       --  Placeholders for the case of an empty Sess...
       for c in 0 .. Title_Col - 1 loop
-         Gtk.Label.Gtk_New (Dummy_Label, "*");
+         Gtk_New (Dummy_Label, "*");
          Tracks_Grid.Attach (Dummy_Label, c, Track_Row);
       end loop;
 
-      Gtk.GEntry.Gtk_New (Title_Entry);
+      Gtk_New (Title_Entry);
       Title_Entry.Set_Width_Chars (25);
       Tracks_Grid.Attach (Title_Entry, Title_Col, Track_Row);
 
@@ -482,7 +482,7 @@ package body GUI is
       Skip_Check.Set_Halign (Align_Center);
       Tracks_Grid.Attach (Skip_Check, Skip_Col, Track_Row);
 
-      Gtk.GEntry.Gtk_New (Comment_Entry);
+      Gtk_New (Comment_Entry);
       Comment_Entry.Set_Width_Chars (40);
       Tracks_Grid.Attach (Comment_Entry, Comment_Col, Track_Row);
 
@@ -497,11 +497,11 @@ package body GUI is
       Gtk.Spin_Button.Gtk_New (Spin_Button => Vol_Spin, Adjustment => Vol_Adj, Climb_Rate => 0.1, The_Digits => 0);
       Tracks_Grid.Attach (Vol_Spin, Vol_Col, Track_Row);
 
-      Gtk.Button.Gtk_New_From_Icon_Name (Track_File_Btn, "folder-symbolic", Icon_Size_Button);
+      Gtk_New_From_Icon_Name (Track_File_Btn, "folder-symbolic", Icon_Size_Button);
       Track_File_Btn.On_Clicked (New_Track_File_Btn_CB'Access);
       Tracks_Grid.Attach (Track_File_Btn, File_Col, Track_Row);
 
-      Track_Insert_Btn := Gtk.Button.Gtk_Button_New_With_Label ("Insert");
+      Track_Insert_Btn := Gtk_Button_New_With_Label ("Insert");
       Track_Insert_Btn.On_Clicked (Track_Insert_Btn_CB'Access);
       Tracks_Grid.Attach (Track_Insert_Btn, File_Col + 1, Track_Row, 3);
    end Display_Empty_Track;
@@ -522,10 +522,10 @@ package body GUI is
    procedure Session_Open_CB (Self : access Gtk.Menu_Item.Gtk_Menu_Item_Record'Class) is
       pragma Unreferenced (Self);
       Filename : constant String :=
-         Gtkada.File_Selection.File_Selection_Dialog (Title => App_Title & " Open Session",
-                                                      Dir_Only => False,
-                                                      Must_Exist => True);
-      Unused_Buttons : Gtkada.Dialogs.Message_Dialog_Buttons;
+         File_Selection_Dialog (Title => App_Title & " Open Session",
+                                Dir_Only => False,
+                                Must_Exist => True);
+      Unused_Buttons : Message_Dialog_Buttons;
    begin
       if Filename'Length > 1 then
          Load_Session (Filename);
@@ -548,9 +548,9 @@ package body GUI is
    end Session_Open_CB;
 
    function Check_Session_Desc return Boolean is
-      Unused_Buttons : Gtkada.Dialogs.Message_Dialog_Buttons;
+      Unused_Buttons : Message_Dialog_Buttons;
    begin
-      if Sess.Desc /= Null_Unbounded_String then
+      if Session_Desc_Entry.Get_Text /= "" then
          return True;
       else
          Unused_Buttons := Message_Dialog (Msg => "You must enter the Session description, cannot save yet.",
@@ -562,13 +562,13 @@ package body GUI is
 
    procedure Session_Save_CB (Self : access Gtk.Menu_Item.Gtk_Menu_Item_Record'Class) is
       pragma Unreferenced (Self);
-      Unused_Buttons : Gtkada.Dialogs.Message_Dialog_Buttons;
+      Unused_Buttons : Message_Dialog_Buttons;
    begin
       if Check_Session_Desc then
          if Sess.Filename = Null_Unbounded_String then
             Unused_Buttons := Message_Dialog (Msg => "No Session has been loaded, cannot save.",
-                                             Dialog_Type => Warning,
-                                             Title => App_Title & " - Error");
+                                              Dialog_Type => Warning,
+                                              Title => App_Title & " - Error");
          else
             Update_Text_Fields;
             Save_Session (To_String (Sess.Filename));
@@ -579,17 +579,18 @@ package body GUI is
    procedure Session_Save_As_CB (Self : access Gtk.Menu_Item.Gtk_Menu_Item_Record'Class) is
       pragma Unreferenced (Self);
       Filename : constant String :=
-         Gtkada.File_Selection.File_Selection_Dialog (Title => App_Title & " - Save Session As...",
-                                                      Dir_Only => False,
-                                                      Must_Exist => False);
-      Unused_Buttons : Gtkada.Dialogs.Message_Dialog_Buttons;
+         File_Selection_Dialog (Title => App_Title & " - Save Session As...",
+                                Dir_Only => False,
+                                Must_Exist => False);
+      Unused_Buttons : Message_Dialog_Buttons;
    begin
       if Check_Session_Desc then
          if Filename'Length > 0 then
             if Ada.Directories.Exists (Filename) then
-               Unused_Buttons := Message_Dialog (Msg => "Session TOML file already exists, use 'Save' to overwrite.",
-                                                Dialog_Type => Warning,
-                                                Title => App_Title & " - Oops");
+               Unused_Buttons := Message_Dialog (Msg => "Session TOML file already exists, " & CR & LF
+                                                        & "Use 'Save' to overwrite.",
+                                                 Dialog_Type => Warning,
+                                                 Title => App_Title & " - Oops");
             else
                Update_Text_Fields;
                Save_Session (Filename);
@@ -600,33 +601,36 @@ package body GUI is
 
    procedure Session_MIDI_CB (Self : access Gtk.Menu_Item.Gtk_Menu_Item_Record'Class) is
       pragma Unreferenced (Self);
-      Dialog : Gtk_Dialog;
-      Dlg_Box   : Gtk.Box.Gtk_Box;
-      Dlg_Port_Label : Gtk.Label.Gtk_Label;
-      Port_Entry : Gtk.GEntry.Gtk_Entry;
-      Cancel_Unused, Save_Unused : Gtk.Widget.Gtk_Widget;
-      Unused_Buttons : Gtkada.Dialogs.Message_Dialog_Buttons;
+      Dialog         : Gtk_Dialog;
+      Dlg_Box        : Gtk_Box;
+      Dlg_Port_Label : Gtk_Label;
+      Port_Entry     : Gtk_Entry;
+      Cancel_Unused,
+      Save_Unused    : Gtk_Widget;
+      Unused_Buttons : Message_Dialog_Buttons;
    begin
       Gtk_New (Dialog);
       Dialog.Set_Destroy_With_Parent (True);
       Dialog.Set_Modal (True);
       Dialog.Set_Title (App_Title & " - Session MIDI Port");
       Dlg_Box := Dialog.Get_Content_Area;
-      Gtk.Label.Gtk_New (Dlg_Port_Label, "MIDI Out Port:");
+      Dlg_Port_Label := Gtk_Label_New ("MIDI Out Port:");
       Dlg_Box.Pack_Start (Child => Dlg_Port_Label, Expand => True, Fill => True, Padding => 5);
-      Gtk.GEntry.Gtk_New (The_Entry => Port_Entry);
+      Port_Entry := Gtk_Entry_New;
       if Sess.MIDI_Port /= Null_Unbounded_String then
-         Port_Entry.Set_Text (To_String (Sess
-.MIDI_Port));
+         Port_Entry.Set_Text (To_String (Sess.MIDI_Port));
       end if;
-      Port_Entry.Set_Tooltip_Text ("MIDI port suitable for aplaymidi to use in form nn:n.  Use aplaymidi -l to see list");
+      Port_Entry.Set_Tooltip_Text ("MIDI port suitable for aplaymidi to use in form nn:n. " & CR & LF
+                                   & "Use aplaymidi -l to see list");
       Dlg_Box.Pack_Start (Child => Port_Entry, Expand => True, Fill => True, Padding => 5);
       Cancel_Unused := Dialog.Add_Button ("Cancel", Gtk_Response_Cancel);
-      Save_Unused := Dialog.Add_Button ("Save", Gtk_Response_Accept);
+      Save_Unused   := Dialog.Add_Button ("Save", Gtk_Response_Accept);
       Dialog.Set_Default_Response (Gtk_Response_Accept);
       Dialog.Show_All;
       if Dialog.Run = Gtk_Response_Accept then
-         null; --  TODO write MIDI port to TOML
+         if Port_Entry.Get_Text_Length > 0 then
+            Sess.MIDI_Port := To_Unbounded_String (Port_Entry.Get_Text);
+         end if;
       end if;
       Dialog.Destroy;
    end Session_MIDI_CB;
@@ -637,10 +641,8 @@ package body GUI is
       if Currently_Selected_Track /= -1 and then Currently_Selected_Track < (Integer (Sess.Tracks.Length)) then --  Not already at end
          loop
             Candidate_Track := Candidate_Track + 1;
-            exit when Candidate_Track = Integer (Sess
-   .Tracks.Length);
-            exit when not Sess
-   .Tracks (Candidate_Track).Skip;
+            exit when Candidate_Track = Integer (Sess.Tracks.Length);
+            exit when not Sess.Tracks (Candidate_Track).Skip;
          end loop;
          Select_Btn_Arr (Candidate_Track).Clicked;
       end if;
@@ -652,10 +654,8 @@ package body GUI is
       if Currently_Selected_Track /= -1 and then Currently_Selected_Track > 1 then --  Not already at start
          loop
             Candidate_Track := Candidate_Track - 1;
-            exit when Candidate_Track = Integer (Sess
-   .Tracks.Length);
-            exit when not Sess
-   .Tracks (Candidate_Track).Skip;
+            exit when Candidate_Track = Integer (Sess.Tracks.Length);
+            exit when not Sess.Tracks (Candidate_Track).Skip;
          end loop;
          Select_Btn_Arr (Candidate_Track).Clicked;
       end if;
@@ -669,8 +669,7 @@ package body GUI is
 
       Gdk.Threads.Enter;
          if Player_Active then
-            Active_Label.Set_Text ("Playing: " & To_String (Sess
-   .Tracks (Currently_Playing_Track).Title));
+            Active_Label.Set_Text ("Playing: " & To_String (Sess.Tracks (Currently_Playing_Track).Title));
             Currently_Active := True;
          else
             if Currently_Active then  --  we have transitioned from playing to not playing
@@ -693,7 +692,7 @@ package body GUI is
       App.Remove_Window (Main_Window);
    end Quit_CB;
 
-   procedure Window_Closed_CB (Self : access Gtk.Widget.Gtk_Widget_Record'Class) is
+   procedure Window_Closed_CB (Self : access Gtk_Widget_Record'Class) is
       pragma Unreferenced (Self);
    begin
       Shutting_Down := True;  --  Time for Update_Status_Box_CB to finish up
@@ -731,6 +730,9 @@ package body GUI is
       Gtk_New (Session_Open_Item, "Open Session");
       File_Menu.Append (Session_Open_Item);
       Session_Open_Item.On_Activate (Session_Open_CB'Access);
+
+      Gtk_New (Sep_Item);
+      File_Menu.Append (Sep_Item);
 
       --  Session Save
       Gtk_New (Session_Save_Item, "Save Session");
@@ -790,39 +792,39 @@ package body GUI is
    function Create_Controls_Grid return Gtk_Grid is
       Controls_Grid : Gtk_Grid;
       Spacer_Lab    : Gtk_Label;
-      Play_Btn, Stop_Btn, Previous_Btn, Next_Btn : Gtk.Button.Gtk_Button;
-      --  Quieter_Btn, Vol_Reset_Btn, Louder_Btn : Gtk.Button.Gtk_Button;
+      Play_Btn, Stop_Btn, Previous_Btn, Next_Btn : Gtk_Button;
+      --  Quieter_Btn, Vol_Reset_Btn, Louder_Btn : Gtk_Button;
    begin
       Gtk_New (Controls_Grid);
       Controls_Grid.Set_Column_Spacing (10);
       Controls_Grid.Set_Column_Homogeneous (True);
-      Gtk.Label.Gtk_New (Spacer_Lab, "");
+      Gtk_New (Spacer_Lab, "");
 
-      Gtk.Button.Gtk_New_From_Icon_Name (Play_Btn, "media-playback-start", Icon_Size_Dialog);
+      Gtk_New_From_Icon_Name (Play_Btn, "media-playback-start", Icon_Size_Dialog);
       Play_Btn.Set_Image_Position (Pos_Top);
       Play_Btn.Set_Label ("Play");
       Play_Btn.On_Clicked (Play_Btn_CB'Access);
       Controls_Grid.Attach (Play_Btn, 0, 0);
 
-      --  Gtk.Button.Gtk_New_From_Icon_Name (Pause_Btn, "media-playback-pause", Icon_Size_Dialog);
+      --  Gtk_New_From_Icon_Name (Pause_Btn, "media-playback-pause", Icon_Size_Dialog);
       --  Pause_Btn.Set_Image_Position (Pos_Top);
       --  Pause_Btn.Set_Label ("Pause");
       --  --  Pause_Btn.On_Clicked (Pause_Btn_CB'Access);
       --  Controls_Grid.Attach (Pause_Btn, 1, 0);
 
-      Gtk.Button.Gtk_New_From_Icon_Name (Stop_Btn, "media-playback-stop", Icon_Size_Dialog);
+      Gtk_New_From_Icon_Name (Stop_Btn, "media-playback-stop", Icon_Size_Dialog);
       Stop_Btn.Set_Image_Position (Pos_Top);
       Stop_Btn.Set_Label ("Stop");
       Stop_Btn.On_Clicked (Stop_Btn_CB'Access);
       Controls_Grid.Attach (Stop_Btn, 2, 0);
 
-      Gtk.Button.Gtk_New_From_Icon_Name (Previous_Btn, "media-skip-backward", Icon_Size_Dialog);
+      Gtk_New_From_Icon_Name (Previous_Btn, "media-skip-backward", Icon_Size_Dialog);
       Previous_Btn.Set_Image_Position (Pos_Top);
       Previous_Btn.Set_Label ("Previous");
       Previous_Btn.On_Clicked (Previous_Btn_CB'Access);
       Controls_Grid.Attach (Previous_Btn, 3, 0);
 
-      Gtk.Button.Gtk_New_From_Icon_Name (Next_Btn, "media-skip-forward", Icon_Size_Dialog);
+      Gtk_New_From_Icon_Name (Next_Btn, "media-skip-forward", Icon_Size_Dialog);
       Next_Btn.Set_Image_Position (Pos_Top);
       Next_Btn.Set_Label ("Next");
       Next_Btn.On_Clicked (Next_Btn_CB'Access);
@@ -830,19 +832,19 @@ package body GUI is
 
       --  Controls_Grid.Attach (Spacer_Lab, 5, 0);
 
-      --  Gtk.Button.Gtk_New_From_Icon_Name (Quieter_Btn, "audio-volume-low", Icon_Size_Dialog);
+      --  Gtk_New_From_Icon_Name (Quieter_Btn, "audio-volume-low", Icon_Size_Dialog);
       --  Quieter_Btn.Set_Image_Position (Pos_Top);
       --  Quieter_Btn.Set_Label ("Vol -");
       --  Quieter_Btn.On_Clicked (Quieter_Btn_CB'Access);
       --  Controls_Grid.Attach (Quieter_Btn, 6, 0);
 
-      --  Gtk.Button.Gtk_New_From_Icon_Name (Vol_Reset_Btn, "audio-volume-medium", Icon_Size_Dialog);
+      --  Gtk_New_From_Icon_Name (Vol_Reset_Btn, "audio-volume-medium", Icon_Size_Dialog);
       --  Vol_Reset_Btn.Set_Image_Position (Pos_Top);
       --  Vol_Reset_Btn.Set_Label ("Reset ");
       --  Vol_Reset_Btn.On_Clicked (Vol_Reset_Btn_CB'Access);
       --  Controls_Grid.Attach (Vol_Reset_Btn, 7, 0);
 
-      --  Gtk.Button.Gtk_New_From_Icon_Name (Louder_Btn, "audio-volume-high", Icon_Size_Dialog);
+      --  Gtk_New_From_Icon_Name (Louder_Btn, "audio-volume-high", Icon_Size_Dialog);
       --  Louder_Btn.Set_Image_Position (Pos_Top);
       --  Louder_Btn.Set_Label ("Vol +");
       --  Louder_Btn.On_Clicked (Louder_Btn_CB'Access);
@@ -858,12 +860,12 @@ package body GUI is
       Gtk_New (Status_Box, Gtk.Enums.Orientation_Horizontal, 2);
 
       Gtk.Frame.Gtk_New (Active_Frame);
-      Gtk.Label.Gtk_New (Active_Label, " ");
+      Gtk_New (Active_Label, " ");
       Active_Frame.Add (Active_Label);
       Status_Box.Pack_Start (Active_Frame);
 
       --  Gtk.Frame.Gtk_New (Players_Frame);
-      --  Gtk.Label.Gtk_New (Players_Label, "(Players Configuration not Loaded)");
+      --  Gtk_New (Players_Label, "(Players Configuration not Loaded)");
       --  Players_Frame.Add (Players_Label);
       --  Status_Box.Pack_Start (Players_Frame);
       --  Status_Box.Set_Hexpand (True);
@@ -878,8 +880,8 @@ package body GUI is
 
    procedure App_Activate (Self : access Gapplication_Record'Class) is
       pragma Unreferenced (Self);
-      Session_Label, Comment_Label : Gtk.Label.Gtk_Label;
-      Error : aliased Glib.Error.GError;
+      Session_Label, Comment_Label : Gtk_Label;
+      Error : aliased GError;
       CSS_Emb : constant Embedded.Content_Type := Embedded.Get_Content (App_CSS);
       CSS_US  : Unbounded_String;
    begin
@@ -904,14 +906,14 @@ package body GUI is
 
       Gtk_New (Session_Label, " Session: ");
       Session_Header_Grid.Attach (Child => Session_Label, Left => 0, Top => 0);
-      Gtk.GEntry.Gtk_New (Session_Desc_Entry);
+      Gtk_New (Session_Desc_Entry);
       Session_Desc_Entry.Set_Width_Chars (60);
       --  Session_Desc_Entry.On_Focus_Out_Event ... TODO probably better than Update_Text_Fields
       Session_Header_Grid.Attach (Child => Session_Desc_Entry, Left => 1, Top => 0);
 
       Gtk_New (Comment_Label, " Notes: ");
       Session_Header_Grid.Attach (Child => Comment_Label, Left => 0, Top => 1);
-      Gtk.GEntry.Gtk_New (Session_Comment_Entry);
+      Gtk_New (Session_Comment_Entry);
       Session_Comment_Entry.Set_Width_Chars (80);
       Session_Header_Grid.Attach (Child => Session_Comment_Entry, Left => 1, Top => 1);
       Main_Box.Pack_Start (Child => Session_Header_Grid, Expand => False);

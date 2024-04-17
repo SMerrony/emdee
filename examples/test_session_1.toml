@@ -3,7 +3,7 @@ comment = "For the MJC Summer concert in the main hall (my laptop, their piano, 
 description = "MJC Summer Concert - Choir"
 midiport = "128:0"
 [[track]]
-comment = "MIDI"
+comment = "Avec chaleur !"
 path = "/home/steve/Desktop/MJC_Saix_MP3/Accompaniments/CestSiBon_SAH_Accpt.mid"
 skip = false
 title = "C'est si bon"
@@ -44,10 +44,4 @@ path = "/home/steve/Desktop/MJC_Saix_MP3/Accompaniments/06-GoldenEarrings.flac"
 skip = false
 title = "Golden Earrings"
 volume = 25
-[[track]]
-comment = "MIDI Shh!"
-path = "/home/steve/Desktop/MJC_Saix_MP3/Accompaniments/all_notes_off.mid"
-skip = false
-title = "All notes off"
-volume = 100
 

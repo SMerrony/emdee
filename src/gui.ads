@@ -11,7 +11,7 @@ with Gtk.Box;
 with Gtk.Button;
 with Gtk.Check_Menu_Item;     use Gtk.Check_Menu_Item;
 with Gtk.Css_Provider;        use Gtk.Css_Provider;
-with Gtk.GEntry;
+with Gtk.GEntry;              use Gtk.GEntry;
 with Gtk.Grid;                use Gtk.Grid;
 with Gtk.Label;               use Gtk.Label;
 
@@ -56,7 +56,7 @@ package GUI is
    Show_Track_Modifiers : Boolean := False;
 
    Session_Desc_Entry,
-   Session_Comment_Entry : Gtk.GEntry.Gtk_Entry;
+   Session_Comment_Entry : Gtk_Entry;
    New_Track_Entry_Row   : Glib.Gint;
 
    Shutting_Down : Boolean := False;
