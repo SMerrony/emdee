@@ -1,0 +1,23 @@
+[session]
+comment = ""
+description = "Test Session"
+midiport = ""
+[[track]]
+comment = ""
+path = "/home/steve/Ada/emdee/all_notes_off.mid"
+skip = false
+title = "All notes off"
+volume = 100
+[[track]]
+comment = "Mix up choir first!"
+path = "/home/steve/Desktop/Brugeria_MP3/Accompaniments/AvoirUnBonCopain.mid"
+skip = false
+title = "Avoir un bon copain"
+volume = 100
+[[track]]
+comment = "Bring men forward"
+path = "/home/steve/Desktop/Brugeria_MP3/Accompaniments/FaurÃ©-CantiqueDeJeanRacine-Master_Piano.mp3"
+skip = false
+title = "Cantique de Jean Racine"
+volume = 95
+

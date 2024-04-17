@@ -24,7 +24,7 @@ package Session is
       Filename  : Unbounded_String;       --  Not stored in TOML
    end record;
 
-   Active_Session : Session_T;
+   Sess : Session_T;
 
    --  TOML exceptions
    Already_Exists,
@@ -35,5 +35,6 @@ package Session is
 
    procedure Load_Session (Filename : String);
    procedure Save_Session (Filename : String);
+   procedure Clear_Session;
 
 end Session;

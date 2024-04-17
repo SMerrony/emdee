@@ -116,7 +116,7 @@ package body Players is
    --  function Get_System_Volume return Natural is (Current_System_Volume_Pct);
 
    procedure Play_Track is
-      Track      : constant Track_T := Active_Session.Tracks (Currently_Playing_Track);
+      Track      : constant Track_T := Sess.Tracks (Currently_Playing_Track);
       Media_File : constant String := To_String (Track.Path);
       Okay : Gboolean;
       PErr : aliased Glib.Error.GError;
@@ -135,7 +135,7 @@ package body Players is
                                  Error => PErr'Access
                                  );
          when MIDI =>
-            Argv := Prepare_Aplaymidi_Arguments (To_String (Active_Session.MIDI_Port), Media_File);
+            Argv := Prepare_Aplaymidi_Arguments (To_String (Sess.MIDI_Port), Media_File);
             Okay := Spawn_Async (Working_Directory => Gtkada.Types.Null_Ptr,
                                  Argv => Argv'Access,
                                  Envp => null,  --  Inherit our env
@@ -178,8 +178,8 @@ package body Players is
          Unused_rc := system (command);
          Glib.Spawn.Spawn_Close_Pid (Player_PID);
          Player_PID := 0;
-         if Active_Session.Tracks (Currently_Playing_Track).File_Type = MIDI then
-            Argv := Prepare_Aplaymidi_Arguments (To_String (Active_Session.MIDI_Port), Notes_Off_Embedded);
+         if Sess.Tracks (Currently_Playing_Track).File_Type = MIDI then
+            Argv := Prepare_Aplaymidi_Arguments (To_String (Sess.MIDI_Port), Notes_Off_Embedded);
             Unused_Okay := Spawn_Async (Working_Directory => Gtkada.Types.Null_Ptr,
                                  Argv => Argv'Access,
                                  Envp => null,  --  Inherit our env

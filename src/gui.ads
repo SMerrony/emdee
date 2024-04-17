@@ -7,9 +7,9 @@ with Glib.Main;
 
 with Gtk.Application;         use Gtk.Application;
 with Gtk.Application_Window;  use Gtk.Application_Window;
-
 with Gtk.Box;
 with Gtk.Button;
+with Gtk.Check_Menu_Item;     use Gtk.Check_Menu_Item;
 with Gtk.Css_Provider;        use Gtk.Css_Provider;
 with Gtk.GEntry;
 with Gtk.Grid;                use Gtk.Grid;
@@ -52,6 +52,7 @@ package GUI is
    Session_Header_Grid,
    Tracks_Grid : Gtk.Grid.Gtk_Grid;
    Select_Btn_Arr : Select_Btn_Arr_T;
+   Track_Modifiers_Check_Item : Gtk_Check_Menu_Item;
    Show_Track_Modifiers : Boolean := False;
 
    Session_Desc_Entry,

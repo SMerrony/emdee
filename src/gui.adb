@@ -20,7 +20,6 @@ with Gtk.Adjustment;
 with Gtk.Box;                 use Gtk.Box;
 with Gtk.Button;              use Gtk.Button;
 with Gtk.Check_Button;
-with Gtk.Check_Menu_Item;     use Gtk.Check_Menu_Item;
 with Gtk.Container;
 with Gtk.Dialog;              use Gtk.Dialog;
 with Gtk.Enums;               use Gtk.Enums;
@@ -92,14 +91,14 @@ package body GUI is
 
    procedure Update_Text_Fields is
       --  This proc should be called before saving a sesssion or moving Tracks
-      --  to ensure the Active_Session is in sync with the screen contents.
+      --  to ensure the Session is in sync with the screen contents.
       --  N.B. It would be more robust to do these updates whenever the text fields
       --       are changed by the user, but I couldn't find the right event(s)...
       Track_Row  : Gint := 1;
    begin
-      Active_Session.Desc := To_Unbounded_String (Session_Desc_Entry.Get_Text);
-      Active_Session.Comment := To_Unbounded_String (Session_Comment_Entry.Get_Text);
-      for Track of Active_Session.Tracks loop
+      Sess.Desc := To_Unbounded_String (Session_Desc_Entry.Get_Text);
+      Sess.Comment := To_Unbounded_String (Session_Comment_Entry.Get_Text);
+      for Track of Sess.Tracks loop
          Track.Title := To_Unbounded_String (
                            Gtk.GEntry.Gtk_Entry (
                               Tracks_Grid.Get_Child_At (Title_Col, Track_Row)).Get_Text);
@@ -143,11 +142,11 @@ package body GUI is
          Unused_Buttons := Message_Dialog (Msg => "No track is selected",
                                            Title => App_Title & " Cannot Play",
                                            Buttons => Button_OK);
-      elsif Active_Session.Tracks (Currently_Selected_Track).Path = Null_Unbounded_String then
+      elsif Sess.Tracks (Currently_Selected_Track).Path = Null_Unbounded_String then
          Unused_Buttons := Message_Dialog (Msg => "Track has no media file to play",
                                            Title => App_Title & " Cannot Play",
                                            Buttons => Button_OK);
-      elsif Active_Session.Tracks (Currently_Selected_Track).File_Type = MIDI and then Active_Session.MIDI_Port = Null_Unbounded_String then
+      elsif Sess.Tracks (Currently_Selected_Track).File_Type = MIDI and then Sess.MIDI_Port = Null_Unbounded_String then
          Unused_Buttons := Message_Dialog (Msg => "No MIDI Port has been set in this session",
                                            Title => App_Title & " Cannot Play",
                                            Buttons => Button_OK);
@@ -214,7 +213,8 @@ package body GUI is
                                  Buttons => Button_No or Button_Yes,
                                  Title => App_Title & " - Delete Track");
       if Buttons = Button_Yes then
-         Active_Session.Tracks.Delete (Track_Num);
+         Sess
+.Tracks.Delete (Track_Num);
          Display_Tracks;  --  N.B. Can't simply delete the row as numbering needs updating.
       end if;
    end Track_Delete_Btn_CB;
@@ -224,7 +224,7 @@ package body GUI is
       Track_Num : constant Integer     := Integer'Value (Name (8 .. Name'Last));
    begin
       Update_Text_Fields;
-      Active_Session.Tracks.Swap (Track_Num, Track_Num + 1);
+      Sess.Tracks.Swap (Track_Num, Track_Num + 1);
       Display_Tracks;
    end Track_Down_Btn_CB;
 
@@ -233,21 +233,22 @@ package body GUI is
       Track_Num : constant Integer     := Integer'Value (Name (8 .. Name'Last));
    begin
       Update_Text_Fields;
-      Active_Session.Tracks.Swap (Track_Num, Track_Num - 1);
+      Sess.Tracks.Swap (Track_Num, Track_Num - 1);
       Display_Tracks;
    end Track_Up_Btn_CB;
 
    procedure Track_File_Btn_CB (Self : access Gtk.Button.Gtk_Button_Record'Class) is
       Name      : constant UTF8_String := Self.Get_Name;
       Track_Num : constant Integer     := Integer'Value (Name (8 .. Name'Last));
-      Filename  : constant String      := To_String (Active_Session.Tracks (Track_Num).Path);
+      Filename  : constant String      := To_String (Sess.Tracks (Track_Num).Path);
       Dir       : constant String      := Ada.Directories.Containing_Directory (Filename);
       New_File  : constant String      := File_Selection_Dialog (Title => App_Title & " - Track File",
                                                                  Default_Dir => Dir,
                                                                  Must_Exist => True);
    begin
       if New_File /= "" then
-         Active_Session.Tracks (Track_Num).Path := To_Unbounded_String (New_File);
+         Sess
+.Tracks (Track_Num).Path := To_Unbounded_String (New_File);
       end if;
    end Track_File_Btn_CB;
 
@@ -255,7 +256,7 @@ package body GUI is
       pragma Unreferenced (Self);
       --  Name      : constant UTF8_String := Self.Get_Name;
       --  Track_Num : constant Integer     := Integer'Value (Name (8 .. Name'Last));
-      --  Filename  : constant String      := To_String (Active_Session.Tracks (Track_Num).Path);
+      --  Filename  : constant String      := To_String (Sess.Tracks (Track_Num).Path);
       --  Dir       : constant String      := Ada.Directories.Containing_Directory (Filename);
       New_File  : constant String      := File_Selection_Dialog (Title => App_Title & " - Track File",
                                                                --    Default_Dir => Dir,
@@ -287,9 +288,10 @@ package body GUI is
          return; --  Nothing is done
       end if;
       New_Track.File_Type := Guess_Media_Type (To_String (New_Track.Path));
-      Active_Session.Tracks.Append (New_Item => New_Track);
+      Sess.Tracks.Append (New_Item => New_Track);
       Update_Text_Fields;
       Display_Tracks;
+      Tracks_Grid.Show_All;
    end Track_Insert_Btn_CB;
 
    procedure Track_Select_Btn_CB (Self : access Gtk.Button.Gtk_Button_Record'Class) is
@@ -313,7 +315,7 @@ package body GUI is
       Name      : constant UTF8_String := Self.Get_Name;
       Track_Num : constant Integer     := Integer'Value (Name (8 .. Name'Last));
    begin
-      Active_Session.Tracks (Track_Num).Skip := Self.Get_Active;
+      Sess.Tracks (Track_Num).Skip := Self.Get_Active;
    end Track_Skip_Check_CB;
 
    procedure Track_Modifiers_CB (Self : access Gtk_Check_Menu_Item_Record'Class) is
@@ -327,7 +329,7 @@ package body GUI is
       Name      : constant UTF8_String := Self.Get_Name;
       Track_Num : constant Integer     := Integer'Value (Name (8 .. Name'Last));
    begin
-      Active_Session.Tracks (Track_Num).Volume := Integer (Self.Get_Value_As_Int);
+      Sess.Tracks (Track_Num).Volume := Integer (Self.Get_Value_As_Int);
    end Track_Vol_Changed_CB;
 
    procedure Display_Track_Headers is
@@ -338,6 +340,14 @@ package body GUI is
       Tracks_Grid.Attach (Gtk_Label_New ("Comment"), Comment_Col, 0);
       Tracks_Grid.Attach (Gtk_Label_New ("Volume (%)"), Vol_Col, 0);
    end Display_Track_Headers;
+
+   procedure Clear_Tracks_Display is
+   begin
+      --  clear out any existing items, ASSUMES rows are contiguous
+      while Tracks_Grid.Get_Child_At (Title_Col, 1) /= null loop
+         Tracks_Grid.Remove_Row (1);
+      end loop;
+   end Clear_Tracks_Display;
 
    procedure Display_Tracks is
       Track_Row  : Gint := 1;
@@ -354,12 +364,9 @@ package body GUI is
       Vol_Adj    : Gtk.Adjustment.Gtk_Adjustment;
       Vol_Spin   : Gtk.Spin_Button.Gtk_Spin_Button;
    begin
-      --  clear out any existing items, ASSUMES rows are contiguous
-      while Tracks_Grid.Get_Child_At (Title_Col, 1) /= null loop
-         Tracks_Grid.Remove_Row (1);
-      end loop;
+      Clear_Tracks_Display;
 
-      for Track of Active_Session.Tracks loop
+      for Track of Sess.Tracks loop
          Gtk.Label.Gtk_New (Row_Label, Track_Row'Img);
          Row_Label.Set_Halign (Align_Center);
          Tracks_Grid.Attach (Row_Label, Row_Col, Track_Row);
@@ -415,7 +422,7 @@ package body GUI is
             Track_File_Btn.On_Clicked (Track_File_Btn_CB'Access);
             Tracks_Grid.Attach (Track_File_Btn, File_Col, Track_Row);
 
-            if Integer (Track_Row) < Integer (Active_Session.Tracks.Length) then
+            if Integer (Track_Row) < Integer (Sess.Tracks.Length) then
                Gtk.Button.Gtk_New_From_Icon_Name (Track_Down_Btn, "go-down-symbolic", Icon_Size_Button);
                Track_Down_Btn.Set_Name ("MoveDn" & Row'Image);
                Track_Down_Btn.On_Clicked (Track_Down_Btn_CB'Access);
@@ -439,7 +446,7 @@ package body GUI is
          Track_Row := Track_Row + 1;
       end loop;
 
-      --  Empty track for adding to Session...
+      --  Empty track for adding to Sess...
       if Show_Track_Modifiers then
          Display_Empty_Track (Track_Row);
       end if;
@@ -450,6 +457,7 @@ package body GUI is
 
    procedure Display_Empty_Track (Track_Row : Glib.Gint) is
    --  Display an empty row for entering a new track
+      Dummy_Label : Gtk.Label.Gtk_Label;
       Track_File_Btn,
       Track_Insert_Btn : Gtk.Button.Gtk_Button;
       Skip_Check : Gtk.Check_Button.Gtk_Check_Button;
@@ -459,6 +467,12 @@ package body GUI is
       Vol_Spin   : Gtk.Spin_Button.Gtk_Spin_Button;
    begin
       New_Track_Entry_Row := Track_Row;
+
+      --  Placeholders for the case of an empty Sess...
+      for c in 0 .. Title_Col - 1 loop
+         Gtk.Label.Gtk_New (Dummy_Label, "*");
+         Tracks_Grid.Attach (Dummy_Label, c, Track_Row);
+      end loop;
 
       Gtk.GEntry.Gtk_New (Title_Entry);
       Title_Entry.Set_Width_Chars (25);
@@ -492,6 +506,19 @@ package body GUI is
       Tracks_Grid.Attach (Track_Insert_Btn, File_Col + 1, Track_Row, 3);
    end Display_Empty_Track;
 
+   procedure Session_New_CB (Self : access Gtk.Menu_Item.Gtk_Menu_Item_Record'Class) is
+      pragma Unreferenced (Self);
+      Prev_MIDI_Port : constant Unbounded_String := Sess.MIDI_Port;
+   begin
+      Clear_Session;
+      Sess.MIDI_Port := Prev_MIDI_Port;
+      Track_Modifiers_Check_Item.Set_Active (True);
+      Clear_Tracks_Display;
+      Display_Empty_Track (1);
+      Tracks_Grid.Show_All;
+      Session_Desc_Entry.Grab_Focus;
+   end Session_New_CB;
+
    procedure Session_Open_CB (Self : access Gtk.Menu_Item.Gtk_Menu_Item_Record'Class) is
       pragma Unreferenced (Self);
       Filename : constant String :=
@@ -501,14 +528,14 @@ package body GUI is
       Unused_Buttons : Gtkada.Dialogs.Message_Dialog_Buttons;
    begin
       if Filename'Length > 1 then
-         Session.Load_Session (Filename);
-         Active_Session.Filename := To_Unbounded_String (Filename);
-         Session_Desc_Entry.Set_Text (To_String (Active_Session.Desc));
-         Session_Comment_Entry.Set_Text (To_String (Active_Session.Comment));
-         if Active_Session.MIDI_Port /= Null_Unbounded_String then
+         Load_Session (Filename);
+         Sess.Filename := To_Unbounded_String (Filename);
+         Session_Desc_Entry.Set_Text (To_String (Sess.Desc));
+         Session_Comment_Entry.Set_Text (To_String (Sess.Comment));
+         if Sess.MIDI_Port /= Null_Unbounded_String then
             Create_Notes_Off_MIDI;
          end if;
-         if Active_Session.Tracks.Length > 0 then
+         if Sess.Tracks.Length > 0 then
             Display_Tracks;
          end if;
       end if;
@@ -517,20 +544,35 @@ package body GUI is
          Unused_Buttons := Message_Dialog (Msg => "Could not open Session TOML file.  " & Exception_Message (E),
                                            Dialog_Type => Warning,
                                            Title => App_Title & " - Error");
-         Active_Session.Filename := Null_Unbounded_String;
+         Sess.Filename := Null_Unbounded_String;
    end Session_Open_CB;
+
+   function Check_Session_Desc return Boolean is
+      Unused_Buttons : Gtkada.Dialogs.Message_Dialog_Buttons;
+   begin
+      if Sess.Desc /= Null_Unbounded_String then
+         return True;
+      else
+         Unused_Buttons := Message_Dialog (Msg => "You must enter the Session description, cannot save yet.",
+                                           Dialog_Type => Warning,
+                                           Title => App_Title & " - Warning");
+         return False;
+      end if;
+   end Check_Session_Desc;
 
    procedure Session_Save_CB (Self : access Gtk.Menu_Item.Gtk_Menu_Item_Record'Class) is
       pragma Unreferenced (Self);
       Unused_Buttons : Gtkada.Dialogs.Message_Dialog_Buttons;
    begin
-      if Active_Session.Filename = Null_Unbounded_String then
-         Unused_Buttons := Message_Dialog (Msg => "No Session has been loaded, cannot save.",
-                                           Dialog_Type => Warning,
-                                           Title => App_Title & " - Error");
-      else
-         Update_Text_Fields;
-         Session.Save_Session (To_String (Active_Session.Filename));
+      if Check_Session_Desc then
+         if Sess.Filename = Null_Unbounded_String then
+            Unused_Buttons := Message_Dialog (Msg => "No Session has been loaded, cannot save.",
+                                             Dialog_Type => Warning,
+                                             Title => App_Title & " - Error");
+         else
+            Update_Text_Fields;
+            Save_Session (To_String (Sess.Filename));
+         end if;
       end if;
    end Session_Save_CB;
 
@@ -542,14 +584,16 @@ package body GUI is
                                                       Must_Exist => False);
       Unused_Buttons : Gtkada.Dialogs.Message_Dialog_Buttons;
    begin
-      if Filename'Length > 0 then
-         if Ada.Directories.Exists (Filename) then
-            Unused_Buttons := Message_Dialog (Msg => "Session TOML file already exists, use 'Save' to overwrite.",
-                                              Dialog_Type => Warning,
-                                              Title => App_Title & " - Oops");
-         else
-            Update_Text_Fields;
-            Session.Save_Session (Filename);
+      if Check_Session_Desc then
+         if Filename'Length > 0 then
+            if Ada.Directories.Exists (Filename) then
+               Unused_Buttons := Message_Dialog (Msg => "Session TOML file already exists, use 'Save' to overwrite.",
+                                                Dialog_Type => Warning,
+                                                Title => App_Title & " - Oops");
+            else
+               Update_Text_Fields;
+               Save_Session (Filename);
+            end if;
          end if;
       end if;
    end Session_Save_As_CB;
@@ -571,8 +615,9 @@ package body GUI is
       Gtk.Label.Gtk_New (Dlg_Port_Label, "MIDI Out Port:");
       Dlg_Box.Pack_Start (Child => Dlg_Port_Label, Expand => True, Fill => True, Padding => 5);
       Gtk.GEntry.Gtk_New (The_Entry => Port_Entry);
-      if Active_Session.MIDI_Port /= Null_Unbounded_String then
-         Port_Entry.Set_Text (To_String (Active_Session.MIDI_Port));
+      if Sess.MIDI_Port /= Null_Unbounded_String then
+         Port_Entry.Set_Text (To_String (Sess
+.MIDI_Port));
       end if;
       Port_Entry.Set_Tooltip_Text ("MIDI port suitable for aplaymidi to use in form nn:n.  Use aplaymidi -l to see list");
       Dlg_Box.Pack_Start (Child => Port_Entry, Expand => True, Fill => True, Padding => 5);
@@ -589,11 +634,13 @@ package body GUI is
    procedure Select_Next_Track is
       Candidate_Track : Integer := Currently_Selected_Track;
    begin
-      if Currently_Selected_Track /= -1 and then Currently_Selected_Track < (Integer (Active_Session.Tracks.Length)) then --  Not already at end
+      if Currently_Selected_Track /= -1 and then Currently_Selected_Track < (Integer (Sess.Tracks.Length)) then --  Not already at end
          loop
             Candidate_Track := Candidate_Track + 1;
-            exit when Candidate_Track = Integer (Active_Session.Tracks.Length);
-            exit when not Active_Session.Tracks (Candidate_Track).Skip;
+            exit when Candidate_Track = Integer (Sess
+   .Tracks.Length);
+            exit when not Sess
+   .Tracks (Candidate_Track).Skip;
          end loop;
          Select_Btn_Arr (Candidate_Track).Clicked;
       end if;
@@ -605,8 +652,10 @@ package body GUI is
       if Currently_Selected_Track /= -1 and then Currently_Selected_Track > 1 then --  Not already at start
          loop
             Candidate_Track := Candidate_Track - 1;
-            exit when Candidate_Track = Integer (Active_Session.Tracks.Length);
-            exit when not Active_Session.Tracks (Candidate_Track).Skip;
+            exit when Candidate_Track = Integer (Sess
+   .Tracks.Length);
+            exit when not Sess
+   .Tracks (Candidate_Track).Skip;
          end loop;
          Select_Btn_Arr (Candidate_Track).Clicked;
       end if;
@@ -620,7 +669,8 @@ package body GUI is
 
       Gdk.Threads.Enter;
          if Player_Active then
-            Active_Label.Set_Text ("Playing: " & To_String (Active_Session.Tracks (Currently_Playing_Track).Title));
+            Active_Label.Set_Text ("Playing: " & To_String (Sess
+   .Tracks (Currently_Playing_Track).Title));
             Currently_Active := True;
          else
             if Currently_Active then  --  we have transitioned from playing to not playing
@@ -658,10 +708,9 @@ package body GUI is
       Sep_Item : Gtk.Separator_Menu_Item.Gtk_Separator_Menu_Item;
       File_Menu, Session_Menu, Help_Menu : Gtk.Menu.Gtk_Menu;
       Menu_Item : Gtk.Menu_Item.Gtk_Menu_Item;
-      Session_Open_Item, Session_Save_Item, Session_Save_As_Item, Session_Create_Item, Session_MIDI_Item,
+      Session_Open_Item, Session_Save_Item, Session_Save_As_Item, Session_New_Item, Session_MIDI_Item,
       Quit_Item,
       About_Item : Gtk.Menu_Item.Gtk_Menu_Item;
-      Track_Modifiers_Check_Item : Gtk.Check_Menu_Item.Gtk_Check_Menu_Item;
    begin
       --  Log (DEBUG, "Starting to Create_Menu_Bar");
       Gtk_New (Menu_Bar);
@@ -673,10 +722,10 @@ package body GUI is
       Gtk_New (File_Menu);
       Menu_Item.Set_Submenu (File_Menu);
 
-      --  Session Create
-      Gtk_New (Session_Create_Item, "New Session");
-      File_Menu.Append (Session_Create_Item);
-      --  Session_Create_Item.On_Activate (Session_Create_CB'Access);
+      --  Session New
+      Gtk_New (Session_New_Item, "New Session");
+      File_Menu.Append (Session_New_Item);
+      Session_New_Item.On_Activate (Session_New_CB'Access);
 
       --  Session Open
       Gtk_New (Session_Open_Item, "Open Session");
