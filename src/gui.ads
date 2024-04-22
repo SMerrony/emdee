@@ -14,6 +14,8 @@ with Gtk.Css_Provider;        use Gtk.Css_Provider;
 with Gtk.GEntry;              use Gtk.GEntry;
 with Gtk.Grid;                use Gtk.Grid;
 with Gtk.Label;               use Gtk.Label;
+with Gtk.Style_Provider;
+with Gtk.Widget;              use Gtk.Widget;
 
 package GUI is
 
@@ -49,8 +51,7 @@ package GUI is
    Main_Window : Gtk_Application_Window;
    Icon_PB     : Gdk.Pixbuf.Gdk_Pixbuf;
    Main_Box    : Gtk.Box.Gtk_Box;
-   Session_Header_Grid,
-   Tracks_Grid : Gtk.Grid.Gtk_Grid;
+   Session_Header_Grid : Gtk.Grid.Gtk_Grid;
    Select_Btn_Arr : Select_Btn_Arr_T;
    Track_Modifiers_Check_Item : Gtk_Check_Menu_Item;
    Show_Track_Modifiers : Boolean := False;
@@ -78,7 +79,12 @@ private
 
    procedure Select_Next_Track;
    procedure Select_Previous_Track;
-   procedure Display_Tracks;
-   procedure Display_Empty_Track (Track_Row : Glib.Gint);
+   --  procedure Display_Tracks;
+   --  procedure Display_Empty_Track (Track_Row : Glib.Gint);
+
+   --  procedure Clear_Tracks_Display;
+   procedure Update_Text_Fields;
+   procedure Apply_Css (Widget   : not null access Gtk_Widget_Record'Class;
+                        Provider : Gtk.Style_Provider.Gtk_Style_Provider);
 
 end GUI;
