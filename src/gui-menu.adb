@@ -20,6 +20,7 @@ with Gtk.Widget;              use Gtk.Widget;
 with Gtkada.Dialogs;          use Gtkada.Dialogs;
 with Gtkada.File_Selection;   use Gtkada.File_Selection;
 
+with Midi_Files;
 with Players;                 use Players;
 with Session;                 use Session;
 
@@ -69,7 +70,7 @@ package body GUI.Menu is
          Session_Desc_Entry.Set_Text (To_String (Sess.Desc));
          Session_Comment_Entry.Set_Text (To_String (Sess.Comment));
          if Sess.MIDI_Port /= Null_Unbounded_String then
-            Create_Notes_Off_MIDI;
+            Midi_Files.Create_Notes_Off_MIDI;
          end if;
          if Sess.Tracks.Length > 0 then
             Display_Tracks;

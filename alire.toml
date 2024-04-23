@@ -36,3 +36,6 @@ ada_toml = "~0.4.0"
 
 [build-switches]
 release.style_checks = "No"
+
+[[depends-on]]
+win32ada = "*"

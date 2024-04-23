@@ -1,8 +1,10 @@
 --  SPDX-License-Identifier: GPL-3.0-or-later
 --  SPDX-FileCopyrightText: Copyright 2024 Stephen Merrony
 
+--  N.B. This is the LINUX-SPECIFIC Players package body
+
 with Ada.Directories;
-with Ada.Sequential_IO;
+
 with Ada.Strings;             use Ada.Strings;
 with Ada.Strings.Fixed;       use Ada.Strings.Fixed;
 with Ada.Strings.Unbounded;   use Ada.Strings.Unbounded;
@@ -17,7 +19,7 @@ with Gtkada.Types;   use Gtkada.Types;
 with Interfaces;
 with Interfaces.C;
 
-with Embedded;       use Embedded;
+with Midi_Files;
 with Players;        use Players;
 with Session;        use Session;
 with Track;          use Track;
@@ -33,22 +35,6 @@ package body Players is
       new Generic_Spawn_Async (User_Data => Integer);
    --  function Spawn_Async_With_Fds is
    --     new Generic_Spawn_Async_With_Fds (User_Data => Integer);
-
-   procedure Create_Notes_Off_MIDI is
-      File_Emb : constant Embedded.Content_Type := Embedded.Get_Content (Notes_Off_Embedded);
-      package IO is new Ada.Sequential_IO (Interfaces.Unsigned_8);
-      MIDI_Filename : constant String := Notes_Off_Embedded;
-      MIDI_File : IO.File_Type;
-   begin
-      if Ada.Directories.Exists (MIDI_Filename) then
-         Ada.Directories.Delete_File (MIDI_Filename);
-      end if;
-      IO.Create (File => MIDI_File, Name => MIDI_Filename);
-      for Val of File_Emb.Content.all loop
-         IO.Write (MIDI_File, Interfaces.Unsigned_8 (Val));
-      end loop;
-      IO.Close (MIDI_File);
-   end Create_Notes_Off_MIDI;
 
    function Prepare_Ffplay_Arguments (Media_File : String; Volume : Integer)
                                       return Chars_Ptr_Array is
@@ -179,7 +165,7 @@ package body Players is
          Glib.Spawn.Spawn_Close_Pid (Player_PID);
          Player_PID := 0;
          if Sess.Tracks (Currently_Playing_Track).File_Type = MIDI then
-            Argv := Prepare_Aplaymidi_Arguments (To_String (Sess.MIDI_Port), Notes_Off_Embedded);
+            Argv := Prepare_Aplaymidi_Arguments (To_String (Sess.MIDI_Port), Midi_Files.Notes_Off_Embedded);
             Unused_Okay := Spawn_Async (Working_Directory => Null_Ptr,
                                  Argv => Argv'Access,
                                  Envp => null,  --  Inherit our env
