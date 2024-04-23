@@ -1,0 +1,47 @@
+[session]
+comment = "For the MJC Summer concert in the main hall (my laptop, their piano, main stage PA)..."
+description = "MJC Summer Concert - Choir"
+midiport = "128:0"
+[[track]]
+comment = "Avec chaleur !"
+path = "/home/steve/Desktop/MJC_Saix_MP3/Accompaniments/CestSiBon_SAH_Accpt.mid"
+skip = false
+title = "C'est si bon"
+volume = 100
+[[track]]
+comment = "*Good for encore!*"
+path = "C:\\Users\\merro\\Desktop\\MJC_Saix_MP3\\Accompaniments\\CestMagnifique_Accpt.mp3"
+skip = true
+title = "C'est Magnifique"
+volume = 90
+[[track]]
+comment = "No accompaniment, give note F"
+path = ""
+skip = false
+title = "Mon coq est mort"
+volume = 100
+[[track]]
+comment = ""
+path = "C:\\Users\\merro\\Desktop\\MJC_Saix_MP3\\Accompaniments\\LaJavanaise_Accpt.mp3"
+skip = false
+title = "La Javanaise"
+volume = 100
+[[track]]
+comment = "WAV version"
+path = "C:\\Users\\merro\\Desktop\\MJC_Saix_MP3\\Accompaniments\\AfriqueAdieu_Accpt.wav"
+skip = true
+title = "Afrique Adieu"
+volume = 99
+[[track]]
+comment = "Count intro!"
+path = "C:\\Users\\merro\\Desktop\\MJC_Saix_MP3\\Accompaniments\\LAigleNoir_Accpt.mp3"
+skip = false
+title = "L'aigle noir"
+volume = 100
+[[track]]
+comment = "FLAC version, quarter volume!"
+path = "/home/steve/Desktop/MJC_Saix_MP3/Accompaniments/06-GoldenEarrings.flac"
+skip = false
+title = "Golden Earrings"
+volume = 25
+
