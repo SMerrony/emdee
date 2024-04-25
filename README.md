@@ -7,22 +7,21 @@
 ![GitHub License](https://img.shields.io/github/license/SMerrony/emdee) ![GitHub Issues or Pull Requests](https://img.shields.io/github/issues/SMerrony/emdee) ![GitHub top language](https://img.shields.io/github/languages/top/SMerrony/emdee)
 
 
-
-
 `eMDee` is a live performance assistant for musical directors which removes 
 the need to have folders of tracks and command-line windows open in order to play backing tracks for performance groups such as singers, choirs, and theatre-groups.
 
 The MD can plan in advance the order of performance; later, `eMDee` will facilitate the playing of each track in the specfied order during the performance.
 
-Additional controls may be added to specific tracks such as changing the volume level.
+Each audio track may have its own volume setting.
 
 ![eMDee main screen, ready to perform!](doc/eMDee_0_1_0_Loaded.png)
 
-`eMDee` is designed for, and probably only runs on, GNU Linux systems such as Mint, Debian, Ubuntu, etc.
+`eMDee` was originally designed for GNU Linux systems such as Mint, Debian, Ubuntu, etc., 
+however work has started on a Windows version.
 
 ## Core Features
 * Create 'session' of 'tracks'
-* Tracks may be audio (FLAC, MP3, OGG, WAV) or MIDI files
+* Tracks may be audio (FLAC, MP3, OGG, WAV) or MIDI files (MIDI not yet supported under Windows)
 * Tracks may be re-ordered
 * Tracks may be marked for skipping in performance
 * Controls are provided to Play, Stop
