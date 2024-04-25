@@ -5,13 +5,16 @@
 			"type": "ada",
 			"configuration": {
 				"kind": "buildProject",
-				"projectFile": "/home/steve/Ada/emdee/emdee.gpr",
+				"projectFile": "C:\\Users\\merro\\Ada\\emdee\\emdee.gpr",
 				"args": []
 			},
 			"problemMatcher": [
 				"$ada"
 			],
-			"group": "build",
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
 			"label": "ada: Build current project"
 		}
 	]

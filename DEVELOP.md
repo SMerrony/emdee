@@ -20,7 +20,7 @@ The all notes off midi file was created using csvmidi.
 ### Spawn
 The whole `spawn_async` thing took ages to figure out.  As usual, it seemed impossible to find a simple example to follow.  
 
-For future referencem this simple example worked...
+For future reference, this simple example worked...
 ```
       --  -- THIS WORKS...
       OK := Spawn_Command_Line_Async (Gtkada.Types.New_String (To_String (Active_Players_Config.MP3_Player) &
@@ -49,6 +49,12 @@ This also worked...
 There's no complementary function to kill a process spawned by the above function.
 
 ### PulseAudio Volume
-It seems a new virtual interface is created for every app that plays music, the master volume
-control does nothing to those interfaces.
+It seems a new virtual interface is created for every app that plays music, the master volume control does nothing to those interfaces, so it's useless.
+
+### Windows
+To get Alire to build win32ada I had to add
+
+```,"-gnateDTARGET=Win32"```
+
+to the `emdee_config.gpr` file.
 

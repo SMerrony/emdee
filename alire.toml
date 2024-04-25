@@ -38,4 +38,4 @@ ada_toml = "~0.4.0"
 release.style_checks = "No"
 
 [[depends-on]]
-win32ada = "*"
+win32ada = "^23.0.0"

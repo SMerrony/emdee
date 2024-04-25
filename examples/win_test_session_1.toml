@@ -4,7 +4,7 @@ description = "MJC Summer Concert - Choir"
 midiport = "128:0"
 [[track]]
 comment = "Avec chaleur !"
-path = "/home/steve/Desktop/MJC_Saix_MP3/Accompaniments/CestSiBon_SAH_Accpt.mid"
+path = "C:\\Users\\merro\\Desktop\\MJC_Saix_MP3\\Accompaniments\\CestSiBon_SAH_Accpt.mid"
 skip = false
 title = "C'est si bon"
 volume = 100
@@ -40,8 +40,7 @@ title = "L'aigle noir"
 volume = 100
 [[track]]
 comment = "FLAC version, quarter volume!"
-path = "/home/steve/Desktop/MJC_Saix_MP3/Accompaniments/06-GoldenEarrings.flac"
+path = "C:\\Users\\merro\\Desktop\\MJC_Saix_MP3\\Accompaniments\\06-GoldenEarrings.flac"
 skip = false
 title = "Golden Earrings"
 volume = 25
-
