@@ -197,8 +197,9 @@ package body GUI.Menu is
    function Create_Menu_Bar return Gtk.Menu_Bar.Gtk_Menu_Bar is
       Menu_Bar : Gtk.Menu_Bar.Gtk_Menu_Bar;
       Sep_Item : Gtk.Separator_Menu_Item.Gtk_Separator_Menu_Item;
-      File_Menu, Session_Menu, Help_Menu : Gtk.Menu.Gtk_Menu;
+      File_Menu, View_Menu, Session_Menu, Help_Menu : Gtk.Menu.Gtk_Menu;
       Menu_Item : Gtk.Menu_Item.Gtk_Menu_Item;
+      View_Smaller_Item, View_Default_Item, View_Larger_Item,
       Session_Open_Item, Session_Save_Item, Session_Save_As_Item, Session_New_Item, Session_MIDI_Item,
       Quit_Item,
       About_Item : Gtk.Menu_Item.Gtk_Menu_Item;
@@ -243,6 +244,32 @@ package body GUI.Menu is
       File_Menu.Append (Quit_Item);
       Quit_Item.On_Activate (Quit_CB'Access);
 
+      --  View
+
+      Gtk_New (Menu_Item, "View");
+      Menu_Bar.Append (Menu_Item);
+      Gtk_New (View_Menu);
+      Menu_Item.Set_Submenu (View_Menu);
+
+      Gtk_New (View_Smaller_Item, "Smaller");
+      View_Menu.Append (View_Smaller_Item);
+
+      Gtk_New (View_Default_Item, "Default");
+      View_Menu.Append (View_Default_Item);
+
+      Gtk_New (View_Larger_Item, "Larger");
+      View_Menu.Append (View_Larger_Item);
+
+
+      Gtk_New (Sep_Item);
+      View_Menu.Append (Sep_Item);
+
+      --  Modifiers visibility
+      Gtk_New (Track_Modifiers_Check_Item, "Track Editing");
+      Track_Modifiers_Check_Item.Set_Active (Show_Track_Modifiers);
+      View_Menu.Append (Track_Modifiers_Check_Item);
+      Track_Modifiers_Check_Item.On_Toggled (Track_Modifiers_CB'Access);
+
       --  Session
 
       Gtk_New (Menu_Item, "Session");
@@ -254,18 +281,6 @@ package body GUI.Menu is
       Gtk_New (Session_MIDI_Item, "MIDI Settings");
       Session_Menu.Append (Session_MIDI_Item);
       Session_MIDI_Item.On_Activate (Session_MIDI_CB'Access);
-
-      Gtk_New (Sep_Item);
-      Session_Menu.Append (Sep_Item);
-
-      Gtk_New (Sep_Item);
-      Session_Menu.Append (Sep_Item);
-
-      --  Modifiers visible
-      Gtk_New (Track_Modifiers_Check_Item, "Allow Track Editing");
-      Track_Modifiers_Check_Item.Set_Active (Show_Track_Modifiers);
-      Session_Menu.Append (Track_Modifiers_Check_Item);
-      Track_Modifiers_Check_Item.On_Toggled (Track_Modifiers_CB'Access);
 
       --  Help
 
