@@ -35,6 +35,8 @@ gtkada = "^24.0.0"
 ada_toml = "~0.4.0"
 
 [build-switches]
+"*".ada_version = "Ada2022"
+development.style_checks = ["-gnaty-m"]
 release.style_checks = "No"
 
 [[depends-on]]

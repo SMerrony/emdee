@@ -14,6 +14,7 @@ with Gtk.Css_Provider;        use Gtk.Css_Provider;
 with Gtk.GEntry;              use Gtk.GEntry;
 with Gtk.Grid;                use Gtk.Grid;
 with Gtk.Label;               use Gtk.Label;
+with Gtk.Radio_Menu_Item;     use Gtk.Radio_Menu_Item;
 with Gtk.Style_Provider;
 with Gtk.Widget;              use Gtk.Widget;
 
@@ -71,7 +72,21 @@ package GUI is
    Currently_Selected_Track : Integer := -1;
    Currently_Active : Boolean := False;
 
+   type Font_Size is (S, M, L, XL, XXL);
+   View_S_Radio_Item, View_M_Radio_Item,
+   View_L_Radio_Item, View_XL_Radio_Item,
+   View_XXL_Radio_Item : Gtk_Radio_Menu_Item;
+
+   Current_Font_Size : Font_Size := M;
+
+   Fixed_CSS_Str : constant String := "grid { padding: 10px; }" & ASCII.LF &
+                              "grid label { margin: 8px; }"     & ASCII.LF &
+                              "entry#highlit { color: red; }"   & ASCII.LF &
+                              "spinbutton#highlit { color: red; }";
+
    CSS_Provider : constant Gtk.Css_Provider.Gtk_Css_Provider := Gtk.Css_Provider.Gtk_Css_Provider_New;
+
+   function Build_CSS (Size : Font_Size) return String;
 
    procedure Launch;
 

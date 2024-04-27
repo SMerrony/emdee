@@ -5,6 +5,8 @@ with Ada.Text_IO;
 
 with TOML.File_IO;
 
+with GUI;
+
 package body Session is
 
    procedure Load_Session (Filename : String) is
@@ -27,7 +29,7 @@ package body Session is
                declare
                   Session_Table : constant TOML_Value := Get (Toml_Parse_Result.Value, "session");
                begin
-                  Sess.Desc      := As_Unbounded_String (Get (Session_Table, "description"));
+                  Sess.Desc := As_Unbounded_String (Get (Session_Table, "description"));
                   if Has (Session_Table, "description") then
                      Sess.Comment   := As_Unbounded_String (Get (Session_Table, "comment"));
                   else
@@ -37,6 +39,11 @@ package body Session is
                      Sess.MIDI_Port := As_Unbounded_String (Get (Session_Table, "midiport"));
                   else
                      Sess.MIDI_Port := Null_Unbounded_String;
+                  end if;
+                  if Has (Session_Table, "fontsize") then
+                     Sess.Font_Size := As_Unbounded_String (Get (Session_Table, "fontsize"));
+                  else
+                     Sess.Font_Size := To_Unbounded_String ("M");
                   end if;
                   --  Session.Updated   := As_Local_Datetime (Get (Session_Table, "updated"));
                end;
@@ -99,6 +106,7 @@ package body Session is
       Toml_Session_Table.Set (Key => "description", Entry_Value => Create_String (Value => Sess.Desc));
       Toml_Session_Table.Set (Key => "comment", Entry_Value => Create_String (Value => Sess.Comment));
       Toml_Session_Table.Set (Key => "midiport", Entry_Value => Create_String (Value => Sess.MIDI_Port));
+      Toml_Session_Table.Set (Key => "fontsize", Entry_Value => Create_String (Value => GUI.Current_Font_Size'Image));
       --  TODO add "updated" field
       Toml_Sess.Set (Key => "session", Entry_Value => Toml_Session_Table);
 

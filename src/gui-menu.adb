@@ -6,8 +6,10 @@ with Ada.Containers;          use Ada.Containers;
 with Ada.Directories;
 with Ada.Exceptions;          use Ada.Exceptions;
 with Ada.Strings.Unbounded;   use Ada.Strings.Unbounded;
+with Ada.Text_IO;
 
 with Glib;                    use Glib;
+with Glib.Error;
 
 with Gtk.About_Dialog;        use Gtk.About_Dialog;
 with Gtk.Box;                 use Gtk.Box;
@@ -21,7 +23,7 @@ with Gtkada.Dialogs;          use Gtkada.Dialogs;
 with Gtkada.File_Selection;   use Gtkada.File_Selection;
 
 with Midi_Files;
-with Players;                 use Players;
+--  with Players;                 use Players;
 with Session;                 use Session;
 
 with GUI.Tracks;              use GUI.Tracks;
@@ -63,6 +65,8 @@ package body GUI.Menu is
                                 Dir_Only => False,
                                 Must_Exist => True);
       Unused_Buttons : Message_Dialog_Buttons;
+      New_Size : Font_Size;
+      Error : aliased Glib.Error.GError;
    begin
       if Filename'Length > 1 then
          Load_Session (Filename);
@@ -75,6 +79,14 @@ package body GUI.Menu is
          if Sess.Tracks.Length > 0 then
             Display_Tracks;
          end if;
+         New_Size := Font_Size'Value (To_String (Sess.Font_Size));
+         if not CSS_Provider.Load_From_Data (Build_CSS (New_Size), Error'Access) then
+            Ada.Text_IO.Put_Line ("ERROR: Could not load CSS internal data");
+         end if;
+         Apply_Css (Main_Window, +CSS_Provider);
+         Current_Font_Size := New_Size;
+         Main_Window.Resize (1, 1);
+         Main_Window.Set_Icon (Icon_PB);
       end if;
    exception
       when E : others =>
@@ -175,7 +187,7 @@ package body GUI.Menu is
       Dialog.Set_Destroy_With_Parent (True);
       Dialog.Set_Modal (True);
       Dialog.Set_Logo (Icon_PB);
-      Dialog.Set_Authors ((1 => new String'(App_Author)));
+      Dialog.Set_Authors ([new String'(App_Author)]);
       Dialog.Set_Copyright (App_Copyright);
       Dialog.Set_Comments (App_Comment);
       Dialog.Set_Program_Name (App_Title);
@@ -194,14 +206,39 @@ package body GUI.Menu is
       App.Remove_Window (Main_Window);
    end Quit_CB;
 
+   procedure View_Size_CB (Self : access Gtk_Check_Menu_Item_Record'Class) is
+      pragma Unreferenced (Self);
+      New_Size : Font_Size;
+      Error : aliased Glib.Error.GError;
+   begin
+      if View_S_Radio_Item.Get_Active then
+         New_Size := S;
+      elsif View_M_Radio_Item.Get_Active then
+         New_Size := M;
+      elsif View_L_Radio_Item.Get_Active then
+         New_Size := L;
+      elsif View_XL_Radio_Item.Get_Active then
+         New_Size := XL;
+      elsif View_XXL_Radio_Item.Get_Active then
+         New_Size := XXL;
+      end if;
+      if not CSS_Provider.Load_From_Data (Build_CSS (New_Size), Error'Access) then
+         Ada.Text_IO.Put_Line ("ERROR: Could not load CSS internal data");
+      end if;
+      Apply_Css (Main_Window, +CSS_Provider);
+      Current_Font_Size := New_Size;
+      Main_Window.Resize (1, 1);
+      Main_Window.Set_Icon (Icon_PB);
+   end View_Size_CB;
+
    function Create_Menu_Bar return Gtk.Menu_Bar.Gtk_Menu_Bar is
       Menu_Bar : Gtk.Menu_Bar.Gtk_Menu_Bar;
       Sep_Item : Gtk.Separator_Menu_Item.Gtk_Separator_Menu_Item;
       File_Menu, View_Menu, Session_Menu, Help_Menu : Gtk.Menu.Gtk_Menu;
       Menu_Item : Gtk.Menu_Item.Gtk_Menu_Item;
-      View_Smaller_Item, View_Default_Item, View_Larger_Item,
       Session_Open_Item, Session_Save_Item, Session_Save_As_Item, Session_New_Item, Session_MIDI_Item,
-      Quit_Item,
+      Quit_Item : Gtk.Menu_Item.Gtk_Menu_Item;
+      Group : Gtk.Widget.Widget_SList.GSlist;
       About_Item : Gtk.Menu_Item.Gtk_Menu_Item;
    begin
       --  Log (DEBUG, "Starting to Create_Menu_Bar");
@@ -251,15 +288,24 @@ package body GUI.Menu is
       Gtk_New (View_Menu);
       Menu_Item.Set_Submenu (View_Menu);
 
-      Gtk_New (View_Smaller_Item, "Smaller");
-      View_Menu.Append (View_Smaller_Item);
+      View_S_Radio_Item := Gtk_Radio_Menu_Item_New_With_Label (Widget_SList.Null_List, "Small");
+      View_Menu.Append (View_S_Radio_Item);
+      View_S_Radio_Item.On_Toggled (View_Size_CB'Access);
+      Group := Gtk.Radio_Menu_Item.Get_Group (View_S_Radio_Item);
 
-      Gtk_New (View_Default_Item, "Default");
-      View_Menu.Append (View_Default_Item);
-
-      Gtk_New (View_Larger_Item, "Larger");
-      View_Menu.Append (View_Larger_Item);
-
+      View_M_Radio_Item := Gtk_Radio_Menu_Item_New_With_Label (Group, "Medium");
+      View_Menu.Append (View_M_Radio_Item);
+      View_M_Radio_Item.On_Toggled (View_Size_CB'Access);
+      View_M_Radio_Item.Set_Active (True);
+      View_L_Radio_Item := Gtk_Radio_Menu_Item_New_With_Label (Group, "Large");
+      View_Menu.Append (View_L_Radio_Item);
+      View_L_Radio_Item.On_Toggled (View_Size_CB'Access);
+      View_XL_Radio_Item := Gtk_Radio_Menu_Item_New_With_Label (Group, "X-Large");
+      View_Menu.Append (View_XL_Radio_Item);
+      View_XL_Radio_Item.On_Toggled (View_Size_CB'Access);
+      View_XXL_Radio_Item := Gtk_Radio_Menu_Item_New_With_Label (Group, "XX-Large");
+      View_Menu.Append (View_XXL_Radio_Item);
+      View_XXL_Radio_Item.On_Toggled (View_Size_CB'Access);
 
       Gtk_New (Sep_Item);
       View_Menu.Append (Sep_Item);

@@ -11,6 +11,7 @@ with Gdk.Threads;
 with Glib;                    use Glib;
 with Glib.Application;        use Glib.Application;
 with Glib.Error;              use Glib.Error;
+--  with Glib.Values;
 
 with Gtk.Box;                 use Gtk.Box;
 with Gtk.Button;              use Gtk.Button;
@@ -164,22 +165,29 @@ package body GUI is
       return Status_Box;
    end Create_Status_Box;
 
+   function Build_CSS (Size : Font_Size) return String is
+   begin
+      --  ("grid {font-size: " & Font_Point_Size'Image & "pt; }" & ASCII.LF & Fixed_CSS_Str);
+      case Size is
+         when S   => return "window {font-size: small; }" & ASCII.LF & Fixed_CSS_Str;
+         when M   => return "window {font-size: medium; }" & ASCII.LF & Fixed_CSS_Str;
+         when L   => return "window {font-size: large; }" & ASCII.LF & Fixed_CSS_Str;
+         when XL  => return "window {font-size: x-large; }" & ASCII.LF & Fixed_CSS_Str;
+         when XXL => return "window {font-size: xx-large; }" & ASCII.LF & Fixed_CSS_Str;
+      end case;
+   end Build_CSS;
+
    procedure App_Activate (Self : access Gapplication_Record'Class) is
       pragma Unreferenced (Self);
       Session_Label, Comment_Label : Gtk_Label;
       Error : aliased GError;
-      CSS_Emb : constant Embedded.Content_Type := Embedded.Get_Content (App_CSS);
-      CSS_US  : Unbounded_String;
    begin
-      for C of CSS_Emb.Content.all loop
-         Append (CSS_US, Character'Val (C));
-      end loop;
-      if not CSS_Provider.Load_From_Data (To_String (CSS_US), Error'Access) then
-         Ada.Text_IO.Put_Line ("ERROR: Could not load CSS internal resource");
-      end if;
-
       Main_Window := Gtk_Application_Window_New (App);
       Main_Window.Set_Title (App_Title);
+
+      if not CSS_Provider.Load_From_Data (Build_CSS (M), Error'Access) then
+         Ada.Text_IO.Put_Line ("ERROR: Could not load CSS internal data");
+      end if;
 
       --  Everything is in a Box...
       Gtk.Box.Gtk_New (Main_Box, Gtk.Enums.Orientation_Vertical, 2);
@@ -189,8 +197,10 @@ package body GUI is
 
       --  Session Info Header
       Gtk_New (Session_Header_Grid);
+      Session_Header_Grid.Set_Column_Spacing (8);
 
       Gtk_New (Session_Label, " Session: ");
+
       Session_Header_Grid.Attach (Child => Session_Label, Left => 0, Top => 0);
       Gtk_New (Session_Desc_Entry);
       Session_Desc_Entry.Set_Width_Chars (60);
@@ -214,7 +224,7 @@ package body GUI is
       Main_Box.Pack_End (Child => Create_Live_Controls_Grid, Expand => False);
 
       Main_Window.Add (Main_Box);
-      Main_Window.Resize (500, 400); --  Gotta start somewhere
+      Main_Window.Resize (1, 1); --  Gotta start somewhere
 
       --  Icon
       Icon_PB := Create_Icon_Pixbuf;
