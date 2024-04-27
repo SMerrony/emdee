@@ -106,7 +106,7 @@ package body Players is
       Media_File : constant String := To_String (Track.Path);
       Okay : Gboolean;
       PErr : aliased Glib.Error.GError;
-      Argv : aliased Chars_Ptr_Array := [];
+      Argv : aliased Chars_Ptr_Array := [0 .. 15 => <>];
    begin
       case Track.File_Type is
          when FLAC | MP3 | OGG | WAV =>
@@ -157,7 +157,7 @@ package body Players is
       Unused_rc : C.int;
       Unused_Okay : Gboolean;
       PErr : aliased Glib.Error.GError;
-      Argv : aliased Chars_Ptr_Array := [];
+      Argv : aliased Chars_Ptr_Array := [0 .. 15 => <>];
    begin
       if Player_Active then
          --  This is just gross - there must be a better way...

@@ -87,6 +87,7 @@ package GUI is
    CSS_Provider : constant Gtk.Css_Provider.Gtk_Css_Provider := Gtk.Css_Provider.Gtk_Css_Provider_New;
 
    function Build_CSS (Size : Font_Size) return String;
+   procedure Resize_Font (New_Size : Font_Size);
 
    procedure Launch;
 

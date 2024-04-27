@@ -6,7 +6,6 @@ with Ada.Containers;          use Ada.Containers;
 with Ada.Directories;
 with Ada.Exceptions;          use Ada.Exceptions;
 with Ada.Strings.Unbounded;   use Ada.Strings.Unbounded;
-with Ada.Text_IO;
 
 with Glib;                    use Glib;
 with Glib.Error;
@@ -65,8 +64,6 @@ package body GUI.Menu is
                                 Dir_Only => False,
                                 Must_Exist => True);
       Unused_Buttons : Message_Dialog_Buttons;
-      New_Size : Font_Size;
-      Error : aliased Glib.Error.GError;
    begin
       if Filename'Length > 1 then
          Load_Session (Filename);
@@ -79,14 +76,7 @@ package body GUI.Menu is
          if Sess.Tracks.Length > 0 then
             Display_Tracks;
          end if;
-         New_Size := Font_Size'Value (To_String (Sess.Font_Size));
-         if not CSS_Provider.Load_From_Data (Build_CSS (New_Size), Error'Access) then
-            Ada.Text_IO.Put_Line ("ERROR: Could not load CSS internal data");
-         end if;
-         Apply_Css (Main_Window, +CSS_Provider);
-         Current_Font_Size := New_Size;
-         Main_Window.Resize (1, 1);
-         Main_Window.Set_Icon (Icon_PB);
+         GUI.Resize_Font (Font_Size'Value (To_String (Sess.Font_Size)));
       end if;
    exception
       when E : others =>
@@ -209,7 +199,6 @@ package body GUI.Menu is
    procedure View_Size_CB (Self : access Gtk_Check_Menu_Item_Record'Class) is
       pragma Unreferenced (Self);
       New_Size : Font_Size;
-      Error : aliased Glib.Error.GError;
    begin
       if View_S_Radio_Item.Get_Active then
          New_Size := S;
@@ -222,13 +211,7 @@ package body GUI.Menu is
       elsif View_XXL_Radio_Item.Get_Active then
          New_Size := XXL;
       end if;
-      if not CSS_Provider.Load_From_Data (Build_CSS (New_Size), Error'Access) then
-         Ada.Text_IO.Put_Line ("ERROR: Could not load CSS internal data");
-      end if;
-      Apply_Css (Main_Window, +CSS_Provider);
-      Current_Font_Size := New_Size;
-      Main_Window.Resize (1, 1);
-      Main_Window.Set_Icon (Icon_PB);
+      GUI.Resize_Font (New_Size);
    end View_Size_CB;
 
    function Create_Menu_Bar return Gtk.Menu_Bar.Gtk_Menu_Bar is

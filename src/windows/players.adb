@@ -95,7 +95,7 @@ package body Players is
       Media_File : constant String := To_String (Track.Path);
       Okay : Gboolean;
       PErr : aliased Glib.Error.GError;
-      Argv : aliased Chars_Ptr_Array := (0 .. 15 => <>);
+      Argv : aliased Chars_Ptr_Array := [0 .. 15 => <>];
    begin
       case Track.File_Type is
          when FLAC | MP3 | OGG | WAV =>
@@ -144,7 +144,7 @@ package body Players is
       Unused_Okay : Gboolean;
       Unused_Bool : Win32.BOOL;
       PErr : aliased Glib.Error.GError;
-      Argv : aliased Chars_Ptr_Array := (0 .. 15 => <>);
+      Argv : aliased Chars_Ptr_Array := [0 .. 15 => <>];
    begin
       if Player_Active then
          Unused_Bool := Win32.Winbase.TerminateProcess (Proc_Handle, 0);

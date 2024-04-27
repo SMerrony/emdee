@@ -115,10 +115,12 @@ package body GUI.Tracks is
    end Track_File_Btn_CB;
 
    procedure Track_Select_Btn_CB (Self : access Gtk_Button_Record'Class) is
+      use Session.Track_Vectors;
       Name      : constant UTF8_String := Self.Get_Name;
       Track_Num : constant Integer     := Integer'Value (Name (8 .. Name'Last));
    begin
-      if Currently_Selected_Track /= -1 then
+      if Currently_Selected_Track > 0 and then 
+         Currently_Selected_Track <= Integer (Sess.Tracks.Length) then
          Tracks_Grid.Get_Child_At (Title_Col, Gint (Currently_Selected_Track)).Set_Name ("not-highlit");
          Tracks_Grid.Get_Child_At (Comment_Col, Gint (Currently_Selected_Track)).Set_Name ("not-highlit");
          Tracks_Grid.Get_Child_At (Vol_Col, Gint (Currently_Selected_Track)).Set_Name ("not-highlit");

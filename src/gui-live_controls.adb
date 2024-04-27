@@ -90,8 +90,6 @@ package body GUI.Live_Controls is
    function Create_Live_Controls_Grid return Gtk_Grid is
       Controls_Grid : Gtk_Grid;
       Spacer_Lab    : Gtk_Label;
-      Play_Btn, Stop_Btn, Previous_Btn, Next_Btn : Gtk_Button;
-      --  Quieter_Btn, Vol_Reset_Btn, Louder_Btn : Gtk_Button;
    begin
       Gtk_New (Controls_Grid);
       Controls_Grid.Set_Column_Spacing (10);

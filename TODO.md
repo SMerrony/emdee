@@ -8,5 +8,5 @@
 * Add session option to send some silence before audio files
 
 ## GUI
-* Add statefulness (?) to GUI buttons, ie. disable STOP unless currently playing
+* ~~Add statefulness (?) to GUI buttons, ie. disable STOP unless currently playing~~ Done
 * ~~Add scaling to GUI, maybe save in the session.toml file?~~ Done

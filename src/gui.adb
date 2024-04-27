@@ -50,6 +50,18 @@ package body GUI is
       end if;
    end Apply_Css;
 
+   procedure Resize_Font (New_Size : Font_Size) is
+      Error : aliased Glib.Error.GError;
+   begin
+      if not CSS_Provider.Load_From_Data (Build_CSS (New_Size), Error'Access) then
+         Ada.Text_IO.Put_Line ("ERROR: Could not load CSS internal data");
+      end if;
+      Apply_Css (Main_Window, +CSS_Provider);
+      Current_Font_Size := New_Size;
+      Main_Window.Resize (1, 1);
+      Main_Window.Set_Icon (Icon_PB);
+   end Resize_Font;
+
    function Create_Icon_Pixbuf return Gdk.Pixbuf.Gdk_Pixbuf is
       IP :  Gdk.Pixbuf.Gdk_Pixbuf;
       Icon_Emb : constant Embedded.Content_Type := Embedded.Get_Content (App_Icon);
@@ -130,12 +142,20 @@ package body GUI is
          if Player_Active then
             Active_Label.Set_Text ("Playing: " & To_String (Sess.Tracks (Currently_Playing_Track).Title));
             Currently_Active := True;
+            GUI.Live_Controls.Play_Btn.Set_Sensitive (False);
+            GUI.Live_Controls.Previous_Btn.Set_Sensitive (False);
+            GUI.Live_Controls.Next_Btn.Set_Sensitive (False);
+            GUI.Live_Controls.Stop_Btn.Set_Sensitive (True);
          else
             if Currently_Active then  --  we have transitioned from playing to not playing
                Select_Next_Track;
                Currently_Active := False;
             end if;
             Active_Label.Set_Text ("Not Playing");
+            GUI.Live_Controls.Play_Btn.Set_Sensitive (True);
+            GUI.Live_Controls.Previous_Btn.Set_Sensitive (True);
+            GUI.Live_Controls.Next_Btn.Set_Sensitive (True);
+            GUI.Live_Controls.Stop_Btn.Set_Sensitive (False);
          end if;
          SB.Queue_Draw;
       Gdk.Threads.Leave;
