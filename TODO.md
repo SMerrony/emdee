@@ -9,4 +9,4 @@
 
 ## GUI
 * Add statefulness (?) to GUI buttons, ie. disable STOP unless currently playing
-* Add scaling to GUI, maybe save in the session.toml file?
+* ~~Add scaling to GUI, maybe save in the session.toml file?~~ Done

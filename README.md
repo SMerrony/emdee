@@ -7,7 +7,7 @@
 ![GitHub License](https://img.shields.io/github/license/SMerrony/emdee) ![GitHub Issues or Pull Requests](https://img.shields.io/github/issues/SMerrony/emdee) ![GitHub top language](https://img.shields.io/github/languages/top/SMerrony/emdee)
 
 
-`eMDee` is a live performance assistant for musical directors which removes 
+`eMDee` is a live performance and rehearsal assistant for musical directors which removes 
 the need to have folders of tracks and command-line windows open in order to play backing tracks for performance groups such as singers, choirs, and theatre-groups.
 
 The MD can plan in advance the order of performance; later, `eMDee` will facilitate the playing of each track in the specfied order during the performance.
@@ -17,7 +17,7 @@ Each audio track may have its own volume setting.
 ![eMDee main screen, ready to perform!](doc/eMDee_0_1_0_Loaded.png)
 
 `eMDee` was originally designed for GNU Linux systems such as Mint, Debian, Ubuntu, etc., 
-however work has started on a Windows version.
+however work has started on Windows compatibility.
 
 ## Core Features
 * Create 'session' of 'tracks'
@@ -27,10 +27,11 @@ however work has started on a Windows version.
 * Controls are provided to Play, Stop
 * Audio tracks may have a volume modifie
 * Dummy or 'placeholder' tracks may be inserted to remind MD of a cappella pieces etc.
+* Independently scalable interface, so you can have a nice big font for live use without reconfiguring your desktop
 
 Third-party 'helper' applications are used to actually play the tracks, currently...
 * `ffplay` for FLAC, MP3, OGG and WAV
-* `aplaymidi` for MIDI files on an external device such as a synthesizer, keyboard, or digital piano
+* `aplaymidi` (Linux-only) for MIDI files on an external device such as a synthesizer, keyboard, or digital piano
 
 You must ensure those applications are installed on your system for `eMDee` to work.
 
