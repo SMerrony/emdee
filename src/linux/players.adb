@@ -4,7 +4,7 @@
 --  N.B. This is the LINUX-SPECIFIC Players package body
 
 with Ada.Directories;
-
+with Ada.Sequential_IO;
 with Ada.Strings;             use Ada.Strings;
 with Ada.Strings.Fixed;       use Ada.Strings.Fixed;
 with Ada.Strings.Unbounded;   use Ada.Strings.Unbounded;
@@ -19,6 +19,7 @@ with Gtkada.Types;   use Gtkada.Types;
 with Interfaces;
 with Interfaces.C;
 
+with Embedded;
 with Midi_Files;
 with Players;        use Players;
 with Session;        use Session;
@@ -30,11 +31,26 @@ package body Players is
 
    function system (command : C.char_array) return C.int
      with Import, Convention => C;
-
+ 
    function Spawn_Async is
       new Generic_Spawn_Async (User_Data => Integer);
-   --  function Spawn_Async_With_Fds is
-   --     new Generic_Spawn_Async_With_Fds (User_Data => Integer);
+
+   function Spawn_Sync is
+      new Generic_Spawn_Sync (User_Data => Integer);   
+
+   procedure Create_1s_Silence_MP3 is
+      MP3_Emb : constant Embedded.Content_Type := Embedded.Get_Content (Silence_Emb_Name);
+      package IO is new Ada.Sequential_IO (Interfaces.Unsigned_8);
+      MP3_File : IO.File_Type;
+   begin
+      if not Ada.Directories.Exists (Silence_Tmp_Name) then
+         IO.Create (File => MP3_File, Name => Silence_Tmp_Name);
+         for Val of MP3_Emb.Content.all loop
+            IO.Write (MP3_File, Interfaces.Unsigned_8 (Val));
+         end loop;
+         IO.Close (MP3_File);
+      end if;
+   end Create_1s_Silence_MP3;
 
    function Prepare_Ffplay_Arguments (Media_File : String; Volume : Integer)
                                       return Chars_Ptr_Array is
@@ -101,6 +117,32 @@ package body Players is
 
    --  function Get_System_Volume return Natural is (Current_System_Volume_Pct);
 
+   procedure Play_Silence (Secs : Positive) is
+   --  N.B. This proc will cause the GUI to hang for 'Secs'
+      Argv : aliased Chars_Ptr_Array := [0 .. 15 => <>];
+      Okay : Gboolean;
+      PErr : aliased Glib.Error.GError;
+   begin
+      Argv := Prepare_Ffplay_Arguments (Silence_Tmp_Name, 0);
+      for S in 1 .. Secs loop
+         Okay := Spawn_Sync (Working_Directory => Null_Ptr,
+                              Argv => Argv'Access,
+                              Envp => null,  --  Inherit our env
+                              Flags => G_Spawn_Search_Path, --  + G_Spawn_Do_Not_Reap_Child,
+                              Child_Setup => null,
+                              Data => null,
+                              Child_Pid => Player_PID'Access,
+                              Standard_Output => null,
+                              Standard_Error => null,
+                              Exit_Status => null,
+                              Error => PErr'Access
+                              );
+         if Okay = 0 then
+            Ada.Text_IO.Put_Line ("SILENCE PLAYER ERROR");
+         end if;
+      end loop;
+   end Play_Silence;
+
    procedure Play_Track is
       Track      : constant Track_T := Sess.Tracks (Currently_Playing_Track);
       Media_File : constant String := To_String (Track.Path);
@@ -111,29 +153,24 @@ package body Players is
       case Track.File_Type is
          when FLAC | MP3 | OGG | WAV =>
             Argv := Prepare_Ffplay_Arguments (Media_File, Track.Volume);
-            Okay := Spawn_Async (Working_Directory => Null_Ptr,
-                                 Argv => Argv'Access,
-                                 Envp => null,  --  Inherit our env
-                                 Flags => G_Spawn_Search_Path, --  + G_Spawn_Do_Not_Reap_Child,
-                                 Child_Setup => null,
-                                 Data => null,
-                                 Child_Pid => Player_PID'Access,
-                                 Error => PErr'Access
-                                 );
          when MIDI =>
             Argv := Prepare_Aplaymidi_Arguments (To_String (Sess.MIDI_Port), Media_File);
-            Okay := Spawn_Async (Working_Directory => Null_Ptr,
-                                 Argv => Argv'Access,
-                                 Envp => null,  --  Inherit our env
-                                 Flags => G_Spawn_Search_Path, --  + G_Spawn_Do_Not_Reap_Child,
-                                 Child_Setup => null,
-                                 Data => null,
-                                 Child_Pid => Player_PID'Access,
-                                 Error => PErr'Access
-                                 );
          when UNKNOWN => raise Unknown_Media_Type;
       end case;
 
+      if Sess.Lead_In_Silence > -0 then
+         Play_Silence (Sess.Lead_In_Silence);
+      end if;
+
+      Okay := Spawn_Async (Working_Directory => Null_Ptr,
+                           Argv => Argv'Access,
+                           Envp => null,  --  Inherit our env
+                           Flags => G_Spawn_Search_Path, --  + G_Spawn_Do_Not_Reap_Child,
+                           Child_Setup => null,
+                           Data => null,
+                           Child_Pid => Player_PID'Access,
+                           Error => PErr'Access
+                           );
       if Okay = 0 then
          Ada.Text_IO.Put_Line ("PLAYER ERROR");
       end if;

@@ -32,6 +32,8 @@ package GUI is
    App_CSS       : constant String := "main.css";
    App_Website   : constant String := "https://github.com/SMerrony/emdee";
 
+   Icon_Tmp_Name : constant String := "eMDee_icon.tmp";
+
    Max_Tracks  : constant Integer := 99;
 
    --  Track display column ordering

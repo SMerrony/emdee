@@ -2,6 +2,7 @@
 comment = "For the MJC Summer concert in the main hall (my laptop, their piano, main stage PA)..."
 description = "MJC Summer Concert - Choir"
 fontsize = "XL"
+leadin = 2
 midiport = "128:0"
 [[track]]
 comment = "Avec chaleur !"

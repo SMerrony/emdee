@@ -66,23 +66,22 @@ package body GUI is
       IP :  Gdk.Pixbuf.Gdk_Pixbuf;
       Icon_Emb : constant Embedded.Content_Type := Embedded.Get_Content (App_Icon);
       package IO is new Ada.Sequential_IO (Interfaces.Unsigned_8);
-      Tmp_Filename : constant String := "emdee_Icon.tmp";
       Tmp_File : IO.File_Type;
       Error : aliased GError;
    begin
-      if Ada.Directories.Exists (Tmp_Filename) then
-         Ada.Directories.Delete_File (Tmp_Filename);
+      if Ada.Directories.Exists (Icon_Tmp_Name) then
+         Ada.Directories.Delete_File (Icon_Tmp_Name);
       end if;
-      IO.Create (File => Tmp_File, Name => Tmp_Filename);
+      IO.Create (File => Tmp_File, Name => Icon_Tmp_Name);
       for Val of Icon_Emb.Content.all loop
          IO.Write (Tmp_File, Interfaces.Unsigned_8 (Val));
       end loop;
       IO.Close (Tmp_File);
-      Gdk.Pixbuf.Gdk_New_From_File (Pixbuf => IP, Filename => Tmp_Filename, Error => Error);
+      Gdk.Pixbuf.Gdk_New_From_File (Pixbuf => IP, Filename => Icon_Tmp_Name, Error => Error);
       if Error /= null then
-         Ada.Text_IO.Put_Line ("WARNING: Could not find/load icon file: emdee_Icon.tmp");
+         Ada.Text_IO.Put_Line ("WARNING: Could not find/load icon file: " & Icon_Tmp_Name);
       end if;
-      Ada.Directories.Delete_File (Tmp_Filename);
+      Ada.Directories.Delete_File (Icon_Tmp_Name);
       return IP;
    end Create_Icon_Pixbuf;
 
@@ -252,6 +251,8 @@ package body GUI is
 
       --  Styling - CSS
       Apply_Css (Main_Window, +CSS_Provider);
+
+      Players.Create_1s_Silence_MP3;
 
       Main_Window.Show_All;
 

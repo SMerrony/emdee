@@ -21,6 +21,7 @@ package Session is
       MIDI_Port : Unbounded_String;
       Updated   : TOML.Any_Local_Datetime;
       Tracks    : Track_Vectors.Vector;
+      Lead_In_Silence : Natural;
       Font_Size : Unbounded_String;
       Filename  : Unbounded_String;       --  Not stored in TOML
    end record;

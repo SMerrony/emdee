@@ -5,10 +5,11 @@ with Ada.Characters.Latin_1;  use Ada.Characters.Latin_1;
 with Ada.Containers;          use Ada.Containers;
 with Ada.Directories;
 with Ada.Exceptions;          use Ada.Exceptions;
+with Ada.Strings;             use Ada.Strings;
+with Ada.Strings.Fixed;       use Ada.Strings.Fixed;
 with Ada.Strings.Unbounded;   use Ada.Strings.Unbounded;
 
 with Glib;                    use Glib;
-with Glib.Error;
 
 with Gtk.About_Dialog;        use Gtk.About_Dialog;
 with Gtk.Box;                 use Gtk.Box;
@@ -125,6 +126,41 @@ package body GUI.Menu is
       end if;
    end Session_Save_As_CB;
 
+   procedure Session_Audio_CB (Self : access Gtk.Menu_Item.Gtk_Menu_Item_Record'Class) is
+      pragma Unreferenced (Self);
+      Dialog         : Gtk_Dialog;
+      Dlg_Box        : Gtk_Box;
+      Dlg_Silence_Label : Gtk_Label;
+      Silence_Entry     : Gtk_Entry;
+      Cancel_Unused,
+      Save_Unused    : Gtk_Widget;
+      Unused_Buttons : Message_Dialog_Buttons;
+   begin
+      Gtk_New (Dialog);
+      Dialog.Set_Destroy_With_Parent (True);
+      Dialog.Set_Modal (True);
+      Dialog.Set_Title (App_Title & " - Session Audio Settings");
+      Dlg_Box := Dialog.Get_Content_Area;
+      Dlg_Silence_Label := Gtk_Label_New ("Lead-in Silence (seconds):");
+      Dlg_Box.Pack_Start (Child => Dlg_Silence_Label, Expand => True, Fill => True, Padding => 5);
+      Silence_Entry := Gtk_Entry_New;
+      Silence_Entry.Set_Text (Trim (Sess.Lead_In_Silence'Image, Left));
+      Silence_Entry.Set_Tooltip_Text ("Number of seconds silence to play before each audio track. " & CR & LF
+                                   & "Must be 0 or a positive integer.");
+      Dlg_Box.Pack_Start (Child => Silence_Entry, Expand => True, Fill => True, Padding => 5);
+      Cancel_Unused := Dialog.Add_Button ("Cancel", Gtk_Response_Cancel);
+      Save_Unused   := Dialog.Add_Button ("Save", Gtk_Response_Accept);
+      Dialog.Set_Default_Response (Gtk_Response_Accept);
+      Dialog.Show_All;
+      if Dialog.Run = Gtk_Response_Accept then
+         if Silence_Entry.Get_Text_Length > 0 then
+            Sess.Lead_In_Silence := Integer'Value (Silence_Entry.Get_Text);
+         end if;
+      end if;
+      Dialog.Destroy;
+
+   end Session_Audio_CB;
+
    procedure Session_MIDI_CB (Self : access Gtk.Menu_Item.Gtk_Menu_Item_Record'Class) is
       pragma Unreferenced (Self);
       Dialog         : Gtk_Dialog;
@@ -219,7 +255,8 @@ package body GUI.Menu is
       Sep_Item : Gtk.Separator_Menu_Item.Gtk_Separator_Menu_Item;
       File_Menu, View_Menu, Session_Menu, Help_Menu : Gtk.Menu.Gtk_Menu;
       Menu_Item : Gtk.Menu_Item.Gtk_Menu_Item;
-      Session_Open_Item, Session_Save_Item, Session_Save_As_Item, Session_New_Item, Session_MIDI_Item,
+      Session_Open_Item, Session_Save_Item, Session_Save_As_Item, Session_New_Item, 
+      Session_Audio_Item, Session_MIDI_Item,
       Quit_Item : Gtk.Menu_Item.Gtk_Menu_Item;
       Group : Gtk.Widget.Widget_SList.GSlist;
       About_Item : Gtk.Menu_Item.Gtk_Menu_Item;
@@ -305,6 +342,11 @@ package body GUI.Menu is
       Menu_Bar.Append (Menu_Item);
       Gtk_New (Session_Menu);
       Menu_Item.Set_Submenu (Session_Menu);
+
+      --  Session Audio Settings
+      Gtk_New (Session_Audio_Item, "Audio Settings");
+      Session_Menu.Append (Session_Audio_Item);
+      Session_Audio_Item.On_Activate (Session_Audio_CB'Access);
 
       --  Session MIDI Settings
       Gtk_New (Session_MIDI_Item, "MIDI Settings");

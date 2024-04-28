@@ -3,6 +3,8 @@
 
 --  N.B. This is the WINDOWS-SPECIFIC Players package body
 
+with Ada.Directories;
+with Ada.Sequential_IO;
 with Ada.Strings;             use Ada.Strings;
 with Ada.Strings.Fixed;       use Ada.Strings.Fixed;
 with Ada.Strings.Unbounded;   use Ada.Strings.Unbounded;
@@ -24,6 +26,7 @@ with Win32;
 with Win32.Winbase;
 with Win32.Winnt;
 
+with Embedded;
 with Midi_Files;
 with Players;        use Players;
 with Session;        use Session;
@@ -33,6 +36,20 @@ package body Players is
 
    function Spawn_Async is
       new Generic_Spawn_Async (User_Data => Integer);
+
+   procedure Create_1s_Silence_MP3 is
+      MP3_Emb : constant Embedded.Content_Type := Embedded.Get_Content (Silence_Emb_Name);
+      package IO is new Ada.Sequential_IO (Interfaces.Unsigned_8);
+      MP3_File : IO.File_Type;
+   begin
+      if not Ada.Directories.Exists (Silence_Tmp_Name) then
+         IO.Create (File => MP3_File, Name => Silence_Tmp_Name);
+         for Val of MP3_Emb.Content.all loop
+            IO.Write (MP3_File, Interfaces.Unsigned_8 (Val));
+         end loop;
+         IO.Close (MP3_File);
+      end if;
+   end Create_1s_Silence_MP3;   
 
    function Prepare_Aplaymidi_Arguments (Midi_Port : String; Media_File : String) return Chars_Ptr_Array is
       Argv_Arr : Chars_Ptr_Array (0 .. 15);

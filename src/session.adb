@@ -45,6 +45,11 @@ package body Session is
                   else
                      Sess.Font_Size := To_Unbounded_String ("M");
                   end if;
+                  if Has (Session_Table, "leadin") then
+                     Sess.Lead_In_Silence := Natural (As_Integer (Get (Session_Table, "leadin")));
+                  else
+                     Sess.Lead_In_Silence := 0;
+                  end if;
                   --  Session.Updated   := As_Local_Datetime (Get (Session_Table, "updated"));
                end;
 
@@ -107,6 +112,7 @@ package body Session is
       Toml_Session_Table.Set (Key => "comment", Entry_Value => Create_String (Value => Sess.Comment));
       Toml_Session_Table.Set (Key => "midiport", Entry_Value => Create_String (Value => Sess.MIDI_Port));
       Toml_Session_Table.Set (Key => "fontsize", Entry_Value => Create_String (Value => GUI.Current_Font_Size'Image));
+      Toml_Session_Table.Set (Key => "leadin", Entry_Value => Create_Integer (Value => Any_Integer (Sess.Lead_In_Silence)));
       --  TODO add "updated" field
       Toml_Sess.Set (Key => "session", Entry_Value => Toml_Session_Table);
 
@@ -131,6 +137,8 @@ package body Session is
       Sess.Desc      := Null_Unbounded_String;
       Sess.Comment   := Null_Unbounded_String;
       Sess.MIDI_Port := Null_Unbounded_String;
+      Sess.Font_Size := To_Unbounded_String ("M");
+      Sess.Lead_In_Silence := 0;
       Sess.Tracks.Clear;
    end Clear_Session;
 
