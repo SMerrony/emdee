@@ -1,6 +1,8 @@
 [session]
 comment = "For the MJC Summer concert in the main hall (my laptop, their piano, main stage PA)..."
 description = "MJC Summer Concert - Choir"
+fontsize = "M"
+leadin = 2
 midiport = "128:0"
 [[track]]
 comment = "Avec chaleur !"
@@ -44,3 +46,4 @@ path = "C:\\Users\\merro\\Desktop\\MJC_Saix_MP3\\Accompaniments\\06-GoldenEarrin
 skip = false
 title = "Golden Earrings"
 volume = 25
+

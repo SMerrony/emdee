@@ -107,6 +107,18 @@ package body Players is
       end if;
    end Launch_FFplayer;
 
+   procedure Play_Silence (Secs : Positive) is
+   --  N.B. This proc will cause the GUI to hang for 'Secs
+   begin
+      for S in 1 .. Secs loop
+         Launch_FFplayer (Silence_Tmp_Name, 0);
+         loop
+            delay 0.1;
+            exit when not Player_Active;
+         end loop;
+      end loop;
+   end Play_Silence;
+
    procedure Play_Track is
       Track      : constant Track_T := Sess.Tracks (Currently_Playing_Track);
       Media_File : constant String := To_String (Track.Path);
@@ -116,6 +128,9 @@ package body Players is
    begin
       case Track.File_Type is
          when FLAC | MP3 | OGG | WAV =>
+            if Sess.Lead_In_Silence > 0 then
+               Play_Silence (Sess.Lead_In_Silence);
+            end if;
             Launch_FFplayer (Media_File, Track.Volume);
          when MIDI =>
             Argv := Prepare_Aplaymidi_Arguments (To_String (Sess.MIDI_Port), Media_File);
