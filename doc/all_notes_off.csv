@@ -1,0 +1,36 @@
+0, 0, Header, 0, 1, 960
+1, 0, Start_track
+1, 1, Control_c, 0, 123, 0
+1, 1, Control_c, 1, 123, 0
+1, 1, Control_c, 2, 123, 0
+1, 1, Control_c, 3, 123, 0
+1, 1, Control_c, 4, 123, 0
+1, 1, Control_c, 5, 123, 0
+1, 1, Control_c, 6, 123, 0
+1, 1, Control_c, 7, 123, 0
+1, 1, Control_c, 8, 123, 0
+1, 1, Control_c, 9, 123, 0
+1, 1, Control_c, 10, 123, 0
+1, 1, Control_c, 11, 123, 0
+1, 1, Control_c, 12, 123, 0
+1, 1, Control_c, 13, 123, 0
+1, 1, Control_c, 14, 123, 0
+1, 1, Control_c, 15, 123, 0
+1, 1, Control_c, 0, 64, 0
+1, 1, Control_c, 1, 64, 0
+1, 1, Control_c, 2, 64, 0
+1, 1, Control_c, 3, 64, 0
+1, 1, Control_c, 4, 64, 0
+1, 1, Control_c, 5, 64, 0
+1, 1, Control_c, 6, 64, 0
+1, 1, Control_c, 7, 64, 0
+1, 1, Control_c, 8, 64, 0
+1, 1, Control_c, 9, 64, 0
+1, 1, Control_c, 10, 64, 0
+1, 1, Control_c, 11, 64, 0
+1, 1, Control_c, 12, 64, 0
+1, 1, Control_c, 13, 64, 0
+1, 1, Control_c, 14, 64, 0
+1, 1, Control_c, 15, 64, 0
+1, 1, End_track
+0, 0, End_of_file

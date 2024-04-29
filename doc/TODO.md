@@ -1,7 +1,7 @@
 # TODO
 
 ## MIDI
-* Fix MIDI off file to send Pedal up as well as note offs
+* ~~Fix MIDI off file to send Pedal up as well as note offs~~ Done - needs testing
 * Either find freely-available command-line MIDI player for Windows, or forbid MIDI under Windows
 
 ## Audio
