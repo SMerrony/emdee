@@ -39,8 +39,8 @@ package body Players is
       new Generic_Spawn_Sync (User_Data => Integer);   
 
    procedure Create_1s_Silence_MP3 is
-      MP3_Emb : constant Embedded.Content_Type := Embedded.Get_Content (Silence_Emb_Name);
       package IO is new Ada.Sequential_IO (Interfaces.Unsigned_8);
+      MP3_Emb  : constant Embedded.Content_Type := Embedded.Get_Content (Silence_Emb_Name);
       MP3_File : IO.File_Type;
    begin
       if not Ada.Directories.Exists (Silence_Tmp_Name) then
@@ -123,7 +123,7 @@ package body Players is
       Okay : Gboolean;
       PErr : aliased Glib.Error.GError;
    begin
-      Argv := Prepare_Ffplay_Arguments (Silence_Tmp_Name, 0);
+      Argv := Prepare_Ffplay_Arguments (Silence_Tmp_Name, 10);
       for S in 1 .. Secs loop
          Okay := Spawn_Sync (Working_Directory => Null_Ptr,
                               Argv => Argv'Access,

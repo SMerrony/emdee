@@ -24,12 +24,8 @@ package body GUI.Tracks is
 
    procedure New_Track_File_Btn_CB (Self : access Gtk_Button_Record'Class) is
       pragma Unreferenced (Self);
-      --  Name      : constant UTF8_String := Self.Get_Name;
-      --  Track_Num : constant Integer     := Integer'Value (Name (8 .. Name'Last));
-      --  Filename  : constant String      := To_String (Sess.Tracks (Track_Num).Path);
-      --  Dir       : constant String      := Ada.Directories.Containing_Directory (Filename);
       New_File  : constant String      := File_Selection_Dialog (Title => App_Title & " - Track File",
-                                                               --    Default_Dir => Dir,
+                                                                 --    Default_Dir => Dir,
                                                                  Must_Exist => True);
    begin
       if New_File /= "" then

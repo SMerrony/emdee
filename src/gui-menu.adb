@@ -250,16 +250,16 @@ package body GUI.Menu is
       GUI.Resize_Font (New_Size);
    end View_Size_CB;
 
-   function Create_Menu_Bar return Gtk.Menu_Bar.Gtk_Menu_Bar is
-      Menu_Bar : Gtk.Menu_Bar.Gtk_Menu_Bar;
-      Sep_Item : Gtk.Separator_Menu_Item.Gtk_Separator_Menu_Item;
-      File_Menu, View_Menu, Session_Menu, Help_Menu : Gtk.Menu.Gtk_Menu;
-      Menu_Item : Gtk.Menu_Item.Gtk_Menu_Item;
+   function Create_Menu_Bar return Gtk_Menu_Bar is
+      Menu_Bar    : Gtk_Menu_Bar;
+      Sep_Item    : Gtk_Separator_Menu_Item;
+      File_Menu, View_Menu, Session_Menu, Help_Menu : Gtk_Menu;
+      Menu_Item   : Gtk_Menu_Item;
       Session_Open_Item, Session_Save_Item, Session_Save_As_Item, Session_New_Item, 
       Session_Audio_Item, Session_MIDI_Item,
-      Quit_Item : Gtk.Menu_Item.Gtk_Menu_Item;
-      Group : Gtk.Widget.Widget_SList.GSlist;
-      About_Item : Gtk.Menu_Item.Gtk_Menu_Item;
+      Quit_Item   : Gtk_Menu_Item;
+      Group       : Widget_SList.GSlist;
+      About_Item  : Gtk_Menu_Item;
    begin
       --  Log (DEBUG, "Starting to Create_Menu_Bar");
       Gtk_New (Menu_Bar);

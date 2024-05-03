@@ -63,14 +63,15 @@ package body GUI is
    end Resize_Font;
 
    function Create_Icon_Pixbuf return Gdk.Pixbuf.Gdk_Pixbuf is
+      use Ada.Directories;
       IP :  Gdk.Pixbuf.Gdk_Pixbuf;
       Icon_Emb : constant Embedded.Content_Type := Embedded.Get_Content (App_Icon);
       package IO is new Ada.Sequential_IO (Interfaces.Unsigned_8);
       Tmp_File : IO.File_Type;
       Error : aliased GError;
    begin
-      if Ada.Directories.Exists (Icon_Tmp_Name) then
-         Ada.Directories.Delete_File (Icon_Tmp_Name);
+      if Exists (Icon_Tmp_Name) then
+         Delete_File (Icon_Tmp_Name);
       end if;
       IO.Create (File => Tmp_File, Name => Icon_Tmp_Name);
       for Val of Icon_Emb.Content.all loop
@@ -81,7 +82,7 @@ package body GUI is
       if Error /= null then
          Ada.Text_IO.Put_Line ("WARNING: Could not find/load icon file: " & Icon_Tmp_Name);
       end if;
-      Ada.Directories.Delete_File (Icon_Tmp_Name);
+      Delete_File (Icon_Tmp_Name);
       return IP;
    end Create_Icon_Pixbuf;
 
