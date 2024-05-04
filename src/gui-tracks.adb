@@ -117,11 +117,13 @@ package body GUI.Tracks is
    begin
       if Currently_Selected_Track > 0 and then 
          Currently_Selected_Track <= Integer (Sess.Tracks.Length) then
+         Tracks_Grid.Get_Child_At (Row_Col, Gint (Currently_Selected_Track)).Set_Name ("not-highlit");
          Tracks_Grid.Get_Child_At (Title_Col, Gint (Currently_Selected_Track)).Set_Name ("not-highlit");
          Tracks_Grid.Get_Child_At (Comment_Col, Gint (Currently_Selected_Track)).Set_Name ("not-highlit");
          Tracks_Grid.Get_Child_At (Vol_Col, Gint (Currently_Selected_Track)).Set_Name ("not-highlit");
       end if;
       Currently_Selected_Track := Track_Num;
+      Tracks_Grid.Get_Child_At (Row_Col, Gint (Track_Num)).Set_Name ("highlit");
       Tracks_Grid.Get_Child_At (Title_Col, Gint (Track_Num)).Set_Name ("highlit");
       Tracks_Grid.Get_Child_At (Comment_Col, Gint (Track_Num)).Set_Name ("highlit");
       Tracks_Grid.Get_Child_At (Vol_Col, Gint (Track_Num)).Set_Name ("highlit");

@@ -83,8 +83,9 @@ package GUI is
 
    Fixed_CSS_Str : constant String := "grid { padding: 10px; }" & ASCII.LF &
                               "grid label { margin: 8px; }"     & ASCII.LF &
-                              "entry#highlit { color: red; }"   & ASCII.LF &
-                              "spinbutton#highlit { color: red; }";
+                              "label#highlit { color: red; font-weight: bold; }"  & ASCII.LF &
+                              "entry#highlit { color: red; font-weight: bold; }" & ASCII.LF &
+                              "spinbutton#highlit { color: red; font-weight: bold; }";
 
    CSS_Provider : constant Gtk.Css_Provider.Gtk_Css_Provider := Gtk.Css_Provider.Gtk_Css_Provider_New;
 
