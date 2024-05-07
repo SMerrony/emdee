@@ -38,5 +38,12 @@ package Session is
    procedure Load_Session (Filename : String);
    procedure Save_Session (Filename : String);
    procedure Clear_Session;
+   procedure Set_Dirty;
+   procedure Set_Clean;
+   function  Is_Dirty return Boolean;
+
+private
+
+   Dirty_Flag : Boolean := False;
 
 end Session;

@@ -93,6 +93,7 @@ package body Session is
          end loop; --  Top_Keys loop
 
       end; --  declare
+      Set_Clean;
    end Load_Session;
 
    procedure Save_Session (Filename : String) is
@@ -130,6 +131,7 @@ package body Session is
 
       TOML.File_IO.Dump_To_File (Toml_Sess, File);
       Ada.Text_IO.Close (File);
+      Set_Clean;
    end Save_Session;
 
    procedure Clear_Session is
@@ -140,6 +142,20 @@ package body Session is
       Sess.Font_Size := To_Unbounded_String ("M");
       Sess.Lead_In_Silence := 0;
       Sess.Tracks.Clear;
+      Set_Clean;
    end Clear_Session;
+
+   procedure Set_Dirty is
+   begin
+      Dirty_Flag := True;
+   end Set_Dirty;
+
+   procedure Set_Clean is
+   begin
+      Dirty_Flag := False;
+   end Set_Clean;
+
+   function Is_Dirty return Boolean is
+      (Dirty_Flag);
 
 end Session;

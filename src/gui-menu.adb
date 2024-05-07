@@ -97,7 +97,6 @@ package body GUI.Menu is
                                               Dialog_Type => Warning,
                                               Title => App_Title & " - Error");
          else
-            Update_Text_Fields;
             Save_Session (To_String (Sess.Filename));
          end if;
       end if;
@@ -119,7 +118,6 @@ package body GUI.Menu is
                                                  Dialog_Type => Warning,
                                                  Title => App_Title & " - Oops");
             else
-               Update_Text_Fields;
                Save_Session (Filename);
             end if;
          end if;
@@ -200,8 +198,8 @@ package body GUI.Menu is
    procedure Track_Modifiers_CB (Self : access Gtk_Check_Menu_Item_Record'Class) is
    begin
       Show_Track_Modifiers := Self.Get_Active;
-      Update_Text_Fields;
       Display_Tracks;
+      Main_Window.Resize (1, 1);
    end Track_Modifiers_CB;
 
    procedure About_CB (Self : access Gtk.Menu_Item.Gtk_Menu_Item_Record'Class) is
@@ -226,10 +224,10 @@ package body GUI.Menu is
    procedure Quit_CB (Self : access Gtk.Menu_Item.Gtk_Menu_Item_Record'Class) is
       pragma Unreferenced (Self);
    begin
-      Shutting_Down := True;
-      delay 0.5;
-      --  Removing the main window closes the application...
-      App.Remove_Window (Main_Window);
+      if Really_Quit then
+         --  Removing the main window closes the application...
+         App.Remove_Window (Main_Window);
+      end if;
    end Quit_CB;
 
    procedure View_Size_CB (Self : access Gtk_Check_Menu_Item_Record'Class) is

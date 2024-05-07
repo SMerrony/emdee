@@ -1,0 +1,13 @@
+[session]
+comment = "test"
+description = "test"
+fontsize = "M"
+leadin = 0
+midiport = "128:0"
+[[track]]
+comment = ""
+path = ""
+skip = false
+title = "asdf"
+volume = 100
+

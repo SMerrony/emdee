@@ -93,6 +93,7 @@ package GUI is
    procedure Resize_Font (New_Size : Font_Size);
 
    procedure Launch;
+   function Really_Quit return Boolean;
 
 private
 
@@ -102,7 +103,7 @@ private
    --  procedure Display_Empty_Track (Track_Row : Glib.Gint);
 
    --  procedure Clear_Tracks_Display;
-   procedure Update_Text_Fields;
+
    procedure Apply_Css (Widget   : not null access Gtk_Widget_Record'Class;
                         Provider : Gtk.Style_Provider.Gtk_Style_Provider);
 

@@ -1,43 +1,49 @@
-# Sample eMDee session TOML file
-
 [session]
-description = "MJC Summer Concert - Choir"
 comment = "For the MJC Summer concert in the main hall (my laptop, their piano, main stage PA)"
+description = "MJC Summer Concert - Choir"
+fontsize = "M"
+leadin = 0
 midiport = "128:0"
-
 [[track]]
-title = "C'est si bon"
-path = "/home/steve/Desktop/MJC_Saix_MP3/Accompaniments/CestSiBon_SAH_Accpt.mid"
 comment = "MIDI"
-
+path = "/home/steve/Desktop/MJC_Saix_MP3/Accompaniments/CestSiBon_SAH_Accpt.mid"
+skip = false
+title = "C'est si bon"
+volume = 100
 [[track]]
-title = "C'est Magnifique"
-skip = true                 # this track will be skipped 
-path = "/home/steve/Desktop/MJC_Saix_MP3/Accompaniments/CestMagnifique_Accpt.mp3"
 comment = "*Good for encore!*"
-volume = 95               # reduce volume by 5%
-
-[[track]]
-title = "Mon coq est mort"
-comment = "No accompaniment, give note F"
-
-[[track]]
-title = "La Javanaise"
-path = "/home/steve/Desktop/MJC_Saix_MP3/Accompaniments/LaJavanaise_Accpt.mp3"
-
-[[track]]
-title = "Afrique Adieu"
-path = "/home/steve/Desktop/MJC_Saix_MP3/Accompaniments/AfriqueAdieu_Accpt.wav"
-comment = "WAV version"
+path = "/home/steve/Desktop/MJC_Saix_MP3/Accompaniments/CestMagnifique_Accpt.mp3"
 skip = true
-
+title = "C'est Magnifique"
+volume = 95
 [[track]]
-title = "Golden Earrings"
-path = "/home/steve/Desktop/MJC_Saix_MP3/Accompaniments/06-GoldenEarrings.flac"
+comment = "No accompaniment, give note F"
+path = ""
+skip = false
+title = "Mon coq est mort"
+volume = 100
+[[track]]
+comment = "Tempo"
+path = "/home/steve/Desktop/MJC_Saix_MP3/Accompaniments/LaJavanaise_Accpt.mp3"
+skip = false
+title = "La Javanaise"
+volume = 100
+[[track]]
+comment = "WAV version"
+path = "/home/steve/Desktop/MJC_Saix_MP3/Accompaniments/AfriqueAdieu_Accpt.wav"
+skip = true
+title = "Afrique Adieu"
+volume = 100
+[[track]]
 comment = "FLAC version, quarter volume!"
+path = "/home/steve/Desktop/MJC_Saix_MP3/Accompaniments/06-GoldenEarrings.flac"
+skip = false
+title = "Golden Earrings"
 volume = 25
-
 [[track]]
-title = "All notes off"
-path = "/home/steve/Desktop/MJC_Saix_MP3/Accompaniments/all_notes_off.mid"
 comment = "MIDI Shh!"
+path = "/home/steve/Desktop/MJC_Saix_MP3/Accompaniments/all_notes_off.mid"
+skip = false
+title = "All notes off"
+volume = 100
+

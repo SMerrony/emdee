@@ -58,3 +58,16 @@ To get Alire to build win32ada I had to add
 
 to the `emdee_config.gpr` file.
 
+A better solution is to add
+```
+   package Compiler is
+      case Emdee_Config.Alire_Host_Os is
+         when "windows" =>
+            for Default_Switches ("Ada") use Emdee_Config.Ada_Compiler_Switches & ("-gnateDTARGET=Win64");
+         when others =>
+            for Default_Switches ("Ada") use Emdee_Config.Ada_Compiler_Switches;
+      end case;
+   end Compiler;
+```
+to `emdee.gpr`.
+

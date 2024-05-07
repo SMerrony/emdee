@@ -1,8 +1,11 @@
 --  SPDX-License-Identifier: GPL-3.0-or-later
 --  SPDX-FileCopyrightText: Copyright 2024 Stephen Merrony
 
+with Ada.Containers;          use Ada.Containers;
 with Ada.Directories;
 with Ada.Strings.Unbounded;   use Ada.Strings.Unbounded;
+
+with Gdk.Event;
 
 with Glib;                    use Glib;
 
@@ -24,14 +27,41 @@ package body GUI.Tracks is
 
    procedure New_Track_File_Btn_CB (Self : access Gtk_Button_Record'Class) is
       pragma Unreferenced (Self);
-      New_File  : constant String      := File_Selection_Dialog (Title => App_Title & " - Track File",
-                                                                 --    Default_Dir => Dir,
-                                                                 Must_Exist => True);
+      New_File  : constant String := File_Selection_Dialog (Title => App_Title & " - Track File",
+                                                            --  Default_Dir => Dir,
+                                                            Must_Exist => True);
    begin
       if New_File /= "" then
          New_Track.Path := To_Unbounded_String (New_File);
       end if;
    end New_Track_File_Btn_CB;
+
+   function Comment_Changed_CB (Self : access Gtk_Widget_Record'Class; 
+                              Event : Gdk.Event.Gdk_Event_Focus) return Boolean is
+      pragma Unreferenced (Event);
+      Name      : constant String  := Self.Get_Name;
+      Track_Num : constant Integer := Integer'Value (Name (9 .. Name'Last));
+   begin
+      if Sess.Tracks (Track_Num).Comment /= Gtk_Entry (Tracks_Grid.Get_Child_At (Comment_Col, Gint (Track_Num))).Get_Text then
+         Sess.Tracks (Track_Num).Comment := To_Unbounded_String (Gtk_Entry (Tracks_Grid.Get_Child_At (Comment_Col, Gint (Track_Num))).Get_Text);
+         Set_Dirty;
+      end if;
+      return False;
+   end Comment_Changed_CB;
+
+   function Title_Changed_CB (Self : access Gtk_Widget_Record'Class; 
+                              Event : Gdk.Event.Gdk_Event_Focus) return Boolean is
+      pragma Unreferenced (Event);
+      Name      : constant String  := Self.Get_Name;
+      Track_Num : constant Integer := Integer'Value (Name (7 .. Name'Last));
+   begin
+      if Sess.Tracks.Length > 0 and then
+         Sess.Tracks (Track_Num).Title /= Gtk_Entry (Tracks_Grid.Get_Child_At (Title_Col, Gint (Track_Num))).Get_Text then
+         Sess.Tracks (Track_Num).Title := To_Unbounded_String (Gtk_Entry (Tracks_Grid.Get_Child_At (Title_Col, Gint (Track_Num))).Get_Text);
+         Set_Dirty;
+      end if;
+      return False;
+   end Title_Changed_CB;
 
    procedure Track_Insert_Btn_CB (Self : access Gtk_Button_Record'Class) is
       pragma Unreferenced (Self);
@@ -54,9 +84,9 @@ package body GUI.Tracks is
       end if;
       New_Track.File_Type := Guess_Media_Type (To_String (New_Track.Path));
       Sess.Tracks.Append (New_Item => New_Track);
-      Update_Text_Fields;
-      Display_Tracks;
+       Display_Tracks;
       Tracks_Grid.Show_All;
+      Set_Dirty;
    end Track_Insert_Btn_CB;
 
    procedure Track_Delete_Btn_CB (Self : access Gtk_Button_Record'Class) is
@@ -71,6 +101,7 @@ package body GUI.Tracks is
       if Buttons = Button_Yes then
          Sess.Tracks.Delete (Track_Num);
          Display_Tracks;  --  N.B. Can't simply delete the row as numbering needs updating.
+         Set_Dirty;
       end if;
    end Track_Delete_Btn_CB;
 
@@ -78,18 +109,18 @@ package body GUI.Tracks is
       Name      : constant UTF8_String := Self.Get_Name;
       Track_Num : constant Integer     := Integer'Value (Name (8 .. Name'Last));
    begin
-      Update_Text_Fields;
       Sess.Tracks.Swap (Track_Num, Track_Num + 1);
       Display_Tracks;
+      Set_Dirty;
    end Track_Down_Btn_CB;
 
    procedure Track_Up_Btn_CB (Self : access Gtk_Button_Record'Class) is
       Name      : constant UTF8_String := Self.Get_Name;
       Track_Num : constant Integer     := Integer'Value (Name (8 .. Name'Last));
    begin
-      Update_Text_Fields;
       Sess.Tracks.Swap (Track_Num, Track_Num - 1);
       Display_Tracks;
+      Set_Dirty;
    end Track_Up_Btn_CB;
 
    procedure Track_File_Btn_CB (Self : access Gtk_Button_Record'Class) is
@@ -107,6 +138,7 @@ package body GUI.Tracks is
                                                               Must_Exist => True));
       if New_File /= "" then
          Sess.Tracks (Track_Num).Path := New_File;
+         Set_Dirty;
       end if;
    end Track_File_Btn_CB;
 
@@ -134,6 +166,7 @@ package body GUI.Tracks is
       Track_Num : constant Integer     := Integer'Value (Name (8 .. Name'Last));
    begin
       Sess.Tracks (Track_Num).Skip := Self.Get_Active;
+      Set_Dirty;
    end Track_Skip_Check_CB;
 
    procedure Track_Vol_Changed_CB (Self : access Gtk.Spin_Button.Gtk_Spin_Button_Record'Class) is
@@ -141,6 +174,7 @@ package body GUI.Tracks is
       Track_Num : constant Integer     := Integer'Value (Name (8 .. Name'Last));
    begin
       Sess.Tracks (Track_Num).Volume := Integer (Self.Get_Value_As_Int);
+      Set_Dirty;
    end Track_Vol_Changed_CB;
 
    procedure Clear_Tracks_Display is
@@ -246,6 +280,7 @@ package body GUI.Tracks is
          Title_Entry.Set_Text (To_String (Track.Title));
          Title_Entry.Set_Name ("Title" & Row'Image);
          Tracks_Grid.Attach (Title_Entry, Title_Col, Track_Row);
+         Title_Entry.On_Focus_Out_Event (Call => Title_Changed_CB'Access);
 
          Gtk.Check_Button.Gtk_New (Skip_Check, "");
          Skip_Check.Set_Active (Track.Skip);
@@ -259,6 +294,7 @@ package body GUI.Tracks is
          Comment_Entry.Set_Text (To_String (Track.Comment));
          Comment_Entry.Set_Name ("Comment" & Row'Image);
          Tracks_Grid.Attach (Comment_Entry, Comment_Col, Track_Row);
+         Comment_Entry.On_Focus_Out_Event (Call => Comment_Changed_CB'Access);
 
          case Track.File_Type is
             when UNKNOWN =>

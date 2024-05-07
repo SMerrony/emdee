@@ -11,3 +11,4 @@
 * ~~Add statefulness (?) to GUI buttons, ie. disable STOP unless currently playing~~ Done
 * ~~Add scaling to GUI, maybe save in the session.toml file?~~ Done
 * Add possibility to translate into local language (see gtkada-intl.ads)
+* ~~Prompt user to save if necessary~~ Done
