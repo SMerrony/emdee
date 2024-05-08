@@ -87,23 +87,8 @@ package body GUI.Menu is
          Sess.Filename := Null_Unbounded_String;
    end Session_Open_CB;
 
-   procedure Session_Save_CB (Self : access Gtk.Menu_Item.Gtk_Menu_Item_Record'Class) is
-      pragma Unreferenced (Self);
-      Unused_Buttons : Message_Dialog_Buttons;
-   begin
-      if Check_Session_Desc then
-         if Sess.Filename = Null_Unbounded_String then
-            Unused_Buttons := Message_Dialog (Msg => "No Session has been loaded, cannot save.",
-                                              Dialog_Type => Warning,
-                                              Title => App_Title & " - Error");
-         else
-            Save_Session (To_String (Sess.Filename));
-         end if;
-      end if;
-   end Session_Save_CB;
-
-   procedure Session_Save_As_CB (Self : access Gtk.Menu_Item.Gtk_Menu_Item_Record'Class) is
-      pragma Unreferenced (Self);
+   procedure Session_Save_As is
+   --  Helper proc for Save callbacks.
       Filename : constant String :=
          File_Selection_Dialog (Title => App_Title & " - Save Session As...",
                                 Dir_Only => False,
@@ -122,6 +107,26 @@ package body GUI.Menu is
             end if;
          end if;
       end if;
+   end Session_Save_As;
+
+   procedure Session_Save_CB (Self : access Gtk.Menu_Item.Gtk_Menu_Item_Record'Class) is
+   --  Save the current session, performs Save As... if not already saved.
+      pragma Unreferenced (Self);
+      Unused_Buttons : Message_Dialog_Buttons;
+   begin
+      if Check_Session_Desc then
+         if Sess.Filename = Null_Unbounded_String then
+            Session_Save_As;
+         else
+            Save_Session (To_String (Sess.Filename));
+         end if;
+      end if;
+   end Session_Save_CB;
+
+   procedure Session_Save_As_CB (Self : access Gtk.Menu_Item.Gtk_Menu_Item_Record'Class) is
+      pragma Unreferenced (Self);
+   begin
+      Session_Save_As;
    end Session_Save_As_CB;
 
    procedure Session_Audio_CB (Self : access Gtk.Menu_Item.Gtk_Menu_Item_Record'Class) is
