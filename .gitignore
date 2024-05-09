@@ -4,3 +4,4 @@
 /config/
 *.mid
 /*.mp3
+.vscode

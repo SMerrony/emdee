@@ -2,7 +2,7 @@
 
 ## MIDI
 * ~~Fix MIDI off file to send Pedal up as well as note offs~~ Done - needs testing
-* Either find freely-available command-line MIDI player for Windows, or forbid MIDI under Windows
+* ~~Either find freely-available command-line MIDI player for Windows, or forbid MIDI under Windows~~ Done, using `playsmf` from http://public.sreal.com/~div/midi-utilities/
 
 ## Audio
 * ~~Add session option to send some silence before audio files~~ Done 

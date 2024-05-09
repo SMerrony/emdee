@@ -11,12 +11,6 @@ with Ada.Strings.Unbounded;   use Ada.Strings.Unbounded;
 with Ada.Text_IO;
 with Ada.Unchecked_Conversion;
 
-with Glib;           use Glib;
-with Glib.Error;
-with Glib.Spawn;     use Glib.Spawn;
-
-with Gtkada.Types;   use Gtkada.Types;
-
 with Interfaces;
 with Interfaces.C;
 
@@ -34,9 +28,6 @@ with Track;          use Track;
 
 package body Players is
 
-   function Spawn_Async is
-      new Generic_Spawn_Async (User_Data => Integer);
-
    procedure Create_1s_Silence_MP3 is
       MP3_Emb : constant Embedded.Content_Type := Embedded.Get_Content (Silence_Emb_Name);
       package IO is new Ada.Sequential_IO (Interfaces.Unsigned_8);
@@ -51,24 +42,13 @@ package body Players is
       end if;
    end Create_1s_Silence_MP3;   
 
-   function Prepare_Aplaymidi_Arguments (Midi_Port : String; Media_File : String) return Chars_Ptr_Array is
-      Argv_Arr : Chars_Ptr_Array (0 .. 15);
-   begin
-      Argv_Arr (0) := New_String ("aplaymidi");
-      Argv_Arr (1) := New_String ("-p");
-      Argv_Arr (2) := New_String (Midi_Port);
-      Argv_Arr (3) := New_String (Media_File);
-      Argv_Arr (4) := Null_Ptr;
-      return Argv_Arr;
-   end Prepare_Aplaymidi_Arguments;
-
    Proc_Info : aliased Win32.Winbase.PROCESS_INFORMATION;
    Proc_Handle : Win32.Winnt.HANDLE;
 
    function To_LPSTR is
       new Ada.Unchecked_Conversion (System.Address, Win32.LPSTR);
 
-   procedure Launch_FFplayer  (Media_File : String; Volume : Integer) is
+   function Launch_FFplayer  (Media_File : String; Volume : Integer) return Boolean is
       use Interfaces.C;
       use type Win32.BOOL;
       use Win32.Winbase;
@@ -101,17 +81,59 @@ package body Players is
       );
       if Okay = Win32.FALSE then
          Ada.Text_IO.Put_Line ("PLAYER LAUNCH ERROR");
+         return False;
       else
          Proc_Handle := Proc_Info.hProcess;
          Ada.Text_IO.Put_Line ("DEBUG: Player PID: " & Proc_Info.dwProcessId'Image);
       end if;
+      return True;
    end Launch_FFplayer;
+
+   function Launch_PlaySMF  (Media_File : String; MIDI_Port : String) return Boolean is
+      use Interfaces.C;
+      use type Win32.BOOL;
+      use Win32.Winbase;
+      Start_Info : aliased STARTUPINFO;
+      Okay       : Win32.BOOL;
+      Command_Str : constant String := "playsmf --out " &MIDI_Port & " " & Media_File;
+      Command_CA : char_array := To_C (Command_Str);
+   begin
+      Ada.Text_IO.Put_Line ("DEBUG: PlasySMF command line: " & Command_Str);
+      Start_Info.cb          := (STARTUPINFOA'Size) / System.Storage_Unit;
+      Start_Info.lpReserved  :=   null;
+      Start_Info.lpDesktop   :=   null;
+      Start_Info.lpTitle     :=   null;
+      Start_Info.dwFlags     :=   0;
+      Start_Info.cbReserved2 :=   0;
+      Start_Info.lpReserved2 :=   null;
+      Okay := CreateProcess (
+         null,                --  No module name
+         To_LPSTR (Command_CA'Address),
+         null,                --  Proc handle not inheritable
+         null,                --  Thread handle not inheritable
+         Win32.FALSE,         --  Do not inherit handles
+         0,                   --  No creation flags
+         System.Null_Address, --  Use our environment
+         null,                --  Use current directory
+         Start_Info'Unchecked_Access,
+         Proc_Info'Unchecked_Access
+      );
+      if Okay = Win32.FALSE then
+         Ada.Text_IO.Put_Line ("PLAYER LAUNCH ERROR");
+         return False;
+      else
+         Proc_Handle := Proc_Info.hProcess;
+         Ada.Text_IO.Put_Line ("DEBUG: Player PID: " & Proc_Info.dwProcessId'Image);
+      end if;
+      return True;
+   end Launch_PlaySMF;
 
    procedure Play_Silence (Secs : Positive) is
    --  N.B. This proc will cause the GUI to hang for 'Secs
+      Unused_Bool : Boolean;
    begin
       for S in 1 .. Secs loop
-         Launch_FFplayer (Silence_Tmp_Name, 0);
+         Unused_Bool := Launch_FFplayer (Silence_Tmp_Name, 0);
          loop
             delay 0.1;
             exit when not Player_Active;
@@ -122,31 +144,20 @@ package body Players is
    procedure Play_Track is
       Track      : constant Track_T := Sess.Tracks (Currently_Playing_Track);
       Media_File : constant String := To_String (Track.Path);
-      Okay : Gboolean;
-      PErr : aliased Glib.Error.GError;
-      Argv : aliased Chars_Ptr_Array := [0 .. 15 => <>];
+      Okay : Boolean;
    begin
       case Track.File_Type is
          when FLAC | MP3 | OGG | WAV =>
             if Sess.Lead_In_Silence > 0 then
                Play_Silence (Sess.Lead_In_Silence);
             end if;
-            Launch_FFplayer (Media_File, Track.Volume);
+            Okay := Launch_FFplayer (Media_File, Track.Volume);
          when MIDI =>
-            Argv := Prepare_Aplaymidi_Arguments (To_String (Sess.MIDI_Port), Media_File);
-            Okay := Spawn_Async (Working_Directory => Null_Ptr,
-                                 Argv => Argv'Access,
-                                 Envp => null,  --  Inherit our env
-                                 Flags => G_Spawn_Search_Path, --  + G_Spawn_Do_Not_Reap_Child,
-                                 Child_Setup => null,
-                                 Data => null,
-                                 Child_Pid => Player_PID'Access,
-                                 Error => PErr'Access
-                                 );
+            Okay := Launch_PlaySMF (Media_File, To_String (Sess.MIDI_Port));
          when UNKNOWN => raise Unknown_Media_Type;
       end case;
 
-      if Okay = 0 then
+      if not Okay then
          Ada.Text_IO.Put_Line ("PLAYER ERROR");
       end if;
    end Play_Track;
@@ -173,25 +184,14 @@ package body Players is
    end Player_Active;
 
    procedure Stop_Playing is
-      Unused_Okay : Gboolean;
+      Unused_Okay : Boolean;
       Unused_Bool : Win32.BOOL;
-      PErr : aliased Glib.Error.GError;
-      Argv : aliased Chars_Ptr_Array := [0 .. 15 => <>];
    begin
       if Player_Active then
          Unused_Bool := Win32.Winbase.TerminateProcess (Proc_Handle, 0);
          Proc_Info.dwProcessId := 0;
          if Sess.Tracks (Currently_Playing_Track).File_Type = MIDI then
-            Argv := Prepare_Aplaymidi_Arguments (To_String (Sess.MIDI_Port), Midi_Files.Notes_Off_Embedded);
-            Unused_Okay := Spawn_Async (Working_Directory => Null_Ptr,
-                                 Argv => Argv'Access,
-                                 Envp => null,  --  Inherit our env
-                                 Flags => G_Spawn_Search_Path, --  + G_Spawn_Do_Not_Reap_Child,
-                                 Child_Setup => null,
-                                 Data => null,
-                                 Child_Pid => Player_PID'Access,
-                                 Error => PErr'Access
-                                 );
+            Unused_Okay := Launch_PlaySMF (Midi_Files.Notes_Off_Embedded, To_String (Sess.MIDI_Port));
          end if;
       end if;
    end Stop_Playing;
