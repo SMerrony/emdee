@@ -2,7 +2,7 @@
 --  SPDX-FileCopyrightText: Copyright 2024 Stephen Merrony
 
 with Ada.Command_Line;  use Ada.Command_Line;
-with Ada.Text_IO;
+with Ada.Text_IO;       use Ada.Text_IO;
 
 with GNAT.OS_Lib;
 
@@ -13,7 +13,6 @@ procedure Emdee is
    Arg_Ix   : Natural := 1;
 
    procedure Print_Help is
-      use Ada.Text_IO;
    begin
       Put_Line (GUI.App_Title &  " - " & GUI.App_Comment);
       Put_Line ("Usage:");
@@ -26,7 +25,7 @@ procedure Emdee is
 begin
    while Arg_Ix <= Argument_Count loop
       if Argument (Arg_Ix) = "-version" then
-         Ada.Text_IO.Put_Line ("emdee version " & GUI.App_SemVer);
+         Put_Line ("emdee version " & GUI.App_SemVer);
          GNAT.OS_Lib.OS_Exit (0);
       elsif Argument (Arg_Ix) = "-h" or else Argument (Arg_Ix) = "-help" then
          Print_Help;
