@@ -39,4 +39,5 @@ development.style_checks = ["-gnaty-m"]
 release.style_checks = "No"
 
 [[depends-on]]
+[depends-on.'case(os)'.windows]
 win32ada = "^23.0.0"
