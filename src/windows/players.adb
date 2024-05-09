@@ -21,6 +21,7 @@ with Win32.Winbase;
 with Win32.Winnt;
 
 with Embedded;
+with GUI;
 with Midi_Files;
 with Players;        use Players;
 with Session;        use Session;
@@ -59,7 +60,9 @@ package body Players is
                                        Volume_Str & " " & Media_File;
       Command_CA : char_array := To_C (Command_Str);
    begin
-      Ada.Text_IO.Put_Line ("DEBUG: FFplay command line: " & Command_Str);
+      if GUI.Verbose then
+         Ada.Text_IO.Put_Line ("DEBUG: FFplay command line: " & Command_Str);
+      end if;
       Start_Info.cb          := (STARTUPINFOA'Size) / System.Storage_Unit;
       Start_Info.lpReserved  :=   null;
       Start_Info.lpDesktop   :=   null;
@@ -84,7 +87,9 @@ package body Players is
          return False;
       else
          Proc_Handle := Proc_Info.hProcess;
-         Ada.Text_IO.Put_Line ("DEBUG: Player PID: " & Proc_Info.dwProcessId'Image);
+         if GUI.Verbose then
+            Ada.Text_IO.Put_Line ("DEBUG: Player PID: " & Proc_Info.dwProcessId'Image);
+         end if;
       end if;
       return True;
    end Launch_FFplayer;

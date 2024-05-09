@@ -17,8 +17,6 @@ procedure Emdee is
       Put_Line (GUI.App_Title &  " - " & GUI.App_Comment);
       Put_Line ("Usage:");
       Put_Line ("  -h | -help           Display this usage message");
-      --  Put_Line ("  -sessconf <filename> Load the specified session configuration");
-      --  Put_Line ("  -sysconf <filename>  Use the specified system configuration");
       Put_Line ("  -version             Show the version of emdee and exit");
    end Print_Help;
 

@@ -63,6 +63,7 @@ package GUI is
    Session_Comment_Entry : Gtk_Entry;
    New_Track_Entry_Row   : Glib.Gint;
 
+   Verbose       : Boolean := False;
    Shutting_Down : Boolean := False;
 
    --  Status Bar items...

@@ -20,6 +20,7 @@ with Interfaces;
 with Interfaces.C;
 
 with Embedded;
+with GUI;
 with Midi_Files;
 with Players;        use Players;
 with Session;        use Session;
@@ -174,7 +175,9 @@ package body Players is
       if Okay = 0 then
          Ada.Text_IO.Put_Line ("PLAYER ERROR");
       end if;
-      Ada.Text_IO.Put_Line ("DEBUG: PID:" & Player_PID'Image);
+      if GUI.Verbose then
+         Ada.Text_IO.Put_Line ("DEBUG: PID:" & Player_PID'Image);
+      end if;
    end Play_Track;
 
    function Player_Active return Boolean is
