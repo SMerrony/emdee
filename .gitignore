@@ -2,6 +2,9 @@
 /bin/
 /alire/
 /config/
+/*.png
 *.mid
-/*.mp3
+*.mp3
 .vscode
+*.AppImage
+*.desktop
