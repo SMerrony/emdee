@@ -28,6 +28,8 @@ it now also runs under Windows.
       - [GNU/Linux](#gnulinux-1)
       - [Windows](#windows-1)
     - [Build from Source](#build-from-source)
+      - [From the Alire Crate Repository](#from-the-alire-crate-repository)
+      - [From Source Download](#from-source-download)
 
 ## Core Features
 * Create 'session' of 'tracks'
@@ -69,7 +71,10 @@ You will neeed to ensure that both of these players are on your PATH so that `eM
 
 ### Install Executable
 #### GNU/Linux
+An AppImage file will normally be provided with each release.  Install it in the usual manner.
+
 #### Windows
+TODO
 
 ### Build from Source
 
@@ -77,8 +82,17 @@ You will neeed to ensure that both of these players are on your PATH so that `eM
 This is easy to install under Linux or Windows and handles the entire build-chain for you.
 See https://alire.ada.dev/docs/ for how to install `Alire` on your system.
 
+#### From the Alire Crate Repository
+[Not yet published]
+
 Once `Alire` is installed, the following command will download and build `eMDee` and its internal dependencies in one step...
 ```
 alr get --build emdee
 ```
+#### From Source Download
+Download and extract the latest release source code bundle from https://github.com/SMerrony/emdee/releases
 
+In the newly-created directory run `alr build`.  The first time you do this it may take some minutes whilst all
+the required libraries are downloaded and built, subsequent builds will be very fast.
+
+The executable will be found in the `bin` subdirectory.
