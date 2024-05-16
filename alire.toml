@@ -10,7 +10,7 @@ The MD can plan in advance the order of performance; later, `eMDee` will facilit
 Additional controls may be added to specific tracks such as changing the volume level.
 """
 
-version = "0.1.0"
+version = "0.1.1" # TODO Update for each release
 
 authors = ["Stephen Merrony"]
 maintainers = ["Stephen Merrony <merrony@gmail.com>"]

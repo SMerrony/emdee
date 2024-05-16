@@ -5,7 +5,7 @@ with Ada.Strings.Unbounded;   use Ada.Strings.Unbounded;
 
 package Track is
 
-   type Media_Type is (FLAC, MIDI, MP3, OGG, WAV, UNKNOWN);
+   type Media_Type is (NONE, FLAC, MIDI, MP3, OGG, WAV, UNKNOWN);
 
    type Track_T is record
       Title,

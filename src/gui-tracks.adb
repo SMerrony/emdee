@@ -207,6 +207,13 @@ package body GUI.Tracks is
       Vol_Adj    : Gtk.Adjustment.Gtk_Adjustment;
       Vol_Spin   : Gtk.Spin_Button.Gtk_Spin_Button;
    begin
+      New_Track.Title := Null_Unbounded_String;
+      New_Track.Path  := Null_Unbounded_String;
+      New_Track.Comment := Null_Unbounded_String;
+      New_Track.Volume  := 100;
+      New_Track.Skip    := False;
+      New_Track.File_Type := NONE;
+
       New_Track_Entry_Row := Track_Row;
 
       --  Placeholders for the case of an empty Sess...
@@ -297,7 +304,7 @@ package body GUI.Tracks is
          Comment_Entry.On_Focus_Out_Event (Call => Comment_Changed_CB'Access);
 
          case Track.File_Type is
-            when UNKNOWN =>
+            when NONE | UNKNOWN =>
                MIDI_Label := Gtk_Label_New ("No Track");
                Tracks_Grid.Attach (MIDI_Label, Vol_Col, Track_Row);
             when MIDI =>

@@ -16,7 +16,9 @@ package body Track is
       Result      : Media_Type := UNKNOWN;
       UC_Filename : constant String := To_Upper (Filename);
    begin
-      if Ends_With (UC_Filename, "MP3") then
+      if Filename'Length = 0 then
+         Result := NONE;
+      elsif Ends_With (UC_Filename, "MP3") then
          Result := MP3;
       elsif Ends_With (UC_Filename, "OGG") then
          Result := OGG;

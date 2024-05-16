@@ -22,7 +22,7 @@ package GUI is
 
    package SB_Timeout_P is new Glib.Main.Generic_Sources (Gtk.Box.Gtk_Box);
 
-   App_SemVer    : constant String := "0.1.0";  --  TODO Update Version each release!
+   App_SemVer    : constant String := "0.1.1";  --  TODO Update Version each release!
    App_Title     : constant String := "eMDee";
    App_ID        : constant String := "fr.merrony." & App_Title;
    App_Comment   : constant String := "Musical Director's Assistant";

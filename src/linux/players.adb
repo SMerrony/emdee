@@ -152,6 +152,8 @@ package body Players is
       Argv : aliased Chars_Ptr_Array := [0 .. 15 => <>];
    begin
       case Track.File_Type is
+         when NONE =>
+            null;
          when FLAC | MP3 | OGG | WAV =>
             Argv := Prepare_Ffplay_Arguments (Media_File, Track.Volume);
          when MIDI =>
