@@ -1,0 +1,31 @@
+[session]
+comment = ""
+description = "Test Session 5"
+fontsize = "M"
+leadin = 0
+midiport = ""
+[[track]]
+comment = ""
+path = "/home/steve/Desktop/Brugeria_MP3/Accompaniments/AvoirUnBonCopain.mid"
+skip = false
+title = "Avoir"
+volume = 100
+[[track]]
+comment = ""
+path = "/home/steve/Desktop/MJC_Saix_MP3/Full Renderings/LaFilleDuSud_Vianney_SABar.mp3"
+skip = false
+title = "La fille du Sud"
+volume = 100
+[[track]]
+comment = ""
+path = ""
+skip = false
+title = "Not a lot"
+volume = 100
+[[track]]
+comment = ""
+path = "/home/steve/Desktop/MJC_Saix_MP3/Full Renderings/LaJavanaise.mp3"
+skip = false
+title = "La java"
+volume = 100
+

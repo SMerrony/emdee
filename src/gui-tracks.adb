@@ -4,13 +4,13 @@
 with Ada.Containers;          use Ada.Containers;
 with Ada.Directories;
 with Ada.Strings.Unbounded;   use Ada.Strings.Unbounded;
+with Ada.Text_IO;
 
 with Gdk.Event;
 
 with Glib;                    use Glib;
 
 with Gtk.Adjustment;
-with Gtk.Button;              use Gtk.Button;
 with Gtk.Check_Button;
 with Gtk.Enums;               use Gtk.Enums;
 with Gtk.Spin_Button;
@@ -26,15 +26,23 @@ with Track;                   use Track;
 package body GUI.Tracks is
 
    procedure New_Track_File_Btn_CB (Self : access Gtk_Button_Record'Class) is
-      pragma Unreferenced (Self);
       New_File  : constant String := File_Selection_Dialog (Title => App_Title & " - Track File",
                                                             --  Default_Dir => Dir,
                                                             Must_Exist => True);
    begin
       if New_File /= "" then
-         New_Track.Path := To_Unbounded_String (New_File);
+         Ada.Text_IO.Put_Line ("DEBUG: File selected: " & New_File);
+         Set_Dirty;
       end if;
+      Self.Set_Tooltip_Text (New_File);
    end New_Track_File_Btn_CB;
+
+   procedure New_Track_File_Del_Btn_CB (Self : access Gtk_Button_Record'Class) is
+      pragma Unreferenced (Self);
+   begin
+      New_Track_File_Btn.Set_Tooltip_Text ("");
+      Set_Dirty;
+   end New_Track_File_Del_Btn_CB;
 
    function Comment_Changed_CB (Self : access Gtk_Widget_Record'Class; 
                               Event : Gdk.Event.Gdk_Event_Focus) return Boolean is
@@ -65,6 +73,7 @@ package body GUI.Tracks is
 
    procedure Track_Insert_Btn_CB (Self : access Gtk_Button_Record'Class) is
       pragma Unreferenced (Self);
+      New_Path : constant String := New_Track_File_Btn.Get_Tooltip_Text;
    begin
       New_Track.Title   := To_Unbounded_String (
                               Gtk_Entry (
@@ -76,13 +85,15 @@ package body GUI.Tracks is
                               Tracks_Grid.Get_Child_At (Skip_Col, New_Track_Entry_Row)).Get_Active;
       New_Track.Volume  := Integer (Gtk.Spin_Button.Gtk_Spin_Button (
                               Tracks_Grid.Get_Child_At (Vol_Col, New_Track_Entry_Row)).Get_Value_As_Int);
-      if New_Track.Path = Null_Unbounded_String and then
-         Message_Dialog ("You have not selected an audio or MIDI file, do you want to save this track?",
+      if New_Path'Length < 4 then
+         if Message_Dialog ("You have not selected an audio or MIDI file, do you want to save this track?",
                          Confirmation, Button_No or Button_Yes) = Button_No
-      then
-         return; --  Nothing is done
+         then
+            return; --  Nothing is done
+         end if;
       end if;
-      New_Track.File_Type := Guess_Media_Type (To_String (New_Track.Path));
+      New_Track.Path := To_Unbounded_String (New_Path);
+      New_Track.File_Type := Guess_Media_Type (New_Path);
       Sess.Tracks.Append (New_Item => New_Track);
        Display_Tracks;
       Tracks_Grid.Show_All;
@@ -138,9 +149,21 @@ package body GUI.Tracks is
                                                               Must_Exist => True));
       if New_File /= "" then
          Sess.Tracks (Track_Num).Path := New_File;
+         Sess.Tracks (Track_Num).File_Type := Guess_Media_Type (To_String (New_File));
+         Display_Tracks;
          Set_Dirty;
       end if;
    end Track_File_Btn_CB;
+
+   procedure Track_File_Del_Btn_CB (Self : access Gtk_Button_Record'Class) is
+      Name      : constant UTF8_String := Self.Get_Name;
+      Track_Num : constant Integer     := Integer'Value (Name (8 .. Name'Last));
+   begin
+      Sess.Tracks (Track_Num).Path := Null_Unbounded_String;
+      Sess.Tracks (Track_Num).File_Type := NONE;
+      Display_Tracks;
+      Set_Dirty;
+   end Track_File_Del_Btn_CB;
 
    procedure Track_Select_Btn_CB (Self : access Gtk_Button_Record'Class) is
       use Session.Track_Vectors;
@@ -199,7 +222,7 @@ package body GUI.Tracks is
    procedure Display_Empty_Track (Track_Row : Glib.Gint) is
    --  Display an empty row for entering a new track
       Dummy_Label : Gtk_Label;
-      Track_File_Btn,
+      Track_File_Del_Btn,
       Track_Insert_Btn : Gtk_Button;
       Skip_Check : Gtk.Check_Button.Gtk_Check_Button;
       Title_Entry,
@@ -207,14 +230,8 @@ package body GUI.Tracks is
       Vol_Adj    : Gtk.Adjustment.Gtk_Adjustment;
       Vol_Spin   : Gtk.Spin_Button.Gtk_Spin_Button;
    begin
-      New_Track.Title := Null_Unbounded_String;
-      New_Track.Path  := Null_Unbounded_String;
-      New_Track.Comment := Null_Unbounded_String;
-      New_Track.Volume  := 100;
-      New_Track.Skip    := False;
-      New_Track.File_Type := NONE;
-
       New_Track_Entry_Row := Track_Row;
+      --  New_Track := new Track_T;
 
       --  Placeholders for the case of an empty Sess...
       for c in 0 .. Title_Col - 1 loop
@@ -245,13 +262,17 @@ package body GUI.Tracks is
       Gtk.Spin_Button.Gtk_New (Spin_Button => Vol_Spin, Adjustment => Vol_Adj, Climb_Rate => 0.1, The_Digits => 0);
       Tracks_Grid.Attach (Vol_Spin, Vol_Col, Track_Row);
 
-      Gtk_New_From_Icon_Name (Track_File_Btn, "folder-symbolic", Icon_Size_Button);
-      Track_File_Btn.On_Clicked (New_Track_File_Btn_CB'Access);
-      Tracks_Grid.Attach (Track_File_Btn, File_Col, Track_Row);
+      Gtk_New_From_Icon_Name (New_Track_File_Btn, "folder-symbolic", Icon_Size_Button);
+      New_Track_File_Btn.On_Clicked (New_Track_File_Btn_CB'Access);
+      Tracks_Grid.Attach (New_Track_File_Btn, File_Col, Track_Row);
+
+      Gtk_New_From_Icon_Name (Track_File_Del_Btn, "edit-clear-symbolic", Icon_Size_Button);
+      Track_File_Del_Btn.On_Clicked (New_Track_File_Del_Btn_CB'Access);
+      Tracks_Grid.Attach (Track_File_Del_Btn, File_Del_Col, Track_Row);
 
       Track_Insert_Btn := Gtk_Button_New_With_Label ("Insert");
       Track_Insert_Btn.On_Clicked (Track_Insert_Btn_CB'Access);
-      Tracks_Grid.Attach (Track_Insert_Btn, File_Col + 1, Track_Row, 3);
+      Tracks_Grid.Attach (Track_Insert_Btn, Down_Col + 1, Track_Row, 3);
    end Display_Empty_Track;
 
    procedure Display_Tracks is
@@ -260,7 +281,8 @@ package body GUI.Tracks is
       Track_Down_Btn,
       Track_Del_Btn,
       Track_Up_Btn,
-      Track_File_Btn : Gtk_Button;
+      Track_File_Btn,
+      Track_File_Del_Btn : Gtk_Button;
       Skip_Check : Gtk.Check_Button.Gtk_Check_Button;
       Row_Label  : Gtk_Label;
       Title_Entry,
@@ -332,6 +354,12 @@ package body GUI.Tracks is
             Track_File_Btn.Set_Name ("FilSel" & Row'Image);
             Track_File_Btn.On_Clicked (Track_File_Btn_CB'Access);
             Tracks_Grid.Attach (Track_File_Btn, File_Col, Track_Row);
+
+            Gtk_New_From_Icon_Name (Track_File_Del_Btn, "edit-clear-symbolic", Icon_Size_Button);
+            Track_File_Del_Btn.Set_Tooltip_Text ("Remove file association");
+            Track_File_Del_Btn.Set_Name ("FilDel" & Row'Image);
+            Track_File_Del_Btn.On_Clicked (Track_File_Del_Btn_CB'Access);
+            Tracks_Grid.Attach (Track_File_Del_Btn, File_Del_Col, Track_Row);
 
             if Integer (Track_Row) < Integer (Sess.Tracks.Length) then
                Gtk_New_From_Icon_Name (Track_Down_Btn, "go-down-symbolic", Icon_Size_Button);

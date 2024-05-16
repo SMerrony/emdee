@@ -1,6 +1,8 @@
 [session]
 comment = ""
 description = "Test Session"
+fontsize = "M"
+leadin = 0
 midiport = ""
 [[track]]
 comment = ""
@@ -16,8 +18,20 @@ title = "Avoir un bon copain"
 volume = 100
 [[track]]
 comment = "Bring men forward"
-path = "/home/steve/Desktop/Brugeria_MP3/Accompaniments/FaurÃ©-CantiqueDeJeanRacine-Master_Piano.mp3"
+path = "/home/steve/Desktop/Brugeria_MP3/Accompaniments/FaurÃÂÃÂ©-CantiqueDeJeanRacine-Master_Piano.mp3"
 skip = false
 title = "Cantique de Jean Racine"
 volume = 95
+[[track]]
+comment = ""
+path = "/home/steve/Ada/emdee/all_notes_off.mid"
+skip = false
+title = "sdf"
+volume = 100
+[[track]]
+comment = "ggg"
+path = "/home/steve/Ada/emdee/all_notes_off.mid"
+skip = false
+title = "sdfg"
+volume = 100
 

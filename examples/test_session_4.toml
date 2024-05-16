@@ -1,0 +1,25 @@
+[session]
+comment = ""
+description = "asd"
+fontsize = "M"
+leadin = 0
+midiport = ""
+[[track]]
+comment = ""
+path = "/home/steve/Desktop/MJC_Saix_MP3/Full Renderings/LaFilleDuSud_Vianney_SABar.mp3"
+skip = false
+title = "ddd"
+volume = 100
+[[track]]
+comment = ""
+path = ""
+skip = false
+title = "nowt"
+volume = 100
+[[track]]
+comment = ""
+path = "/home/steve/Ada/emdee/all_notes_off.mid"
+skip = false
+title = "shh"
+volume = 100
+

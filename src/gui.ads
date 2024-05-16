@@ -22,7 +22,7 @@ package GUI is
 
    package SB_Timeout_P is new Glib.Main.Generic_Sources (Gtk.Box.Gtk_Box);
 
-   App_SemVer    : constant String := "0.1.1";  --  TODO Update Version each release!
+   App_SemVer    : constant String := "0.2.0";  --  TODO Update Version each release!
    App_Title     : constant String := "eMDee";
    App_ID        : constant String := "fr.merrony." & App_Title;
    App_Comment   : constant String := "Musical Director's Assistant";
@@ -35,18 +35,6 @@ package GUI is
    Icon_Tmp_Name : constant String := "eMDee_icon.tmp";
 
    Max_Tracks  : constant Integer := 99;
-
-   --  Track display column ordering
-   Row_Col     : constant Glib.Gint := 0;
-   Select_Col  : constant Glib.Gint := 1;
-   Title_Col   : constant Glib.Gint := 2;
-   Skip_Col    : constant Glib.Gint := 3;
-   Comment_Col : constant Glib.Gint := 4;
-   Vol_Col     : constant Glib.Gint := 5;
-   File_Col    : constant Glib.Gint := 6;
-   Down_Col    : constant Glib.Gint := 7;
-   Up_Col      : constant Glib.Gint := 8;
-   Del_Col     : constant Glib.Gint := 9;
 
    type Select_Btn_Arr_T is array (1 .. Max_Tracks) of Gtk.Button.Gtk_Button;
 
