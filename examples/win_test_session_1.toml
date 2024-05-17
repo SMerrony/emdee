@@ -36,7 +36,7 @@ title = "Afrique Adieu"
 volume = 99
 [[track]]
 comment = "Count intro!"
-path = "C:\\Users\\merro\\Desktop\\MJC_Saix_MP3\\Accompaniments\\LAigleNoir_Accpt.mp3"
+path = ""
 skip = false
 title = "L'aigle noir"
 volume = 100
@@ -46,4 +46,10 @@ path = "C:\\Users\\merro\\Desktop\\MJC_Saix_MP3\\Accompaniments\\06-GoldenEarrin
 skip = false
 title = "Golden Earrings"
 volume = 25
+[[track]]
+comment = ""
+path = "C:\\Users\\merro\\Desktop\\MJC_Saix_MP3\\Accompaniments\\LAigleNoir_Accpt.mp3"
+skip = false
+title = "L'aigle encore"
+volume = 100
 

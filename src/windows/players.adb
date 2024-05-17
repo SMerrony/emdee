@@ -152,6 +152,8 @@ package body Players is
       Okay : Boolean;
    begin
       case Track.File_Type is
+         when NONE =>
+            null;
          when FLAC | MP3 | OGG | WAV =>
             if Sess.Lead_In_Silence > 0 then
                Play_Silence (Sess.Lead_In_Silence);
