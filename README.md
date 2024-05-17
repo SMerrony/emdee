@@ -12,8 +12,6 @@ the need to have folders of tracks and command-line windows open in order to pla
 
 The MD can plan in advance the order of performance; later, `eMDee` will facilitate the playing of each track in the specfied order during the performance.
 
-![eMDee main screen, ready to perform!](doc/eMDee_0_1_0_Loaded.png)
-
 `eMDee` was originally designed for GNU Linux systems such as Mint, Debian, Ubuntu, etc., 
 it now also runs under Windows.
 
@@ -30,6 +28,9 @@ it now also runs under Windows.
     - [Build from Source](#build-from-source)
       - [From the Alire Crate Repository](#from-the-alire-crate-repository)
       - [From Source Download](#from-source-download)
+  - [Changes](#changes)
+
+![eMDee main screen, ready to perform!](doc/eMDee_0_2_0_Loaded.png)
 
 ## Core Features
 * Create 'session' of 'tracks'
@@ -51,7 +52,7 @@ When a MIDI file is manually stopped from playing, an all-notes-off MIDI file is
 
 ## Session Editing
 
-![eMDee main screen, editing tracks](doc/eMDee_0_1_0_Editing.png)
+![eMDee main screen, editing tracks](doc/eMDee_0_2_0_Editing.png)
 
 ## Prerequisites
 `eMDee` relies on well-known third-party applications to play audio and MIDI files, these must be installed
@@ -96,3 +97,9 @@ In the newly-created directory run `alr build`.  The first time you do this it m
 the required libraries are downloaded and built, subsequent builds will be very fast.
 
 The executable will be found in the `bin` subdirectory.
+
+## Changes
+
+* 0.2.0 Add button to delete sound file from a track - Issue #2
+* 0.1.1 Fix adding new tracks with no associated sound file - Issue #1
+* 0.1.0 Initial release - runs OK on GNU/Linux and Windows
