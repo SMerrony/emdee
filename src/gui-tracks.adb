@@ -6,12 +6,11 @@ with Ada.Directories;
 with Ada.Strings.Unbounded;   use Ada.Strings.Unbounded;
 with Ada.Text_IO;
 
-with Gdk.Event;
-
 with Glib;                    use Glib;
 
 with Gtk.Adjustment;
 with Gtk.Check_Button;
+with Gtk.Editable;            use Gtk.Editable;
 with Gtk.Enums;               use Gtk.Enums;
 with Gtk.Spin_Button;
 with Gtk.Toggle_Button;
@@ -44,23 +43,20 @@ package body GUI.Tracks is
       Set_Dirty;
    end New_Track_File_Del_Btn_CB;
 
-   function Comment_Changed_CB (Self : access Gtk_Widget_Record'Class; 
-                              Event : Gdk.Event.Gdk_Event_Focus) return Boolean is
-      pragma Unreferenced (Event);
-      Name      : constant String  := Self.Get_Name;
+   procedure Comment_Changed_CB (Self : Gtk_Editable) is
+      Ent       : constant Gtk_Entry := -Self;
+      Name      : constant String  := Ent.Get_Name;
       Track_Num : constant Integer := Integer'Value (Name (9 .. Name'Last));
    begin
       if Sess.Tracks (Track_Num).Comment /= Gtk_Entry (Tracks_Grid.Get_Child_At (Comment_Col, Gint (Track_Num))).Get_Text then
          Sess.Tracks (Track_Num).Comment := To_Unbounded_String (Gtk_Entry (Tracks_Grid.Get_Child_At (Comment_Col, Gint (Track_Num))).Get_Text);
          Set_Dirty;
       end if;
-      return False;
    end Comment_Changed_CB;
 
-   function Title_Changed_CB (Self : access Gtk_Widget_Record'Class; 
-                              Event : Gdk.Event.Gdk_Event_Focus) return Boolean is
-      pragma Unreferenced (Event);
-      Name      : constant String  := Self.Get_Name;
+   procedure Title_Changed_CB (Self : Gtk_Editable) is
+      Ent       : constant Gtk_Entry := -Self;
+      Name      : constant String  := Ent.Get_Name;
       Track_Num : constant Integer := Integer'Value (Name (7 .. Name'Last));
    begin
       if Sess.Tracks.Length > 0 and then
@@ -68,8 +64,7 @@ package body GUI.Tracks is
          Sess.Tracks (Track_Num).Title := To_Unbounded_String (Gtk_Entry (Tracks_Grid.Get_Child_At (Title_Col, Gint (Track_Num))).Get_Text);
          Set_Dirty;
       end if;
-      return False;
-   end Title_Changed_CB;
+   end Title_Changed_CB;   
 
    procedure Track_Insert_Btn_CB (Self : access Gtk_Button_Record'Class) is
       pragma Unreferenced (Self);
@@ -309,7 +304,7 @@ package body GUI.Tracks is
          Title_Entry.Set_Text (To_String (Track.Title));
          Title_Entry.Set_Name ("Title" & Row'Image);
          Tracks_Grid.Attach (Title_Entry, Title_Col, Track_Row);
-         Title_Entry.On_Focus_Out_Event (Call => Title_Changed_CB'Access);
+         On_Changed (+Title_Entry, Title_Changed_CB'Access);
 
          Gtk.Check_Button.Gtk_New (Skip_Check, "");
          Skip_Check.Set_Active (Track.Skip);
@@ -323,7 +318,7 @@ package body GUI.Tracks is
          Comment_Entry.Set_Text (To_String (Track.Comment));
          Comment_Entry.Set_Name ("Comment" & Row'Image);
          Tracks_Grid.Attach (Comment_Entry, Comment_Col, Track_Row);
-         Comment_Entry.On_Focus_Out_Event (Call => Comment_Changed_CB'Access);
+         On_Changed (+Comment_Entry, Comment_Changed_CB'Access);
 
          case Track.File_Type is
             when NONE | UNKNOWN =>

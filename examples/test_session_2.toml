@@ -1,37 +1,37 @@
 [session]
-comment = ""
-description = "Test Session"
+comment = "Notes"
+description = "Test Session updated"
 fontsize = "M"
 leadin = 0
 midiport = ""
 [[track]]
-comment = ""
+comment = "1"
 path = "/home/steve/Ada/emdee/all_notes_off.mid"
 skip = false
 title = "All notes off"
 volume = 100
 [[track]]
-comment = "Mix up choir first!"
+comment = "2"
 path = "/home/steve/Desktop/Brugeria_MP3/Accompaniments/AvoirUnBonCopain.mid"
 skip = false
 title = "Avoir un bon copain"
 volume = 100
 [[track]]
-comment = "Bring men forward"
-path = "/home/steve/Desktop/Brugeria_MP3/Accompaniments/FaurÃÂÃÂ©-CantiqueDeJeanRacine-Master_Piano.mp3"
+comment = "3"
+path = "/home/steve/Desktop/Brugeria_MP3/Accompaniments/FaurÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ©-CantiqueDeJeanRacine-Master_Piano.mp3"
 skip = false
 title = "Cantique de Jean Racine"
 volume = 95
 [[track]]
-comment = ""
+comment = "4"
 path = "/home/steve/Ada/emdee/all_notes_off.mid"
 skip = false
-title = "sdf"
+title = "sdf2"
 volume = 100
 [[track]]
-comment = "ggg"
+comment = "56"
 path = "/home/steve/Ada/emdee/all_notes_off.mid"
 skip = false
-title = "sdfg"
+title = "sdfg3"
 volume = 100
 

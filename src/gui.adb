@@ -17,6 +17,7 @@ with Glib.Error;              use Glib.Error;
 with Gtk.Box;                 use Gtk.Box;
 with Gtk.Button;              use Gtk.Button;
 with Gtk.Container;
+with Gtk.Editable;            use Gtk.Editable;
 with Gtk.Enums;               use Gtk.Enums;
 with Gtk.Frame;
 with Gtk.Style_Context;
@@ -115,26 +116,22 @@ package body GUI is
       end if;
    end Select_Previous_Track;
 
-   function Comment_Changed_CB (Self : access Gtk_Widget_Record'Class;
-                                Event : Gdk.Event.Gdk_Event_Focus) return Boolean is
-      pragma Unreferenced (Self, Event);
+   procedure Comment_Changed_CB (Self : Gtk_Editable) is
+      pragma Unreferenced (Self);
    begin
       if Session_Comment_Entry.Get_Text /= Sess.Comment then
          Set_Dirty;
          Sess.Comment := To_Unbounded_String (Session_Comment_Entry.Get_Text);
       end if;
-      return False;
    end Comment_Changed_CB;
 
-   function Desc_Changed_CB (Self : access Gtk_Widget_Record'Class;
-                             Event : Gdk.Event.Gdk_Event_Focus) return Boolean is
-      pragma Unreferenced (Self, Event);
+   procedure Desc_Changed_CB (Self : Gtk_Editable) is
+      pragma Unreferenced (Self);
    begin
       if Session_Desc_Entry.Get_Text /= Sess.Desc then
          Set_Dirty;
          Sess.Desc := To_Unbounded_String (Session_Desc_Entry.Get_Text);
       end if;
-      return False;
    end Desc_Changed_CB;
 
    function Update_Status_Box_CB (SB : Gtk.Box.Gtk_Box) return Boolean is
@@ -255,15 +252,14 @@ package body GUI is
       Session_Header_Grid.Attach (Child => Session_Label, Left => 0, Top => 0);
       Gtk_New (Session_Desc_Entry);
       Session_Desc_Entry.Set_Width_Chars (60);
-      Session_Desc_Entry.On_Focus_Out_Event (Call => Desc_Changed_CB'Access);
-      --  Session_Desc_Entry.On_Focus_Out_Event ... TODO probably better than Update_Text_Fields
+      On_Changed (+Session_Desc_Entry, Desc_Changed_CB'Access);
       Session_Header_Grid.Attach (Child => Session_Desc_Entry, Left => 1, Top => 0);
 
       Gtk_New (Comment_Label, " Notes: ");
       Session_Header_Grid.Attach (Child => Comment_Label, Left => 0, Top => 1);
       Gtk_New (Session_Comment_Entry);
       Session_Comment_Entry.Set_Width_Chars (80);
-      Session_Comment_Entry.On_Focus_Out_Event (Call => Comment_Changed_CB'Access);
+      On_Changed (+Session_Comment_Entry, Comment_Changed_CB'Access);
       Session_Header_Grid.Attach (Child => Session_Comment_Entry, Left => 1, Top => 1);
       Main_Box.Pack_Start (Child => Session_Header_Grid, Expand => False);
 

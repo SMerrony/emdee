@@ -100,6 +100,7 @@ The executable will be found in the `bin` subdirectory.
 
 ## Changes
 
+* 0.2.1 Fix case where last text field edited might not be saved
 * 0.2.0 Add button to delete sound file from a track - Issue #2
 * 0.1.1 Fix adding new tracks with no associated sound file - Issue #1
 * 0.1.0 Initial release - runs OK on GNU/Linux and Windows
