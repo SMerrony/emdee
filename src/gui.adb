@@ -165,11 +165,11 @@ package body GUI is
             SB.Queue_Draw;
             if Is_Dirty then
                if Win_Title (Win_Title'Last) /= '*' then
-                  Main_Window.Set_Title (App_Title & "*");
+                  Main_Window.Set_Title (App_Title & " - " & To_String (Sess.Filename) & "*");
                end if;
             else
                if Win_Title (Win_Title'Last) = '*' then
-                  Main_Window.Set_Title (App_Title);
+                  Main_Window.Set_Title (App_Title & " - " & To_String (Sess.Filename) );
                end if;
             end if;
          end;
