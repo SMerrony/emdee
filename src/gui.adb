@@ -231,7 +231,7 @@ package body GUI is
       Error : aliased GError;
    begin
       Main_Window := Gtk_Application_Window_New (App);
-      Main_Window.Set_Title (App_Title);
+      Main_Window.Set_Title (App_Title & " - (No session loaded)");
 
       if not CSS_Provider.Load_From_Data (Build_CSS (M), Error'Access) then
          Ada.Text_IO.Put_Line ("ERROR: Could not load CSS internal data");

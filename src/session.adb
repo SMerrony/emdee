@@ -131,6 +131,7 @@ package body Session is
 
       TOML.File_IO.Dump_To_File (Toml_Sess, File);
       Ada.Text_IO.Close (File);
+      Sess.Filename := To_Unbounded_String (Filename);
       Set_Clean;
    end Save_Session;
 
