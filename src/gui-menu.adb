@@ -48,6 +48,7 @@ package body GUI.Menu is
       Prev_MIDI_Port : constant Unbounded_String := Sess.MIDI_Port;
    begin
       Clear_Session;
+      Main_Window.Set_Title (App_Title & " - (No session loaded)");
       Session_Desc_Entry.Set_Text ("");
       Session_Comment_Entry.Set_Text ("");
       Sess.MIDI_Port := Prev_MIDI_Port;
@@ -78,6 +79,7 @@ package body GUI.Menu is
             Display_Tracks;
          end if;
          GUI.Resize_Font (Font_Size'Value (To_String (Sess.Font_Size)));
+         Main_Window.Set_Title (App_Title & " - " & Filename);
       end if;
    exception
       when E : others =>
@@ -120,6 +122,7 @@ package body GUI.Menu is
          else
             Save_Session (To_String (Sess.Filename));
          end if;
+         Main_Window.Set_Title (App_Title & " - " & To_String (Sess.Filename));
       end if;
    end Session_Save_CB;
 
@@ -127,6 +130,7 @@ package body GUI.Menu is
       pragma Unreferenced (Self);
    begin
       Session_Save_As;
+      Main_Window.Set_Title (App_Title & " - " & To_String (Sess.Filename));
    end Session_Save_As_CB;
 
    procedure Session_Audio_CB (Self : access Gtk.Menu_Item.Gtk_Menu_Item_Record'Class) is
