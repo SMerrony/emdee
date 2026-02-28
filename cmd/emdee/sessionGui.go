@@ -32,18 +32,6 @@ var (
 	rows []row
 )
 
-// openSession opens a file dialog to select a session file, then loads and displays the session data in the UI
-func openSession() {
-	sd := dialog.NewFileOpen(func(urirc fyne.URIReadCloser, e error) {
-		if urirc != nil {
-			loadAndShowSession(urirc.URI().Path())
-		}
-	}, mainWindow)
-	sd.Resize(fyne.Size{Width: 600, Height: 600})
-	sd.SetConfirmText("Open")
-	sd.Show()
-}
-
 func loadAndShowSession(path string) {
 	var err error
 	currentSession, err = loadSession(path)
@@ -153,7 +141,7 @@ func updateSessionRows() {
 		rowBox.Add(titleEntry)
 		skipCheck := widget.NewCheck("", func(b bool) {
 			currentSession.Tracks[rowid].Skip = b
-			currentSession.Session.IsDirty = true
+			currentSession.Session.isDirty = true
 		})
 		skipCheck.SetChecked(track.Skip)
 		rowBox.Add(skipCheck)
@@ -172,7 +160,7 @@ func updateSessionRows() {
 func buildSessionBody() (sessionBody *fyne.Container) {
 	sessBox = container.NewVBox()
 	hdrBox := container.NewHBox()
-	hdrBox.Add(widget.NewLabel("#"))
+	hdrBox.Add(widget.NewLabel(" ")) // Placeholder for row number column
 	hdrBox.Add(widget.NewLabel(" ")) // Placeholder for selector column
 	hdrBox.Add(NewMinSizeableLabel("Title", 300*scaleFactor()))
 	hdrBox.Add(NewMinSizeableLabel("Skip", 40*scaleFactor()))

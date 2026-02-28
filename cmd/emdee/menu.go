@@ -23,7 +23,7 @@ func buildMenu() (mainMenu *fyne.MainMenu) {
 	newItem := fyne.NewMenuItem("New Session...", func() {})
 	openItem := fyne.NewMenuItem("Open Session...", func() { openSession() })
 	saveItem := fyne.NewMenuItem("Save Session", func() {})
-	saveAsItem := fyne.NewMenuItem("Save Session As...", func() {})
+	saveAsItem := fyne.NewMenuItem("Save Session As...", saveAs)
 	fileMenu := fyne.NewMenu("File", newItem, openItem, fyne.NewMenuItemSeparator(), saveItem, saveAsItem)
 
 	// viewSmallItem := fyne.NewMenuItem("View Small", func() {})
@@ -35,7 +35,7 @@ func buildMenu() (mainMenu *fyne.MainMenu) {
 		viewXLItem.Checked = false
 		if currentSession != nil {
 			currentSession.Session.FontSize = "M"
-			currentSession.Session.IsDirty = true
+			currentSession.Session.isDirty = true
 		}
 		emdeeApp.Settings().SetTheme(&emdeeTheme{})
 	})
@@ -48,7 +48,7 @@ func buildMenu() (mainMenu *fyne.MainMenu) {
 		viewXLItem.Checked = false
 		if currentSession != nil {
 			currentSession.Session.FontSize = "L"
-			currentSession.Session.IsDirty = true
+			currentSession.Session.isDirty = true
 		}
 		emdeeApp.Settings().SetTheme(&emdeeTheme{})
 	})
@@ -60,7 +60,7 @@ func buildMenu() (mainMenu *fyne.MainMenu) {
 		viewXLItem.Checked = true
 		if currentSession != nil {
 			currentSession.Session.FontSize = "XL"
-			currentSession.Session.IsDirty = true
+			currentSession.Session.isDirty = true
 		}
 		emdeeApp.Settings().SetTheme(&emdeeTheme{})
 	})
@@ -82,6 +82,37 @@ func buildMenu() (mainMenu *fyne.MainMenu) {
 
 	mainMenu = fyne.NewMainMenu(fileMenu, viewMenu, midiMenu, helpMenu)
 	return mainMenu
+}
+
+// openSession opens a file dialog to select a session file, then loads and displays the session data in the UI
+func openSession() {
+	sd := dialog.NewFileOpen(func(urirc fyne.URIReadCloser, e error) {
+		if urirc != nil {
+			loadAndShowSession(urirc.URI().Path())
+		}
+	}, mainWindow)
+	sd.Resize(fyne.Size{Width: 600, Height: 600})
+	sd.SetConfirmText("Open")
+	sd.Show()
+}
+
+func saveAs() {
+	sd := dialog.NewFileSave(func(urirc fyne.URIWriteCloser, e error) {
+		if urirc != nil {
+			path := urirc.URI().Path()
+			if err := saveSession(path, currentSession); err != nil {
+				dialog.ShowError(err, mainWindow)
+				log.Printf("ERROR: Could not save Session file %s\n", path)
+			} else {
+				currentSession.Session.filePath = path
+				currentSession.Session.isDirty = false
+				mainWindow.SetTitle(fmt.Sprintf("%s - %s", appTitle, currentSession.Session.Name))
+			}
+		}
+	}, mainWindow)
+	sd.Resize(fyne.Size{Width: 600, Height: 600})
+	sd.SetConfirmText("Save")
+	sd.Show()
 }
 
 func openBrowser(url string) {

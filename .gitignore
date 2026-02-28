@@ -8,3 +8,4 @@
 .vscode
 *.AppImage
 *.desktop
+/cmd/emdee/*.toml

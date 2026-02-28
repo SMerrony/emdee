@@ -18,6 +18,7 @@ func NewMinSizeableLabel(text string, minWidth float32) *MinSizeableLabel {
 	label := &MinSizeableLabel{minWidth: minWidth}
 	label.ExtendBaseWidget(label)
 	label.SetText(text)
+	label.Alignment = fyne.TextAlignCenter
 	return label
 }
 
