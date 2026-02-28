@@ -1,0 +1,40 @@
+[session]
+name = "Xmas 2025"
+notes = "Rehearsal for Xmas 2025 concert"
+fontsize = "L"
+midiport = ""
+[[track]]
+comment = ""
+path = "/home/steve/Desktop/Brugeria_MP3/Accompaniments/DontCryForMe_FR_Accpt.wav"
+skip = false
+title = "Argentine"
+volume = 100
+leadin = 0
+[[track]]
+comment = "Sax solo"
+path = "/home/steve/Desktop/Brugeria_MP3/Accompaniments/ChansonDesJumelles_Accpt.flac"
+skip = false
+title = "La Chanson des Jumelles"
+volume = 80
+leadin = 0
+[[track]]
+comment = "Sax solo"
+path = "/home/steve/Desktop/Brugeria_MP3/Accompaniments/LOiseau_V2_Accpt.wav"
+skip = true
+title = "L'Oiseau"
+volume = 100
+leadin = 0
+[[track]]
+comment = "Sax solo"
+path = "/home/steve/Desktop/Brugeria_MP3/Accompaniments/LaSoupeAuxChoux_Generique_EWI_Accpt.flac"
+skip = false
+title = "La soupe aux choux"
+volume = 90
+leadin = 0
+[[track]]
+comment = "Choir"
+path = "/home/steve/Desktop/Brugeria_MP3/Accompaniments/CestNoel_Francois_Accpt.mp3"
+skip = false
+title = "C'est Noel"
+volume = 100
+leadin = 0
