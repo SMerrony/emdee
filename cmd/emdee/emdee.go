@@ -27,6 +27,8 @@ const (
 var (
 	emdeeApp    fyne.App
 	mainWindow  fyne.Window
+	content     *fyne.Container
+	tracksBox   *fyne.Container
 	statusLabel *widget.Label
 
 	currentSession       *Config   = nil
@@ -65,7 +67,7 @@ func main() {
 func setupWindow(w fyne.Window) {
 	w.Resize(fyne.NewSize(900, 600))
 	w.SetMainMenu(buildMenu())
-	bottom := container.NewVBox(buildPlayerControls(), buildStatusBox())
-	content := container.NewBorder(buildSessionHeader(), bottom, nil, nil, buildSessionBody())
+	status := container.NewVBox(buildPlayerControls(), buildStatusBox())
+	content = container.NewBorder(buildSessionHeader(), status, nil, nil)
 	w.SetContent(content)
 }

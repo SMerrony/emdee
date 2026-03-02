@@ -14,17 +14,23 @@ import (
 )
 
 var (
-	viewNormalItem *fyne.MenuItem
-	viewLargeItem  *fyne.MenuItem
-	viewXLItem     *fyne.MenuItem
+	viewNormalItem         *fyne.MenuItem
+	viewLargeItem          *fyne.MenuItem
+	viewXLItem             *fyne.MenuItem
+	viewSessionEditingItem *fyne.MenuItem
 )
 
 func buildMenu() (mainMenu *fyne.MainMenu) {
 	newItem := fyne.NewMenuItem("New Session...", func() {})
-	openItem := fyne.NewMenuItem("Open Session...", func() { openSession() })
-	saveItem := fyne.NewMenuItem("Save Session", func() {})
-	saveAsItem := fyne.NewMenuItem("Save Session As...", saveAs)
-	fileMenu := fyne.NewMenu("File", newItem, openItem, fyne.NewMenuItemSeparator(), saveItem, saveAsItem)
+	openItem := fyne.NewMenuItem("Open Session...", fileOpen)
+	saveItem := fyne.NewMenuItem("Save Session", fileSave)
+	saveAsItem := fyne.NewMenuItem("Save Session As...", fileSaveAs)
+	fileMenu := fyne.NewMenu("File",
+		newItem,
+		openItem,
+		fyne.NewMenuItemSeparator(),
+		saveItem,
+		saveAsItem)
 
 	// viewSmallItem := fyne.NewMenuItem("View Small", func() {})
 	// viewSmallItem.Checked = false
@@ -67,10 +73,24 @@ func buildMenu() (mainMenu *fyne.MainMenu) {
 
 	// viewXXLItem := fyne.NewMenuItem("View XX-Large", func() {})
 	// viewXXLItem.Checked = false
-	viewSessionEditingItem := fyne.NewMenuItem("Session Editing Mode", func() {})
+	viewSessionEditingItem = fyne.NewMenuItem("Session Editing", func() {
+		viewSessionEditingItem.Checked = !viewSessionEditingItem.Checked
+		trackEditMode = viewSessionEditingItem.Checked
+		if tracksBox != nil {
+			content.Remove(tracksBox)
+			tracksBox = buildSessionRows()
+			content.Add(tracksBox)
+			content.Refresh()
+		}
+		// content.Refresh()
+	})
 	viewSessionEditingItem.Checked = false
-	viewMenu := fyne.NewMenu("View", viewNormalItem, viewLargeItem, viewXLItem,
-		fyne.NewMenuItemSeparator(), viewSessionEditingItem,
+	viewMenu := fyne.NewMenu("View",
+		viewNormalItem,
+		viewLargeItem,
+		viewXLItem,
+		fyne.NewMenuItemSeparator(),
+		viewSessionEditingItem,
 	)
 
 	midiSettingsItem := fyne.NewMenuItem("MIDI Settings...", func() {})
@@ -78,14 +98,16 @@ func buildMenu() (mainMenu *fyne.MainMenu) {
 
 	onlineHelpItem := fyne.NewMenuItem("Online Help", func() { openBrowser(helpURL) })
 	aboutItem := fyne.NewMenuItem("About", helpAbout)
-	helpMenu := fyne.NewMenu("Help", onlineHelpItem, aboutItem)
+	helpMenu := fyne.NewMenu("Help",
+		onlineHelpItem,
+		aboutItem)
 
 	mainMenu = fyne.NewMainMenu(fileMenu, viewMenu, midiMenu, helpMenu)
 	return mainMenu
 }
 
-// openSession opens a file dialog to select a session file, then loads and displays the session data in the UI
-func openSession() {
+// opens a file dialog to select a session file, then loads and displays the session data in the UI
+func fileOpen() {
 	sd := dialog.NewFileOpen(func(urirc fyne.URIReadCloser, e error) {
 		if urirc != nil {
 			loadAndShowSession(urirc.URI().Path())
@@ -96,7 +118,22 @@ func openSession() {
 	sd.Show()
 }
 
-func saveAs() {
+func fileSave() {
+	if currentSession != nil {
+		if currentSession.Session.filePath != "" {
+			if err := saveSession(currentSession.Session.filePath, currentSession); err != nil {
+				dialog.ShowError(err, mainWindow)
+				log.Printf("ERROR: Could not save Session file %s\n", currentSession.Session.filePath)
+			} else {
+				currentSession.Session.isDirty = false
+			}
+		} else {
+			fileSaveAs()
+		}
+	}
+}
+
+func fileSaveAs() {
 	sd := dialog.NewFileSave(func(urirc fyne.URIWriteCloser, e error) {
 		if urirc != nil {
 			path := urirc.URI().Path()
@@ -106,7 +143,6 @@ func saveAs() {
 			} else {
 				currentSession.Session.filePath = path
 				currentSession.Session.isDirty = false
-				mainWindow.SetTitle(fmt.Sprintf("%s - %s", appTitle, currentSession.Session.Name))
 			}
 		}
 	}, mainWindow)

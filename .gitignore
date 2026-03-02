@@ -8,4 +8,7 @@
 .vscode
 *.AppImage
 *.desktop
+*.exe
+*.deb
 /cmd/emdee/*.toml
+/cmd/emdee/emdee

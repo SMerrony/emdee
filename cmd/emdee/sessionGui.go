@@ -12,6 +12,7 @@ import (
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/layout"
+	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 )
 
@@ -28,6 +29,8 @@ var (
 	sessionNotesEntry *widget.Entry
 
 	sessBox *fyne.Container
+
+	trackEditMode bool = false
 
 	rows []row
 )
@@ -64,7 +67,10 @@ func loadAndShowSession(path string) {
 		}
 		mainWindow.SetTitle(fmt.Sprintf("%s - %s", appTitle, currentSession.Session.Name))
 		updateSessionHeader(currentSession.Session.Name, currentSession.Session.Notes)
-		updateSessionRows()
+		tracksBox = buildSessionRows()
+		content.Add(tracksBox)
+		content.Refresh()
+		// content.Add(buildSessionRows())
 
 		playButton.Enable()
 		previousButton.Enable()
@@ -77,6 +83,10 @@ func loadAndShowSession(path string) {
 	}
 }
 
+// The sessionHeader holds the session name and notes fields, which are displayed at the top of the
+// UI and can be edited by the user. Changes to these fields are tracked in the currentSession struct
+// and marked as dirty if they differ from the loaded values.
+// The sesssionHeader is the same for both the performance and editing modes.
 func buildSessionHeader() (sessionHeader *fyne.Container) {
 	sessionLabel := widget.NewLabel("Session:")
 	sessionNameEntry = widget.NewEntry()
@@ -108,7 +118,8 @@ func scaleFactor() float32 {
 	}
 }
 
-func updateSelection() {
+// Update the GUI whenever the active track changes.
+func updateTrackSelection() {
 	for _, r := range rows {
 		if r.id == activeTrackIx {
 			r.selectorBtn.Importance = widget.HighImportance
@@ -119,18 +130,20 @@ func updateSelection() {
 	}
 }
 
-func updateSessionRows() {
+func buildSessionRows() *fyne.Container {
+	rows = nil // Clear existing row data
+	tracksBox = container.NewVBox()
 	for rowid, track := range currentSession.Tracks {
-		selectorBtn := widget.NewButtonWithIcon(">", nil, func() {
+		selectorBtn := widget.NewButtonWithIcon("", theme.NavigateNextIcon(), func() {
 			activeTrackIx = rowid
-			updateSelection()
+			updateTrackSelection()
 		})
 		rows = append(rows, row{
 			id:          rowid,
 			title:       track.Title,
 			comment:     track.Comment,
 			volume:      track.Volume,
-			skip:        track.Skip,
+			skip:        track.Play,
 			selectorBtn: selectorBtn,
 		})
 		rowBox := container.NewHBox()
@@ -140,35 +153,61 @@ func updateSessionRows() {
 		titleEntry.SetText(track.Title)
 		rowBox.Add(titleEntry)
 		skipCheck := widget.NewCheck("", func(b bool) {
-			currentSession.Tracks[rowid].Skip = b
+			currentSession.Tracks[rowid].Play = b
 			currentSession.Session.isDirty = true
 		})
-		skipCheck.SetChecked(track.Skip)
+		skipCheck.SetChecked(track.Play)
 		rowBox.Add(skipCheck)
 		commentEntry := NewMinSizeableEntry(200 * scaleFactor())
 		commentEntry.SetText(track.Comment)
 		rowBox.Add(commentEntry)
-		volumeEntry := NewMinSizeableEntry(50 * scaleFactor())
+		volumeEntry := NewMinSizeableEntry(60 * scaleFactor())
 		volumeEntry.SetText(strconv.Itoa(track.Volume))
+
 		rowBox.Add(volumeEntry)
-		rowBox.Add(widget.NewButtonWithIcon("-", nil, nil))
-		rowBox.Add(widget.NewButtonWithIcon("+", nil, nil))
-		sessBox.Add(rowBox)
+		rowBox.Add(widget.NewButtonWithIcon("", theme.VolumeDownIcon(), nil))
+		rowBox.Add(widget.NewButtonWithIcon("", theme.VolumeUpIcon(), nil))
+
+		if trackEditMode {
+			LeadInEntry := NewMinSizeableEntry(40 * scaleFactor())
+			LeadInEntry.SetText(strconv.Itoa(track.LeadIn))
+			rowBox.Add(LeadInEntry)
+			rowBox.Add(widget.NewButtonWithIcon("", theme.FolderOpenIcon(), nil))
+			clearBtn := widget.NewButtonWithIcon("", theme.ContentClearIcon(), nil)
+			rowBox.Add(clearBtn)
+			tmpWidth := clearBtn.MinSize().Width
+			if rowid < len(currentSession.Tracks)-1 {
+				rowBox.Add(widget.NewButtonWithIcon("", theme.MoveDownIcon(), nil))
+			} else {
+				rowBox.Add(NewMinSizeableLabel(" ", tmpWidth)) // Placeholder to keep buttons aligned
+			}
+			if rowid > 0 {
+				rowBox.Add(widget.NewButtonWithIcon("", theme.MoveUpIcon(), nil))
+			} else {
+				rowBox.Add(NewMinSizeableLabel(" ", tmpWidth)) // Placeholder to keep buttons aligned
+			}
+			rowBox.Add(widget.NewButtonWithIcon("", theme.DeleteIcon(), nil))
+		}
+
+		tracksBox.Add(rowBox)
 	}
+	// TODO Add empty row at the end for adding new tracks in editing mode
+	return tracksBox
 }
 
-func buildSessionBody() (sessionBody *fyne.Container) {
-	sessBox = container.NewVBox()
-	hdrBox := container.NewHBox()
-	hdrBox.Add(widget.NewLabel(" ")) // Placeholder for row number column
-	hdrBox.Add(widget.NewLabel(" ")) // Placeholder for selector column
-	hdrBox.Add(NewMinSizeableLabel("Title", 300*scaleFactor()))
-	hdrBox.Add(NewMinSizeableLabel("Skip", 40*scaleFactor()))
-	hdrBox.Add(NewMinSizeableLabel("Comment", 200*scaleFactor()))
-	hdrBox.Add(NewMinSizeableLabel("Volume", 50*scaleFactor()))
-	sessBox.Add(hdrBox)
-	return sessBox
-}
+// // FIXME Do we really need this?
+// func buildSessionRowsHeader() (sessionBody *fyne.Container) {
+// 	sessBox = container.NewVBox()
+// 	hdrBox := container.NewHBox()
+// 	hdrBox.Add(widget.NewLabel(" ")) // Placeholder for row number column
+// 	hdrBox.Add(widget.NewLabel(" ")) // Placeholder for selector column
+// 	hdrBox.Add(NewMinSizeableLabel("Title", 300*scaleFactor()))
+// 	hdrBox.Add(NewMinSizeableLabel("Skip", 40*scaleFactor()))
+// 	hdrBox.Add(NewMinSizeableLabel("Comment", 200*scaleFactor()))
+// 	hdrBox.Add(NewMinSizeableLabel("Volume", 50*scaleFactor()))
+// 	sessBox.Add(hdrBox)
+// 	return sessBox
+// }
 
 // updates to the UI after a track has finished playing
 func playerFinished() {
@@ -177,11 +216,11 @@ func playerFinished() {
 	if activeTrackIx < len(currentSession.Tracks)-1 {
 		for {
 			activeTrackIx++
-			if !currentSession.Tracks[activeTrackIx].Skip ||
+			if currentSession.Tracks[activeTrackIx].Play ||
 				activeTrackIx >= len(currentSession.Tracks)-1 {
 				break
 			}
 		}
-		updateSelection()
+		updateTrackSelection()
 	}
 }

@@ -38,7 +38,7 @@ func play() {
 		return
 	}
 	track := currentSession.Tracks[activeTrackIx]
-	if track.Skip {
+	if track.Play {
 		dialog.ShowInformation("Track Skipped", "This track is marked to be skipped. Please uncheck the skip box to play it.", mainWindow)
 		return
 	}
@@ -68,13 +68,13 @@ func stop() {
 func next() {
 	if activeTrackIx < len(currentSession.Tracks)-1 {
 		activeTrackIx++
-		updateSelection()
+		updateTrackSelection()
 	}
 }
 
 func previous() {
 	if activeTrackIx > 0 {
 		activeTrackIx--
-		updateSelection()
+		updateTrackSelection()
 	}
 }
