@@ -12,3 +12,6 @@
 *.deb
 /cmd/emdee/*.toml
 /cmd/emdee/emdee
+cmd/emdee/emdee
+cmd/emdee/Xmas_2025.toml
+cmd/emdee/Xmas_2025.toml
