@@ -7,13 +7,12 @@
 ![GitHub License](https://img.shields.io/github/license/SMerrony/emdee) ![GitHub Issues or Pull Requests](https://img.shields.io/github/issues/SMerrony/emdee) ![GitHub top language](https://img.shields.io/github/languages/top/SMerrony/emdee)
 
 
-`eMDee` is a live performance and rehearsal assistant for musical directors which removes 
-the need to have folders of tracks and command-line windows open in order to play backing tracks for performance groups such as singers, choirs, and theatre-groups.
+`eMDee` is a live performance and rehearsal tool for musical directors which removes 
+the need to have folders of tracks and media players open in order to play backing tracks for performance groups such as singers, choirs, and theatre-groups.
 
-The MD can plan in advance the order of performance; later, `eMDee` will facilitate the playing of each track in the specfied order during the performance.
+The MD can plan in advance the order of performance; later, `eMDee` will facilitate the playing of each track in the specfied order during the performance.  The volume of each track can be adjusted, and tracks can be skipped etc.
 
-`eMDee` was originally designed for GNU Linux systems such as Mint, Debian, Ubuntu, etc., 
-it now also runs under Windows.
+`eMDee` runs on GNU Linux systems such as Mint, Debian, Ubuntu, etc. and Windows.
 
 - [eMDee Musical Director's Assistant](#emdee-musical-directors-assistant)
   - [Core Features](#core-features)
@@ -27,6 +26,7 @@ it now also runs under Windows.
       - [Windows](#windows-1)
     - [Build from Source](#build-from-source)
       - [From Source Download](#from-source-download)
+  - [Usage](#usage)
   - [Changes](#changes)
 
 ![eMDee main screen, ready to perform!](doc/eMDee_0_2_0_Loaded.png)
@@ -83,9 +83,12 @@ TODO
 Download and extract the latest release source code bundle from https://github.com/SMerrony/emdee/releases
 
 
+## Usage
+See our [User Guide](doc/UserGuide.md).
 
 ## Changes
 
+* 0.3.0(WIP) Rewrite in Go.  Improvements to .toml file format, lead-in per track (not per session)
 * 0.2.1 Fix case where last text field edited might not be saved
 * 0.2.0 Add button to delete sound file from a track - Issue #2
 * 0.1.1 Fix adding new tracks with no associated sound file - Issue #1
