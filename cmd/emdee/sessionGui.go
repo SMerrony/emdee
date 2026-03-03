@@ -12,6 +12,7 @@ import (
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/layout"
+	"fyne.io/fyne/v2/storage"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 )
@@ -20,7 +21,8 @@ type row struct {
 	id             int
 	title, comment string
 	volume         int
-	skip           bool
+	play           bool
+	path           string
 	selectorBtn    *widget.Button
 }
 
@@ -152,7 +154,7 @@ func buildSessionRows() *fyne.Container {
 			title:       track.Title,
 			comment:     track.Comment,
 			volume:      track.Volume,
-			skip:        track.Play,
+			play:        track.Play,
 			selectorBtn: selectorBtn,
 		})
 		rowBox := container.NewHBox()
@@ -195,42 +197,86 @@ func buildSessionRows() *fyne.Container {
 			} else {
 				rowBox.Add(NewMinSizeableLabel(" ", tmpWidth)) // Placeholder to keep buttons aligned
 			}
-			rowBox.Add(widget.NewButtonWithIcon("", theme.DeleteIcon(), nil))
+			rowBox.Add(widget.NewButtonWithIcon("", theme.DeleteIcon(), func() {
+				currentSession.Tracks = append(currentSession.Tracks[:rowid], currentSession.Tracks[rowid+1:]...)
+				currentSession.Session.isDirty = true
+				content.Remove(tracksBox)
+				tracksBox = buildSessionRows()
+				content.Add(tracksBox)
+				content.Refresh()
+			}))
 		}
 
 		tracksBox.Add(rowBox)
 	}
 	// TODO Add empty row at the end for adding new tracks in editing mode
 	if trackEditMode {
+		newRow := row{}
 		rowBox := container.NewHBox()
 		rowBox.Add(widget.NewLabel(strconv.Itoa(len(currentSession.Tracks) + 1)))
 		selectorBtn := widget.NewButtonWithIcon("", theme.NavigateNextIcon(), nil)
 		selectorBtn.Disable()
 		rowBox.Add(selectorBtn)
+
 		titleEntry := NewMinSizeableEntry(300 * scaleFactor())
-		titleEntry.SetPlaceHolder("(Track Title)")
+		titleEntry.SetPlaceHolder("(Track Title)*")
+		titleEntry.OnChanged = func(s string) {
+			newRow.title = s
+		}
 		rowBox.Add(titleEntry)
+
 		playCheck := widget.NewCheck("", nil)
+		playCheck.OnChanged = func(b bool) {
+			newRow.play = b
+		}
 		playCheck.SetChecked(true)
 		rowBox.Add(playCheck)
+
 		commentEntry := NewMinSizeableEntry(200 * scaleFactor())
-		commentEntry.SetPlaceHolder("(Comment)")
+		commentEntry.SetPlaceHolder("(Optional Comment)")
+		commentEntry.OnChanged = func(s string) {
+			newRow.comment = s
+		}
 		rowBox.Add(commentEntry)
+
 		volumeEntry := NewMinSizeableEntry(60 * scaleFactor())
 		volumeEntry.SetText(strconv.Itoa(100))
-
+		volumeEntry.OnChanged = func(s string) {
+			newRow.volume, _ = strconv.Atoi(s)
+		}
 		rowBox.Add(volumeEntry)
+
 		rowBox.Add(widget.NewButtonWithIcon("", theme.VolumeDownIcon(), nil))
 		rowBox.Add(widget.NewButtonWithIcon("", theme.VolumeUpIcon(), nil))
 
 		LeadInEntry := NewMinSizeableEntry(40 * scaleFactor())
 		LeadInEntry.SetText(strconv.Itoa(0))
 		rowBox.Add(LeadInEntry)
-		rowBox.Add(widget.NewButtonWithIcon("", theme.FolderOpenIcon(), nil))
+		rowBox.Add(widget.NewButtonWithIcon("", theme.FolderOpenIcon(), func() {
+			fd := dialog.NewFileOpen(func(reader fyne.URIReadCloser, err error) {
+				if err != nil {
+					dialog.ShowError(err, mainWindow)
+					return
+				}
+				if reader == nil {
+					// log.Println("Cancelled")
+					return
+				}
+				newRow.path = reader.URI().Path()
+				reader.Close()
+			}, mainWindow)
+			fd.SetFilter(storage.NewExtensionFileFilter([]string{".mp3", ".wav", ".ogg", ".flac", ".midi", ".MP3", ".WAV", ".OGG", ".FLAC", ".MIDI"}))
+			fd.SetConfirmText("Select")
+			fd.Show()
+		}))
 		clearBtn := widget.NewButtonWithIcon("", theme.ContentClearIcon(), nil)
 		rowBox.Add(clearBtn)
 		// tmpWidth := clearBtn.MinSize().Width
-		insertBtn := widget.NewButton("Insert", func() {
+		trackSaveBtn := widget.NewButton("Save", func() {
+			if titleEntry.Text == "" {
+				dialog.ShowInformation("Validation Error", "Track title is required.", mainWindow)
+				return
+			}
 			vol, err := strconv.Atoi(volumeEntry.Text)
 			if err != nil {
 				dialog.ShowError(fmt.Errorf("Invalid volume value: %s", volumeEntry.Text), mainWindow)
@@ -244,6 +290,7 @@ func buildSessionRows() *fyne.Container {
 			newTrack := Track{
 				Title:   titleEntry.Text,
 				Comment: commentEntry.Text,
+				Path:    newRow.path,
 				Volume:  vol,
 				Play:    playCheck.Checked,
 				LeadIn:  leadIn,
@@ -256,18 +303,7 @@ func buildSessionRows() *fyne.Container {
 			content.Refresh()
 		})
 
-		rowBox.Add(insertBtn)
-		// if rowid < len(currentSession.Tracks)-1 {
-		// 	rowBox.Add(widget.NewButtonWithIcon("", theme.MoveDownIcon(), nil))
-		// } else {
-		// 	rowBox.Add(NewMinSizeableLabel(" ", tmpWidth)) // Placeholder to keep buttons aligned
-		// }
-		// if rowid > 0 {
-		// 	rowBox.Add(widget.NewButtonWithIcon("", theme.MoveUpIcon(), nil))
-		// } else {
-		// 	rowBox.Add(NewMinSizeableLabel(" ", tmpWidth)) // Placeholder to keep buttons aligned
-		// }
-		// rowBox.Add(widget.NewButtonWithIcon("", theme.DeleteIcon(), nil))
+		rowBox.Add(trackSaveBtn)
 
 		tracksBox.Add(rowBox)
 	}

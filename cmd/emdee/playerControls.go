@@ -38,8 +38,8 @@ func play() {
 		return
 	}
 	track := currentSession.Tracks[activeTrackIx]
-	if track.Play {
-		dialog.ShowInformation("Track Skipped", "This track is marked to be skipped. Please uncheck the skip box to play it.", mainWindow)
+	if !track.Play {
+		dialog.ShowInformation("Track Skipped", "This track is marked not to be played. Please check the play box to play it.", mainWindow)
 		return
 	}
 	// TODO handle MIDI files, different OSes, etc.

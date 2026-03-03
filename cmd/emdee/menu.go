@@ -11,6 +11,7 @@ import (
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/dialog"
+	"fyne.io/fyne/v2/storage"
 )
 
 var (
@@ -115,6 +116,7 @@ func fileOpen() {
 	}, mainWindow)
 	sd.Resize(fyne.Size{Width: 600, Height: 600})
 	sd.SetConfirmText("Open")
+	sd.SetFilter(storage.NewExtensionFileFilter([]string{".toml", ".TOML"}))
 	sd.Show()
 }
 
