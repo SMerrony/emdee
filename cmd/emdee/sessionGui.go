@@ -90,8 +90,17 @@ func loadAndShowSession(path string) {
 func buildSessionHeader() (sessionHeader *fyne.Container) {
 	sessionLabel := widget.NewLabel("Session:")
 	sessionNameEntry = widget.NewEntry()
+	sessionNameEntry.OnChanged = func(s string) {
+		currentSession.Session.Name = s
+		currentSession.Session.isDirty = true
+		mainWindow.SetTitle(fmt.Sprintf("%s - %s", appTitle, currentSession.Session.Name))
+	}
 	notesLabel := widget.NewLabel("Notes:")
 	sessionNotesEntry = widget.NewEntry()
+	sessionNotesEntry.OnChanged = func(s string) {
+		currentSession.Session.Notes = s
+		currentSession.Session.isDirty = true
+	}
 	sessionHeader = container.New(layout.NewFormLayout(), sessionLabel, sessionNameEntry, notesLabel, sessionNotesEntry)
 	return sessionHeader
 }
@@ -152,12 +161,12 @@ func buildSessionRows() *fyne.Container {
 		titleEntry := NewMinSizeableEntry(300 * scaleFactor())
 		titleEntry.SetText(track.Title)
 		rowBox.Add(titleEntry)
-		skipCheck := widget.NewCheck("", func(b bool) {
+		playCheck := widget.NewCheck("", func(b bool) {
 			currentSession.Tracks[rowid].Play = b
 			currentSession.Session.isDirty = true
 		})
-		skipCheck.SetChecked(track.Play)
-		rowBox.Add(skipCheck)
+		playCheck.SetChecked(track.Play)
+		rowBox.Add(playCheck)
 		commentEntry := NewMinSizeableEntry(200 * scaleFactor())
 		commentEntry.SetText(track.Comment)
 		rowBox.Add(commentEntry)
@@ -192,6 +201,76 @@ func buildSessionRows() *fyne.Container {
 		tracksBox.Add(rowBox)
 	}
 	// TODO Add empty row at the end for adding new tracks in editing mode
+	if trackEditMode {
+		rowBox := container.NewHBox()
+		rowBox.Add(widget.NewLabel(strconv.Itoa(len(currentSession.Tracks) + 1)))
+		selectorBtn := widget.NewButtonWithIcon("", theme.NavigateNextIcon(), nil)
+		selectorBtn.Disable()
+		rowBox.Add(selectorBtn)
+		titleEntry := NewMinSizeableEntry(300 * scaleFactor())
+		titleEntry.SetPlaceHolder("(Track Title)")
+		rowBox.Add(titleEntry)
+		playCheck := widget.NewCheck("", nil)
+		playCheck.SetChecked(true)
+		rowBox.Add(playCheck)
+		commentEntry := NewMinSizeableEntry(200 * scaleFactor())
+		commentEntry.SetPlaceHolder("(Comment)")
+		rowBox.Add(commentEntry)
+		volumeEntry := NewMinSizeableEntry(60 * scaleFactor())
+		volumeEntry.SetText(strconv.Itoa(100))
+
+		rowBox.Add(volumeEntry)
+		rowBox.Add(widget.NewButtonWithIcon("", theme.VolumeDownIcon(), nil))
+		rowBox.Add(widget.NewButtonWithIcon("", theme.VolumeUpIcon(), nil))
+
+		LeadInEntry := NewMinSizeableEntry(40 * scaleFactor())
+		LeadInEntry.SetText(strconv.Itoa(0))
+		rowBox.Add(LeadInEntry)
+		rowBox.Add(widget.NewButtonWithIcon("", theme.FolderOpenIcon(), nil))
+		clearBtn := widget.NewButtonWithIcon("", theme.ContentClearIcon(), nil)
+		rowBox.Add(clearBtn)
+		// tmpWidth := clearBtn.MinSize().Width
+		insertBtn := widget.NewButton("Insert", func() {
+			vol, err := strconv.Atoi(volumeEntry.Text)
+			if err != nil {
+				dialog.ShowError(fmt.Errorf("Invalid volume value: %s", volumeEntry.Text), mainWindow)
+				return
+			}
+			leadIn, err := strconv.Atoi(LeadInEntry.Text)
+			if err != nil {
+				dialog.ShowError(fmt.Errorf("Invalid lead-in value: %s", LeadInEntry.Text), mainWindow)
+				return
+			}
+			newTrack := Track{
+				Title:   titleEntry.Text,
+				Comment: commentEntry.Text,
+				Volume:  vol,
+				Play:    playCheck.Checked,
+				LeadIn:  leadIn,
+			}
+			currentSession.Tracks = append(currentSession.Tracks, newTrack)
+			currentSession.Session.isDirty = true
+			content.Remove(tracksBox)
+			tracksBox = buildSessionRows()
+			content.Add(tracksBox)
+			content.Refresh()
+		})
+
+		rowBox.Add(insertBtn)
+		// if rowid < len(currentSession.Tracks)-1 {
+		// 	rowBox.Add(widget.NewButtonWithIcon("", theme.MoveDownIcon(), nil))
+		// } else {
+		// 	rowBox.Add(NewMinSizeableLabel(" ", tmpWidth)) // Placeholder to keep buttons aligned
+		// }
+		// if rowid > 0 {
+		// 	rowBox.Add(widget.NewButtonWithIcon("", theme.MoveUpIcon(), nil))
+		// } else {
+		// 	rowBox.Add(NewMinSizeableLabel(" ", tmpWidth)) // Placeholder to keep buttons aligned
+		// }
+		// rowBox.Add(widget.NewButtonWithIcon("", theme.DeleteIcon(), nil))
+
+		tracksBox.Add(rowBox)
+	}
 	return tracksBox
 }
 

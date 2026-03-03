@@ -31,7 +31,7 @@ var (
 	tracksBox   *fyne.Container
 	statusLabel *widget.Label
 
-	currentSession       *Config   = nil
+	currentSession       *Config   = &Config{}
 	playerActive         bool      = false
 	activeTrackIx        int       = -1
 	playingStatusChanged chan bool = make(chan bool, 5)
@@ -68,6 +68,6 @@ func setupWindow(w fyne.Window) {
 	w.Resize(fyne.NewSize(900, 600))
 	w.SetMainMenu(buildMenu())
 	status := container.NewVBox(buildPlayerControls(), buildStatusBox())
-	content = container.NewBorder(buildSessionHeader(), status, nil, nil)
+	content = container.NewBorder(buildSessionHeader(), status, nil, nil, buildSessionRows())
 	w.SetContent(content)
 }
