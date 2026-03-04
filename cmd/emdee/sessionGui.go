@@ -72,7 +72,6 @@ func loadAndShowSession(path string) {
 		tracksBox = buildSessionRows()
 		content.Add(tracksBox)
 		content.Refresh()
-		// content.Add(buildSessionRows())
 
 		playButton.Enable()
 		previousButton.Enable()
@@ -157,27 +156,63 @@ func buildSessionRows() *fyne.Container {
 			play:        track.Play,
 			selectorBtn: selectorBtn,
 		})
+
 		rowBox := container.NewHBox()
+
 		rowBox.Add(widget.NewLabel(strconv.Itoa(rowid + 1)))
+
 		rowBox.Add(selectorBtn)
+
 		titleEntry := NewMinSizeableEntry(300 * scaleFactor())
 		titleEntry.SetText(track.Title)
+		titleEntry.OnChanged = func(s string) {
+			currentSession.Tracks[rowid].Title = s
+			currentSession.Session.isDirty = true
+		}
 		rowBox.Add(titleEntry)
+
 		playCheck := widget.NewCheck("", func(b bool) {
 			currentSession.Tracks[rowid].Play = b
 			currentSession.Session.isDirty = true
 		})
 		playCheck.SetChecked(track.Play)
+		playCheck.OnChanged = func(b bool) {
+			currentSession.Tracks[rowid].Play = b
+			currentSession.Session.isDirty = true
+		}
 		rowBox.Add(playCheck)
+
 		commentEntry := NewMinSizeableEntry(200 * scaleFactor())
 		commentEntry.SetText(track.Comment)
+		commentEntry.OnChanged = func(s string) {
+			currentSession.Tracks[rowid].Comment = s
+			currentSession.Session.isDirty = true
+		}
 		rowBox.Add(commentEntry)
+
 		volumeEntry := NewMinSizeableEntry(60 * scaleFactor())
 		volumeEntry.SetText(strconv.Itoa(track.Volume))
-
+		volumeEntry.OnChanged = func(s string) {
+			currentSession.Tracks[rowid].Volume, _ = strconv.Atoi(s)
+			currentSession.Session.isDirty = true
+		}
 		rowBox.Add(volumeEntry)
-		rowBox.Add(widget.NewButtonWithIcon("", theme.VolumeDownIcon(), nil))
-		rowBox.Add(widget.NewButtonWithIcon("", theme.VolumeUpIcon(), nil))
+
+		rowBox.Add(widget.NewButtonWithIcon("", theme.VolumeDownIcon(), func() {
+			if currentSession.Tracks[rowid].Volume >= 10 {
+				currentSession.Tracks[rowid].Volume -= 5
+				volumeEntry.SetText(strconv.Itoa(currentSession.Tracks[rowid].Volume))
+				currentSession.Session.isDirty = true
+			}
+		}))
+		rowBox.Add(widget.NewButtonWithIcon("", theme.VolumeUpIcon(), func() {
+			currentSession.Tracks[rowid].Volume += 5
+			if currentSession.Tracks[rowid].Volume <= 95 {
+				currentSession.Tracks[rowid].Volume += 5
+				volumeEntry.SetText(strconv.Itoa(currentSession.Tracks[rowid].Volume))
+				currentSession.Session.isDirty = true
+			}
+		}))
 
 		if trackEditMode {
 			LeadInEntry := NewMinSizeableEntry(40 * scaleFactor())
@@ -186,17 +221,34 @@ func buildSessionRows() *fyne.Container {
 			rowBox.Add(widget.NewButtonWithIcon("", theme.FolderOpenIcon(), nil))
 			clearBtn := widget.NewButtonWithIcon("", theme.ContentClearIcon(), nil)
 			rowBox.Add(clearBtn)
+
 			tmpWidth := clearBtn.MinSize().Width
 			if rowid < len(currentSession.Tracks)-1 {
-				rowBox.Add(widget.NewButtonWithIcon("", theme.MoveDownIcon(), nil))
+				rowBox.Add(widget.NewButtonWithIcon("", theme.MoveDownIcon(), func() {
+					currentSession.swapTracks(rowid, rowid+1)
+					content.Remove(tracksBox)
+					tracksBox = buildSessionRows()
+					content.Add(tracksBox)
+					content.Refresh()
+					currentSession.Session.isDirty = true
+				}))
 			} else {
 				rowBox.Add(NewMinSizeableLabel(" ", tmpWidth)) // Placeholder to keep buttons aligned
 			}
+
 			if rowid > 0 {
-				rowBox.Add(widget.NewButtonWithIcon("", theme.MoveUpIcon(), nil))
+				rowBox.Add(widget.NewButtonWithIcon("", theme.MoveUpIcon(), func() {
+					currentSession.swapTracks(rowid, rowid-1)
+					content.Remove(tracksBox)
+					tracksBox = buildSessionRows()
+					content.Add(tracksBox)
+					content.Refresh()
+					currentSession.Session.isDirty = true
+				}))
 			} else {
 				rowBox.Add(NewMinSizeableLabel(" ", tmpWidth)) // Placeholder to keep buttons aligned
 			}
+
 			rowBox.Add(widget.NewButtonWithIcon("", theme.DeleteIcon(), func() {
 				currentSession.Tracks = append(currentSession.Tracks[:rowid], currentSession.Tracks[rowid+1:]...)
 				currentSession.Session.isDirty = true
@@ -212,8 +264,10 @@ func buildSessionRows() *fyne.Container {
 	// TODO Add empty row at the end for adding new tracks in editing mode
 	if trackEditMode {
 		newRow := row{}
+
 		rowBox := container.NewHBox()
 		rowBox.Add(widget.NewLabel(strconv.Itoa(len(currentSession.Tracks) + 1)))
+
 		selectorBtn := widget.NewButtonWithIcon("", theme.NavigateNextIcon(), nil)
 		selectorBtn.Disable()
 		rowBox.Add(selectorBtn)
@@ -241,13 +295,25 @@ func buildSessionRows() *fyne.Container {
 
 		volumeEntry := NewMinSizeableEntry(60 * scaleFactor())
 		volumeEntry.SetText(strconv.Itoa(100))
+		newRow.volume = 100
 		volumeEntry.OnChanged = func(s string) {
 			newRow.volume, _ = strconv.Atoi(s)
 		}
 		rowBox.Add(volumeEntry)
 
-		rowBox.Add(widget.NewButtonWithIcon("", theme.VolumeDownIcon(), nil))
-		rowBox.Add(widget.NewButtonWithIcon("", theme.VolumeUpIcon(), nil))
+		rowBox.Add(widget.NewButtonWithIcon("", theme.VolumeDownIcon(), func() {
+			if newRow.volume >= 10 {
+				newRow.volume -= 5
+				volumeEntry.SetText(strconv.Itoa(newRow.volume))
+			}
+		}))
+
+		rowBox.Add(widget.NewButtonWithIcon("", theme.VolumeUpIcon(), func() {
+			if newRow.volume <= 95 {
+				newRow.volume += 5
+				volumeEntry.SetText(strconv.Itoa(newRow.volume))
+			}
+		}))
 
 		LeadInEntry := NewMinSizeableEntry(40 * scaleFactor())
 		LeadInEntry.SetText(strconv.Itoa(0))
@@ -272,7 +338,7 @@ func buildSessionRows() *fyne.Container {
 		clearBtn := widget.NewButtonWithIcon("", theme.ContentClearIcon(), nil)
 		rowBox.Add(clearBtn)
 		// tmpWidth := clearBtn.MinSize().Width
-		trackSaveBtn := widget.NewButton("Save", func() {
+		trackSaveBtn := widget.NewButton("Add to Session", func() {
 			if titleEntry.Text == "" {
 				dialog.ShowInformation("Validation Error", "Track title is required.", mainWindow)
 				return

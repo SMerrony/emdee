@@ -31,10 +31,9 @@ var (
 	tracksBox   *fyne.Container
 	statusLabel *widget.Label
 
-	currentSession       *Config   = &Config{}
-	playerActive         bool      = false
-	activeTrackIx        int       = -1
-	playingStatusChanged chan bool = make(chan bool, 5)
+	currentSession *Config = &Config{}
+	playerActive   bool    = false
+	activeTrackIx  int     = -1
 )
 
 var (

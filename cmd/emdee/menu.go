@@ -123,7 +123,7 @@ func fileOpen() {
 func fileSave() {
 	if currentSession != nil {
 		if currentSession.Session.filePath != "" {
-			if err := saveSession(currentSession.Session.filePath, currentSession); err != nil {
+			if err := currentSession.Save(currentSession.Session.filePath); err != nil {
 				dialog.ShowError(err, mainWindow)
 				log.Printf("ERROR: Could not save Session file %s\n", currentSession.Session.filePath)
 			} else {
@@ -139,7 +139,7 @@ func fileSaveAs() {
 	sd := dialog.NewFileSave(func(urirc fyne.URIWriteCloser, e error) {
 		if urirc != nil {
 			path := urirc.URI().Path()
-			if err := saveSession(path, currentSession); err != nil {
+			if err := currentSession.Save(path); err != nil {
 				dialog.ShowError(err, mainWindow)
 				log.Printf("ERROR: Could not save Session file %s\n", path)
 			} else {

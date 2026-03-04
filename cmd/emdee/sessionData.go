@@ -24,10 +24,10 @@ type Session struct {
 }
 
 type Track struct {
+	Title   string `toml:"title"`
+	Play    bool   `toml:"play"`
 	Comment string `toml:"comment"`
 	Path    string `toml:"path"`
-	Play    bool   `toml:"play"`
-	Title   string `toml:"title"`
 	Volume  int    `toml:"volume"`
 	LeadIn  int    `toml:"leadin"`
 }
@@ -45,7 +45,7 @@ func loadSession(path string) (*Config, error) {
 	return &config, nil
 }
 
-func saveSession(path string, config *Config) error {
+func (conf *Config) Save(path string) error {
 	f, err := os.Create(path)
 	if err != nil {
 		return err
@@ -53,8 +53,13 @@ func saveSession(path string, config *Config) error {
 	defer f.Close()
 
 	encoder := toml.NewEncoder(f)
-	if err := encoder.Encode(config); err != nil {
+	if err := encoder.Encode(conf); err != nil {
 		return err
 	}
 	return nil
+}
+
+func (conf *Config) swapTracks(i, j int) {
+	conf.Tracks[i], conf.Tracks[j] = conf.Tracks[j], conf.Tracks[i]
+	conf.Session.isDirty = true
 }
