@@ -17,7 +17,7 @@ The MD can plan in advance the order of performance; later, `eMDee` will facilit
   - [Creating a New Session](#creating-a-new-session)
   - [Adding Tracks](#adding-tracks)
     - [Title](#title)
-    - [Play enable](#play-enable)
+    - [Skip](#skip)
     - [Comment](#comment)
     - [Volume](#volume)
     - [Increase/Decrease Volume](#increasedecrease-volume)
@@ -30,7 +30,7 @@ See the project [README.](../README.md)
 
 ## Terminology
 * Track - usually an audio or MIDI file, typically the accompaniment for a single piece of music.  You can also add tracks with no associated media file, eg. as a placeholder for an unaccompanied item
-* Session - a collection of tracks arranged in a specific order for a performance, rehearsal, etc.
+* Session - a collection of tracks arranged in a specific order for a performance, rehearsal, gig, etc.
 
 ## Starting the Application
 `eMDee` may be started in two ways...
@@ -60,8 +60,8 @@ From left to right...
 ### Title
 Enter the title of the track (compulsory) in the first field.
 
-### Play enable
-The check-box is to indicate that the track should be played, uncheck it if you want the track to be skipped in performance - it will also be unchecked if there is now media file for the track.
+### Skip
+The check-box is to indicate that the track should be skipped, check it if you want the track to be skipped in performance - it will also be checked if there is no media file for the track.
 
 ### Comment
 Next is an optional comment field.  Often this is used for a short *aide memoire* for the MD.

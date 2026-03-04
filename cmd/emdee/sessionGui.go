@@ -21,7 +21,7 @@ type row struct {
 	id             int
 	title, comment string
 	volume         int
-	play           bool
+	skip           bool
 	path           string
 	selectorBtn    *widget.Button
 }
@@ -69,7 +69,7 @@ func loadAndShowSession(path string) {
 		}
 		mainWindow.SetTitle(fmt.Sprintf("%s - %s", appTitle, currentSession.Session.Name))
 		updateSessionHeader(currentSession.Session.Name, currentSession.Session.Notes)
-		tracksBox = buildSessionRows()
+		tracksBox = buildTracksDisplay()
 		content.Add(tracksBox)
 		content.Refresh()
 
@@ -140,9 +140,11 @@ func updateTrackSelection() {
 	}
 }
 
-func buildSessionRows() *fyne.Container {
+func buildTracksDisplay() *fyne.Container {
+	log.Println("Building tracks display")
 	rows = nil // Clear existing row data
 	tracksBox = container.NewVBox()
+	tracksBox.Add(buildTracksDisplayHeader())
 	for rowid, track := range currentSession.Tracks {
 		selectorBtn := widget.NewButtonWithIcon("", theme.NavigateNextIcon(), func() {
 			activeTrackIx = rowid
@@ -153,13 +155,13 @@ func buildSessionRows() *fyne.Container {
 			title:       track.Title,
 			comment:     track.Comment,
 			volume:      track.Volume,
-			play:        track.Play,
+			skip:        track.Skip,
 			selectorBtn: selectorBtn,
 		})
 
 		rowBox := container.NewHBox()
 
-		rowBox.Add(widget.NewLabel(strconv.Itoa(rowid + 1)))
+		rowBox.Add(NewMinSizeableLabel(strconv.Itoa(rowid+1), 40*scaleFactor()))
 
 		rowBox.Add(selectorBtn)
 
@@ -171,16 +173,16 @@ func buildSessionRows() *fyne.Container {
 		}
 		rowBox.Add(titleEntry)
 
-		playCheck := widget.NewCheck("", func(b bool) {
-			currentSession.Tracks[rowid].Play = b
+		skipCheck := widget.NewCheck("", func(b bool) {
+			currentSession.Tracks[rowid].Skip = b
 			currentSession.Session.isDirty = true
 		})
-		playCheck.SetChecked(track.Play)
-		playCheck.OnChanged = func(b bool) {
-			currentSession.Tracks[rowid].Play = b
+		skipCheck.SetChecked(track.Skip)
+		skipCheck.OnChanged = func(b bool) {
+			currentSession.Tracks[rowid].Skip = b
 			currentSession.Session.isDirty = true
 		}
-		rowBox.Add(playCheck)
+		rowBox.Add(skipCheck)
 
 		commentEntry := NewMinSizeableEntry(200 * scaleFactor())
 		commentEntry.SetText(track.Comment)
@@ -227,7 +229,7 @@ func buildSessionRows() *fyne.Container {
 				rowBox.Add(widget.NewButtonWithIcon("", theme.MoveDownIcon(), func() {
 					currentSession.swapTracks(rowid, rowid+1)
 					content.Remove(tracksBox)
-					tracksBox = buildSessionRows()
+					tracksBox = buildTracksDisplay()
 					content.Add(tracksBox)
 					content.Refresh()
 					currentSession.Session.isDirty = true
@@ -240,7 +242,7 @@ func buildSessionRows() *fyne.Container {
 				rowBox.Add(widget.NewButtonWithIcon("", theme.MoveUpIcon(), func() {
 					currentSession.swapTracks(rowid, rowid-1)
 					content.Remove(tracksBox)
-					tracksBox = buildSessionRows()
+					tracksBox = buildTracksDisplay()
 					content.Add(tracksBox)
 					content.Refresh()
 					currentSession.Session.isDirty = true
@@ -253,7 +255,7 @@ func buildSessionRows() *fyne.Container {
 				currentSession.Tracks = append(currentSession.Tracks[:rowid], currentSession.Tracks[rowid+1:]...)
 				currentSession.Session.isDirty = true
 				content.Remove(tracksBox)
-				tracksBox = buildSessionRows()
+				tracksBox = buildTracksDisplay()
 				content.Add(tracksBox)
 				content.Refresh()
 			}))
@@ -266,25 +268,25 @@ func buildSessionRows() *fyne.Container {
 		newRow := row{}
 
 		rowBox := container.NewHBox()
-		rowBox.Add(widget.NewLabel(strconv.Itoa(len(currentSession.Tracks) + 1)))
+		rowBox.Add(NewMinSizeableLabel(strconv.Itoa(len(currentSession.Tracks)+1), 40*scaleFactor()))
 
 		selectorBtn := widget.NewButtonWithIcon("", theme.NavigateNextIcon(), nil)
 		selectorBtn.Disable()
 		rowBox.Add(selectorBtn)
 
 		titleEntry := NewMinSizeableEntry(300 * scaleFactor())
-		titleEntry.SetPlaceHolder("(Track Title)*")
+		titleEntry.SetPlaceHolder("(Track Title - Required)")
 		titleEntry.OnChanged = func(s string) {
 			newRow.title = s
 		}
 		rowBox.Add(titleEntry)
 
-		playCheck := widget.NewCheck("", nil)
-		playCheck.OnChanged = func(b bool) {
-			newRow.play = b
+		skipCheck := widget.NewCheck("", nil)
+		skipCheck.OnChanged = func(b bool) {
+			newRow.skip = b
 		}
-		playCheck.SetChecked(true)
-		rowBox.Add(playCheck)
+		skipCheck.SetChecked(false)
+		rowBox.Add(skipCheck)
 
 		commentEntry := NewMinSizeableEntry(200 * scaleFactor())
 		commentEntry.SetPlaceHolder("(Optional Comment)")
@@ -358,13 +360,13 @@ func buildSessionRows() *fyne.Container {
 				Comment: commentEntry.Text,
 				Path:    newRow.path,
 				Volume:  vol,
-				Play:    playCheck.Checked,
+				Skip:    skipCheck.Checked,
 				LeadIn:  leadIn,
 			}
 			currentSession.Tracks = append(currentSession.Tracks, newTrack)
 			currentSession.Session.isDirty = true
 			content.Remove(tracksBox)
-			tracksBox = buildSessionRows()
+			tracksBox = buildTracksDisplay()
 			content.Add(tracksBox)
 			content.Refresh()
 		})
@@ -376,19 +378,20 @@ func buildSessionRows() *fyne.Container {
 	return tracksBox
 }
 
-// // FIXME Do we really need this?
-// func buildSessionRowsHeader() (sessionBody *fyne.Container) {
-// 	sessBox = container.NewVBox()
-// 	hdrBox := container.NewHBox()
-// 	hdrBox.Add(widget.NewLabel(" ")) // Placeholder for row number column
-// 	hdrBox.Add(widget.NewLabel(" ")) // Placeholder for selector column
-// 	hdrBox.Add(NewMinSizeableLabel("Title", 300*scaleFactor()))
-// 	hdrBox.Add(NewMinSizeableLabel("Skip", 40*scaleFactor()))
-// 	hdrBox.Add(NewMinSizeableLabel("Comment", 200*scaleFactor()))
-// 	hdrBox.Add(NewMinSizeableLabel("Volume", 50*scaleFactor()))
-// 	sessBox.Add(hdrBox)
-// 	return sessBox
-// }
+func buildTracksDisplayHeader() *fyne.Container {
+	log.Println("Building tracks display header")
+	hdrBox := container.NewHBox()
+	hdrBox.Add(NewMinSizeableLabel(" ", 40*scaleFactor())) // Placeholder for row number column
+	hdrBox.Add(NewMinSizeableLabel(" ", 35*scaleFactor())) // Placeholder for selector column
+	hdrBox.Add(NewMinSizeableLabel("Title", 300*scaleFactor()))
+	hdrBox.Add(NewMinSizeableLabel("Skip", 40*scaleFactor()))
+	hdrBox.Add(NewMinSizeableLabel("Comment", 200*scaleFactor()))
+	hdrBox.Add(NewMinSizeableLabel("Volume", 140*scaleFactor()))
+	if trackEditMode {
+		hdrBox.Add(NewMinSizeableLabel("Lead In", 40*scaleFactor()))
+	}
+	return hdrBox
+}
 
 // updates to the UI after a track has finished playing
 func playerFinished() {
@@ -397,8 +400,8 @@ func playerFinished() {
 	if activeTrackIx < len(currentSession.Tracks)-1 {
 		for {
 			activeTrackIx++
-			if currentSession.Tracks[activeTrackIx].Play ||
-				activeTrackIx >= len(currentSession.Tracks)-1 {
+			if !currentSession.Tracks[activeTrackIx].Skip &&
+				activeTrackIx <= len(currentSession.Tracks)-1 {
 				break
 			}
 		}

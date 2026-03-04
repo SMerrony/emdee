@@ -21,6 +21,16 @@ var (
 	viewSessionEditingItem *fyne.MenuItem
 )
 
+func updateTracks() {
+	if tracksBox != nil {
+		content.Remove(tracksBox)
+		emdeeApp.Settings().SetTheme(&emdeeTheme{})
+		tracksBox = buildTracksDisplay()
+		content.Add(tracksBox)
+		content.Refresh()
+	}
+}
+
 func buildMenu() (mainMenu *fyne.MainMenu) {
 	newItem := fyne.NewMenuItem("New Session...", func() {})
 	openItem := fyne.NewMenuItem("Open Session...", fileOpen)
@@ -35,6 +45,7 @@ func buildMenu() (mainMenu *fyne.MainMenu) {
 
 	// viewSmallItem := fyne.NewMenuItem("View Small", func() {})
 	// viewSmallItem.Checked = false
+
 	viewNormalItem = fyne.NewMenuItem("View Normal", func() {
 		GuiSize = GuiNormal
 		viewNormalItem.Checked = true
@@ -44,7 +55,7 @@ func buildMenu() (mainMenu *fyne.MainMenu) {
 			currentSession.Session.FontSize = "M"
 			currentSession.Session.isDirty = true
 		}
-		emdeeApp.Settings().SetTheme(&emdeeTheme{})
+		updateTracks()
 	})
 	viewNormalItem.Checked = true
 
@@ -57,7 +68,7 @@ func buildMenu() (mainMenu *fyne.MainMenu) {
 			currentSession.Session.FontSize = "L"
 			currentSession.Session.isDirty = true
 		}
-		emdeeApp.Settings().SetTheme(&emdeeTheme{})
+		updateTracks()
 	})
 
 	viewXLItem = fyne.NewMenuItem("View X-Large", func() {
@@ -69,17 +80,18 @@ func buildMenu() (mainMenu *fyne.MainMenu) {
 			currentSession.Session.FontSize = "XL"
 			currentSession.Session.isDirty = true
 		}
-		emdeeApp.Settings().SetTheme(&emdeeTheme{})
+		updateTracks()
 	})
 
 	// viewXXLItem := fyne.NewMenuItem("View XX-Large", func() {})
 	// viewXXLItem.Checked = false
+
 	viewSessionEditingItem = fyne.NewMenuItem("Session Editing", func() {
 		viewSessionEditingItem.Checked = !viewSessionEditingItem.Checked
 		trackEditMode = viewSessionEditingItem.Checked
 		if tracksBox != nil {
 			content.Remove(tracksBox)
-			tracksBox = buildSessionRows()
+			tracksBox = buildTracksDisplay()
 			content.Add(tracksBox)
 			content.Refresh()
 		}

@@ -67,6 +67,7 @@ func setupWindow(w fyne.Window) {
 	w.Resize(fyne.NewSize(900, 600))
 	w.SetMainMenu(buildMenu())
 	status := container.NewVBox(buildPlayerControls(), buildStatusBox())
-	content = container.NewBorder(buildSessionHeader(), status, nil, nil, buildSessionRows())
+	// content = container.NewBorder(buildSessionHeader(), status, nil, nil, buildTracksDisplay())
+	content = container.NewBorder(buildSessionHeader(), status, nil, nil, nil)
 	w.SetContent(content)
 }

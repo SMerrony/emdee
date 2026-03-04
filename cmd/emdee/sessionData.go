@@ -25,7 +25,7 @@ type Session struct {
 
 type Track struct {
 	Title   string `toml:"title"`
-	Play    bool   `toml:"play"`
+	Skip    bool   `toml:"skip"`
 	Comment string `toml:"comment"`
 	Path    string `toml:"path"`
 	Volume  int    `toml:"volume"`
