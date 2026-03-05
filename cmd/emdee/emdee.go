@@ -54,12 +54,17 @@ func main() {
 	emdeeApp.SetIcon(resourceEmdeeiconPng)
 	emdeeApp.Settings().SetTheme(&emdeeTheme{})
 	mainWindow = emdeeApp.NewWindow(appTitle + " - (No Session Loaded)")
+
 	setupWindow(mainWindow)
 
 	if *sessionFlag != "" {
 		loadAndShowSession(*sessionFlag)
 	}
-
+	mainWindow.SetCloseIntercept(func() {
+		promptToSaveIfDirty(func() {
+			mainWindow.Close()
+		})
+	})
 	mainWindow.ShowAndRun()
 }
 
@@ -67,7 +72,6 @@ func setupWindow(w fyne.Window) {
 	w.Resize(fyne.NewSize(900, 600))
 	w.SetMainMenu(buildMenu())
 	status := container.NewVBox(buildPlayerControls(), buildStatusBox())
-	// content = container.NewBorder(buildSessionHeader(), status, nil, nil, buildTracksDisplay())
 	content = container.NewBorder(buildSessionHeader(), status, nil, nil, nil)
 	w.SetContent(content)
 }

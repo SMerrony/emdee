@@ -26,12 +26,17 @@ func buildStatusBox() (statBox *fyne.Container) {
 
 func updateStatusBox() {
 	fyne.Do(func() {
-		if currentSession == nil {
-			statusLabel.SetText("No session loaded")
+		statusText := ""
+		if currentSession.Session.Name == "" {
+			statusText = "No session loaded"
 		} else if playerActive {
-			statusLabel.SetText("(Playing)")
+			statusText = "(Playing)"
 		} else {
-			statusLabel.SetText("(Not Playing)")
+			statusText = "(Not Playing)"
 		}
+		if currentSession.Session.isDirty {
+			statusText = statusText + " - Unsaved changes"
+		}
+		statusLabel.SetText(statusText)
 	})
 }

@@ -141,7 +141,7 @@ func updateTrackSelection() {
 }
 
 func buildTracksDisplay() *fyne.Container {
-	log.Println("Building tracks display")
+	// log.Println("Building tracks display")
 	rows = nil // Clear existing row data
 	tracksBox = container.NewVBox()
 	tracksBox.Add(buildTracksDisplayHeader())
@@ -263,7 +263,7 @@ func buildTracksDisplay() *fyne.Container {
 
 		tracksBox.Add(rowBox)
 	}
-	// TODO Add empty row at the end for adding new tracks in editing mode
+
 	if trackEditMode {
 		newRow := row{}
 
@@ -379,7 +379,7 @@ func buildTracksDisplay() *fyne.Container {
 }
 
 func buildTracksDisplayHeader() *fyne.Container {
-	log.Println("Building tracks display header")
+	// log.Println("Building tracks display header")
 	hdrBox := container.NewHBox()
 	hdrBox.Add(NewMinSizeableLabel(" ", 40*scaleFactor())) // Placeholder for row number column
 	hdrBox.Add(NewMinSizeableLabel(" ", 35*scaleFactor())) // Placeholder for selector column

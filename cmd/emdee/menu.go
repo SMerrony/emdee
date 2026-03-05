@@ -32,7 +32,7 @@ func updateTracks() {
 }
 
 func buildMenu() (mainMenu *fyne.MainMenu) {
-	newItem := fyne.NewMenuItem("New Session...", func() {})
+	newItem := fyne.NewMenuItem("New Session...", fileNew)
 	openItem := fyne.NewMenuItem("Open Session...", fileOpen)
 	saveItem := fyne.NewMenuItem("Save Session", fileSave)
 	saveAsItem := fyne.NewMenuItem("Save Session As...", fileSaveAs)
@@ -56,6 +56,7 @@ func buildMenu() (mainMenu *fyne.MainMenu) {
 			currentSession.Session.isDirty = true
 		}
 		updateTracks()
+		mainWindow.Resize(fyne.Size{20, 20})
 	})
 	viewNormalItem.Checked = true
 
@@ -69,6 +70,7 @@ func buildMenu() (mainMenu *fyne.MainMenu) {
 			currentSession.Session.isDirty = true
 		}
 		updateTracks()
+		mainWindow.Resize(fyne.Size{20, 20})
 	})
 
 	viewXLItem = fyne.NewMenuItem("View X-Large", func() {
@@ -81,6 +83,7 @@ func buildMenu() (mainMenu *fyne.MainMenu) {
 			currentSession.Session.isDirty = true
 		}
 		updateTracks()
+		mainWindow.Resize(fyne.Size{20, 20})
 	})
 
 	// viewXXLItem := fyne.NewMenuItem("View XX-Large", func() {})
@@ -91,11 +94,11 @@ func buildMenu() (mainMenu *fyne.MainMenu) {
 		trackEditMode = viewSessionEditingItem.Checked
 		if tracksBox != nil {
 			content.Remove(tracksBox)
-			tracksBox = buildTracksDisplay()
-			content.Add(tracksBox)
-			content.Refresh()
 		}
-		// content.Refresh()
+		tracksBox = buildTracksDisplay()
+		content.Add(tracksBox)
+		content.Refresh()
+		mainWindow.Resize(fyne.Size{20, 20}) // Force the window to recalculate its size to accommodate the new track display layout
 	})
 	viewSessionEditingItem.Checked = false
 	viewMenu := fyne.NewMenu("View",
@@ -119,17 +122,53 @@ func buildMenu() (mainMenu *fyne.MainMenu) {
 	return mainMenu
 }
 
+func promptToSaveIfDirty(after func()) {
+	if currentSession.Session.isDirty {
+		cd := dialog.NewConfirm("Unsaved Changes", "You have unsaved changes. Do you want to save before proceeding?",
+			func(save bool) {
+				if save {
+					fileSave()
+				}
+				after()
+			}, mainWindow)
+		cd.Show()
+	} else {
+		after()
+	}
+}
+
+func fileNew() {
+	promptToSaveIfDirty(func() {
+		currentSession = &Config{}
+		activeTrackIx = -1
+		mainWindow.SetTitle(appTitle + " - (No Session Loaded)")
+		viewSessionEditingItem.Checked = true
+		trackEditMode = true
+		if tracksBox != nil {
+			tracksBox.RemoveAll()
+		}
+		tracksBox = buildTracksDisplay()
+		content.Add(tracksBox)
+		content.Refresh()
+		mainWindow.Resize(fyne.Size{20, 20})
+	})
+}
+
 // opens a file dialog to select a session file, then loads and displays the session data in the UI
 func fileOpen() {
-	sd := dialog.NewFileOpen(func(urirc fyne.URIReadCloser, e error) {
-		if urirc != nil {
-			loadAndShowSession(urirc.URI().Path())
-		}
-	}, mainWindow)
-	sd.Resize(fyne.Size{Width: 600, Height: 600})
-	sd.SetConfirmText("Open")
-	sd.SetFilter(storage.NewExtensionFileFilter([]string{".toml", ".TOML"}))
-	sd.Show()
+	promptToSaveIfDirty(func() {
+		od := dialog.NewFileOpen(func(urirc fyne.URIReadCloser, e error) {
+			if urirc != nil {
+				loadAndShowSession(urirc.URI().Path())
+				currentSession.Session.isDirty = false
+			}
+		}, mainWindow)
+		od.Resize(fyne.Size{Width: 600, Height: 600})
+		od.SetConfirmText("Open")
+		od.SetFilter(storage.NewExtensionFileFilter([]string{".toml", ".TOML"}))
+		od.Show()
+	})
+
 }
 
 func fileSave() {
