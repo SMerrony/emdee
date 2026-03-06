@@ -30,11 +30,11 @@ func updateStatusBox() {
 		if currentSession.Session.Name == "" {
 			statusText = "No session loaded"
 		} else if playerActive {
-			statusText = "(Playing)"
+			statusText = "Playing"
 		} else {
 			statusText = "(Not Playing)"
 		}
-		if currentSession.Session.isDirty {
+		if sessionDirty {
 			statusText = statusText + " - Unsaved changes"
 		}
 		statusLabel.SetText(statusText)

@@ -39,12 +39,19 @@ See the project [README.](../README.md)
 
 ## Menu
 ### File
+No surprises here; you can create new sessions, open existing ones, save your session etc.
+
 ### View
+Here you can select one of three GUI sizes for eMDee.  It's often useful to have a large (or XL) interface
+on laptops or tablets being used in performance.  The chosen view size is saved whenever you save a session.
+
+You can also switch between performance (normal) and Session Editing mode from this menu.
+
 ### MIDI
 ### Help
 
 ## Creating a New Session
-First, ensure you are in the session editing mode by choosing `Session Editing` from the `View` menu, an empty track will appear on the display.
+First, ensure you are in the session editing mode either by choosing `Session Editing` from the `View` menu or via the `File | New` menu option - an empty track will appear on the display.
 
 Enter a descriptive name for the session in the top (`Session`) field.  Optionally, add further notes about the session in the `Notes` field.
 

@@ -53,7 +53,7 @@ func buildMenu() (mainMenu *fyne.MainMenu) {
 		viewXLItem.Checked = false
 		if currentSession != nil {
 			currentSession.Session.FontSize = "M"
-			currentSession.Session.isDirty = true
+			sessionDirty = true
 		}
 		updateTracks()
 		mainWindow.Resize(fyne.Size{20, 20})
@@ -67,7 +67,7 @@ func buildMenu() (mainMenu *fyne.MainMenu) {
 		viewXLItem.Checked = false
 		if currentSession != nil {
 			currentSession.Session.FontSize = "L"
-			currentSession.Session.isDirty = true
+			sessionDirty = true
 		}
 		updateTracks()
 		mainWindow.Resize(fyne.Size{20, 20})
@@ -80,7 +80,7 @@ func buildMenu() (mainMenu *fyne.MainMenu) {
 		viewXLItem.Checked = true
 		if currentSession != nil {
 			currentSession.Session.FontSize = "XL"
-			currentSession.Session.isDirty = true
+			sessionDirty = true
 		}
 		updateTracks()
 		mainWindow.Resize(fyne.Size{20, 20})
@@ -123,7 +123,7 @@ func buildMenu() (mainMenu *fyne.MainMenu) {
 }
 
 func promptToSaveIfDirty(after func()) {
-	if currentSession.Session.isDirty {
+	if sessionDirty {
 		cd := dialog.NewConfirm("Unsaved Changes", "You have unsaved changes. Do you want to save before proceeding?",
 			func(save bool) {
 				if save {
@@ -160,7 +160,7 @@ func fileOpen() {
 		od := dialog.NewFileOpen(func(urirc fyne.URIReadCloser, e error) {
 			if urirc != nil {
 				loadAndShowSession(urirc.URI().Path())
-				currentSession.Session.isDirty = false
+				sessionDirty = false
 			}
 		}, mainWindow)
 		od.Resize(fyne.Size{Width: 600, Height: 600})
@@ -173,12 +173,12 @@ func fileOpen() {
 
 func fileSave() {
 	if currentSession != nil {
-		if currentSession.Session.filePath != "" {
-			if err := currentSession.Save(currentSession.Session.filePath); err != nil {
+		if sessionFilePath != "" {
+			if err := currentSession.Save(sessionFilePath); err != nil {
 				dialog.ShowError(err, mainWindow)
-				log.Printf("ERROR: Could not save Session file %s\n", currentSession.Session.filePath)
+				log.Printf("ERROR: Could not save Session file %s\n", sessionFilePath)
 			} else {
-				currentSession.Session.isDirty = false
+				sessionDirty = false
 			}
 		} else {
 			fileSaveAs()
@@ -194,8 +194,8 @@ func fileSaveAs() {
 				dialog.ShowError(err, mainWindow)
 				log.Printf("ERROR: Could not save Session file %s\n", path)
 			} else {
-				currentSession.Session.filePath = path
-				currentSession.Session.isDirty = false
+				sessionFilePath = path
+				sessionDirty = false
 			}
 		}
 	}, mainWindow)

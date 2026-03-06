@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: Copyright 2026 Stephen Merrony
 
-package main
+package customwidgets
 
 import (
 	"fyne.io/fyne/v2"
@@ -9,38 +9,38 @@ import (
 )
 
 // Customised Label widget with a minimum width
-type MinSizeableLabel struct {
+type MinWidthLabel struct {
 	widget.Label
 	minWidth float32
 }
 
-func NewMinSizeableLabel(text string, minWidth float32) *MinSizeableLabel {
-	label := &MinSizeableLabel{minWidth: minWidth}
+func NewMinWidthLabel(text string, minWidth float32) *MinWidthLabel {
+	label := &MinWidthLabel{minWidth: minWidth}
 	label.ExtendBaseWidget(label)
 	label.SetText(text)
 	label.Alignment = fyne.TextAlignCenter
 	return label
 }
 
-func (l *MinSizeableLabel) MinSize() fyne.Size {
+func (l *MinWidthLabel) MinSize() fyne.Size {
 	min := l.Label.MinSize()
 	min.Width = l.minWidth // Set a minimum width for the label
 	return min
 }
 
 // Customised Entry widget with a minimum width
-type MinSizeableEntry struct {
+type MinWidthEntry struct {
 	widget.Entry
 	minWidth float32
 }
 
-func NewMinSizeableEntry(minWidth float32) *MinSizeableEntry {
-	entry := &MinSizeableEntry{minWidth: minWidth}
+func NewMinWidthEntry(minWidth float32) *MinWidthEntry {
+	entry := &MinWidthEntry{minWidth: minWidth}
 	entry.ExtendBaseWidget(entry)
 	return entry
 }
 
-func (e *MinSizeableEntry) MinSize() fyne.Size {
+func (e *MinWidthEntry) MinSize() fyne.Size {
 	min := e.Entry.MinSize()
 	min.Width = e.minWidth // Set a minimum width for the entry
 	return min

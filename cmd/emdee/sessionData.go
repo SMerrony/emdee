@@ -19,8 +19,6 @@ type Session struct {
 	Notes    string `toml:"notes"`
 	FontSize string `toml:"fontsize"`
 	MidiPort string `toml:"midiport"`
-	filePath string // Not stored in the TOML, used to track from where the session was loaded
-	isDirty  bool   // Not stored in the TOML, used to track whether the session has unsaved changes
 }
 
 type Track struct {
@@ -40,8 +38,6 @@ func loadSession(path string) (*Config, error) {
 	if _, err := toml.DecodeFile(path, &config); err != nil {
 		return nil, err
 	}
-	config.Session.filePath = path
-	config.Session.isDirty = false
 	return &config, nil
 }
 
@@ -61,5 +57,4 @@ func (conf *Config) Save(path string) error {
 
 func (conf *Config) swapTracks(i, j int) {
 	conf.Tracks[i], conf.Tracks[j] = conf.Tracks[j], conf.Tracks[i]
-	conf.Session.isDirty = true
 }

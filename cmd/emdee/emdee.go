@@ -31,9 +31,11 @@ var (
 	tracksBox   *fyne.Container
 	statusLabel *widget.Label
 
-	currentSession *Config = &Config{}
-	playerActive   bool    = false
-	activeTrackIx  int     = -1
+	currentSession  *Config = &Config{}
+	sessionDirty    bool    = false
+	sessionFilePath string  = ""
+	playerActive    bool    = false
+	activeTrackIx   int     = -1
 )
 
 var (
