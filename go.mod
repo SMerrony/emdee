@@ -1,6 +1,6 @@
 module emdee
 
-go 1.24.0
+go 1.24.2
 
 require fyne.io/fyne/v2 v2.7.3
 

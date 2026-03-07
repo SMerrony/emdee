@@ -4,6 +4,7 @@
 package main
 
 import (
+	"emdee/internal/players"
 	"fmt"
 	"log"
 	"os/exec"
@@ -12,6 +13,7 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/storage"
+	"fyne.io/fyne/v2/widget"
 )
 
 var (
@@ -56,7 +58,7 @@ func buildMenu() (mainMenu *fyne.MainMenu) {
 			sessionDirty = true
 		}
 		updateTracks()
-		mainWindow.Resize(fyne.Size{20, 20})
+		mainWindow.Resize(fyne.Size{Width: 20, Height: 20})
 	})
 	viewNormalItem.Checked = true
 
@@ -70,7 +72,7 @@ func buildMenu() (mainMenu *fyne.MainMenu) {
 			sessionDirty = true
 		}
 		updateTracks()
-		mainWindow.Resize(fyne.Size{20, 20})
+		mainWindow.Resize(fyne.Size{Width: 20, Height: 20})
 	})
 
 	viewXLItem = fyne.NewMenuItem("View X-Large", func() {
@@ -83,7 +85,7 @@ func buildMenu() (mainMenu *fyne.MainMenu) {
 			sessionDirty = true
 		}
 		updateTracks()
-		mainWindow.Resize(fyne.Size{20, 20})
+		mainWindow.Resize(fyne.Size{Width: 20, Height: 20})
 	})
 
 	// viewXXLItem := fyne.NewMenuItem("View XX-Large", func() {})
@@ -98,7 +100,7 @@ func buildMenu() (mainMenu *fyne.MainMenu) {
 		tracksBox = buildTracksDisplay()
 		content.Add(tracksBox)
 		content.Refresh()
-		mainWindow.Resize(fyne.Size{20, 20}) // Force the window to recalculate its size to accommodate the new track display layout
+		mainWindow.Resize(fyne.Size{Width: 20, Height: 20}) // Force the window to recalculate its size to accommodate the new track display layout
 	})
 	viewSessionEditingItem.Checked = false
 	viewMenu := fyne.NewMenu("View",
@@ -109,8 +111,14 @@ func buildMenu() (mainMenu *fyne.MainMenu) {
 		viewSessionEditingItem,
 	)
 
-	midiSettingsItem := fyne.NewMenuItem("MIDI Settings...", func() {})
-	midiMenu := fyne.NewMenu("MIDI", midiSettingsItem)
+	midiListPortsItem := fyne.NewMenuItem("List Ports", func() {
+		log.Print(players.ListMidiOuts()) // TODO remove this when tested on Windows
+		text := widget.NewLabel(players.ListMidiOuts())
+		text.TextStyle = fyne.TextStyle{Monospace: true}
+		dialog.ShowCustom("MIDI Ports", "OK", text, mainWindow)
+	})
+	midiSettingsItem := fyne.NewMenuItem("MIDI Settings...", midiPortChooser)
+	midiMenu := fyne.NewMenu("MIDI", midiListPortsItem, midiSettingsItem)
 
 	onlineHelpItem := fyne.NewMenuItem("Online Help", func() { openBrowser(helpURL) })
 	aboutItem := fyne.NewMenuItem("About", helpAbout)
@@ -150,7 +158,7 @@ func fileNew() {
 		tracksBox = buildTracksDisplay()
 		content.Add(tracksBox)
 		content.Refresh()
-		mainWindow.Resize(fyne.Size{20, 20})
+		mainWindow.Resize(fyne.Size{Width: 20, Height: 20})
 	})
 }
 
@@ -202,6 +210,18 @@ func fileSaveAs() {
 	sd.Resize(fyne.Size{Width: 600, Height: 600})
 	sd.SetConfirmText("Save")
 	sd.Show()
+}
+
+func midiPortChooser() {
+	portEntry := widget.NewEntry()
+	portEntry.Text = currentSession.Session.MidiPort
+	items := []*widget.FormItem{widget.NewFormItem("Port:", portEntry)}
+	dialog.ShowForm("MIDI Port", "Save", "Cancel", items, func(b bool) {
+		if b {
+			currentSession.Session.MidiPort = portEntry.Text
+			sessionDirty = true
+		}
+	}, mainWindow)
 }
 
 func openBrowser(url string) {

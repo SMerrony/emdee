@@ -6,6 +6,7 @@ package players
 import (
 	"log"
 	"os/exec"
+	"runtime"
 	"strconv"
 	"strings"
 )
@@ -73,4 +74,28 @@ func StopPlayer(cmd *exec.Cmd) error {
 		}
 	}
 	return nil
+}
+
+func ListMidiOuts() (result string) {
+	switch runtime.GOOS {
+	case "linux":
+		cmd := exec.Command("aplaymidi", "-l")
+		out, err := cmd.Output()
+		if err != nil {
+			result = err.Error()
+		} else {
+			result = string(out)
+		}
+	case "windows":
+		cmd := exec.Command("lsmidiouts")
+		out, err := cmd.Output()
+		if err != nil {
+			result = err.Error()
+		} else {
+			result = string(out)
+		}
+	default:
+		result = "Cannot list MIDI ports on this Operating System"
+	}
+	return result
 }

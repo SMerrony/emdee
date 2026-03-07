@@ -24,8 +24,7 @@ The MD can plan in advance the order of performance; later, `eMDee` will facilit
     - [Install Executable](#install-executable)
       - [GNU/Linux](#gnulinux-1)
       - [Windows](#windows-1)
-    - [Build from Source](#build-from-source)
-      - [From Source Download](#from-source-download)
+    - [From Source Download](#from-source-download)
   - [Usage](#usage)
   - [Changes](#changes)
 
@@ -76,12 +75,13 @@ An AppImage file will normally be provided with each release.  Install it in the
 #### Windows
 TODO
 
-### Build from Source
 
-
-#### From Source Download
+### From Source Download
 Download and extract the latest release source code bundle from https://github.com/SMerrony/emdee/releases
 
+Run the command `go build ./cmd/emdee`
+
+The `emdee` executable will be in your current directory.
 
 ## Usage
 See our [User Guide](doc/UserGuide.md).
