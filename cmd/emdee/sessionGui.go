@@ -33,12 +33,42 @@ var (
 	sessionNameEntry  *widget.Entry
 	sessionNotesEntry *widget.Entry
 
-	sessBox *fyne.Container
-
 	trackEditMode bool = false
 
 	rows []row
 )
+
+func showSession() {
+	switch currentSession.Session.FontSize {
+	case "M":
+		GuiSize = GuiNormal
+		viewNormalItem.Checked = true
+		viewLargeItem.Checked = false
+		viewXLItem.Checked = false
+	case "L":
+		GuiSize = GuiLarge
+		viewNormalItem.Checked = false
+		viewLargeItem.Checked = true
+		viewXLItem.Checked = false
+	case "XL":
+		GuiSize = GuiXLarge
+		viewNormalItem.Checked = false
+		viewLargeItem.Checked = false
+		viewXLItem.Checked = true
+	default:
+		GuiSize = GuiNormal
+		viewNormalItem.Checked = true
+		viewLargeItem.Checked = false
+		viewXLItem.Checked = false
+	}
+	mainWindow.SetTitle(fmt.Sprintf("%s - %s", appTitle, sessionFilePath))
+	status := container.NewVBox(buildPlayerControls(), buildStatusBox())
+	content = container.NewBorder(buildSessionHeader(), status, nil, nil, nil)
+	updateSessionHeader(currentSession.Session.Name, currentSession.Session.Notes)
+	tracksBox = buildTracksDisplay()
+	content.Add(tracksBox)
+	mainWindow.SetContent(content)
+}
 
 func loadAndShowSession(path string) {
 	var err error
@@ -48,43 +78,24 @@ func loadAndShowSession(path string) {
 		log.Printf("ERROR: Could not load Session file %s\n", path)
 	} else {
 		// fmt.Printf("%#v\n", currentSession)
-		switch currentSession.Session.FontSize {
-		case "M":
-			GuiSize = GuiNormal
-			viewNormalItem.Checked = true
-			viewLargeItem.Checked = false
-			viewXLItem.Checked = false
-		case "L":
-			GuiSize = GuiLarge
-			viewNormalItem.Checked = false
-			viewLargeItem.Checked = true
-			viewXLItem.Checked = false
-		case "XL":
-			GuiSize = GuiXLarge
-			viewNormalItem.Checked = false
-			viewLargeItem.Checked = false
-			viewXLItem.Checked = true
-		default:
-			GuiSize = GuiNormal
-			viewNormalItem.Checked = true
-			viewLargeItem.Checked = false
-			viewXLItem.Checked = false
-		}
+		showSession()
 		sessionFilePath = path
-		mainWindow.SetTitle(fmt.Sprintf("%s - %s", appTitle, sessionFilePath))
-		updateSessionHeader(currentSession.Session.Name, currentSession.Session.Notes)
-		tracksBox = buildTracksDisplay()
-		content.Add(tracksBox)
-		content.Refresh()
-
 		sessionDirty = false
 
 		playButton.Enable()
 		previousButton.Enable()
 		nextButton.Enable()
-
-		// TODO Update MIDI settings with loaded session data
 	}
+}
+
+func clearSessionDisplayAndData() {
+	currentSession = newConfig()
+	rows = nil
+	sessionFilePath = ""
+	sessionDirty = false
+	tracksBox = nil
+	content.RemoveAll()
+	content.Refresh()
 }
 
 // The sessionHeader holds the session name and notes fields, which are displayed at the top of the
@@ -144,7 +155,6 @@ func updateTrackSelection() {
 
 func buildTracksDisplay() *fyne.Container {
 	// log.Println("Building tracks display")
-	rows = nil // Clear existing row data
 	tracksBox = container.NewVBox()
 	tracksBox.Add(buildTracksDisplayHeader())
 	for rowid, track := range currentSession.Tracks {
@@ -197,6 +207,8 @@ func buildTracksDisplay() *fyne.Container {
 		switch players.GuessMediaType(currentSession.Tracks[rowid].Path) {
 		case players.MediaNone:
 			rowBox.Add(cw.NewMinWidthLabel("No Media", 140*scaleFactor()))
+		case players.MediaMIDI:
+			rowBox.Add(cw.NewMinWidthLabel("MIDI", 140*scaleFactor()))
 		case players.MediaAudio, players.MediaUnknown:
 			volumeEntry := cw.NewMinWidthEntry(60 * scaleFactor())
 			volumeEntry.SetText(strconv.Itoa(track.Volume))
@@ -221,8 +233,6 @@ func buildTracksDisplay() *fyne.Container {
 					sessionDirty = true
 				}
 			}))
-		case players.MediaMIDI:
-			rowBox.Add(cw.NewMinWidthLabel("MIDI", 140*scaleFactor()))
 		}
 
 		if trackEditMode {

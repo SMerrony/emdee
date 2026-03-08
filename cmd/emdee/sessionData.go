@@ -30,6 +30,10 @@ type Track struct {
 	LeadIn  int    `toml:"leadin"`
 }
 
+func newConfig() *Config {
+	return &Config{}
+}
+
 func loadSession(path string) (*Config, error) {
 	if _, err := os.Stat(path); err != nil {
 		return nil, err

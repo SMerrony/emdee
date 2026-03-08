@@ -147,26 +147,23 @@ func promptToSaveIfDirty(after func()) {
 
 func fileNew() {
 	promptToSaveIfDirty(func() {
-		currentSession = &Config{}
+		clearSessionDisplayAndData()
 		activeTrackIx = -1
 		mainWindow.SetTitle(appTitle + " - (No Session Loaded)")
 		viewSessionEditingItem.Checked = true
 		trackEditMode = true
-		if tracksBox != nil {
-			tracksBox.RemoveAll()
-		}
-		tracksBox = buildTracksDisplay()
-		content.Add(tracksBox)
-		content.Refresh()
+		showSession()
 		mainWindow.Resize(fyne.Size{Width: 20, Height: 20})
 	})
 }
 
+// FIXME: DISPLAY CORRUPTION WHEN OPENING AFTER OPENING 2 SESSIONS
 // opens a file dialog to select a session file, then loads and displays the session data in the UI
 func fileOpen() {
 	promptToSaveIfDirty(func() {
 		od := dialog.NewFileOpen(func(urirc fyne.URIReadCloser, e error) {
 			if urirc != nil {
+				clearSessionDisplayAndData()
 				loadAndShowSession(urirc.URI().Path())
 				sessionDirty = false
 			}
