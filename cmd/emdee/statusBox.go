@@ -18,25 +18,21 @@ func buildStatusBox() (statBox *fyne.Container) {
 	go func() {
 		ticker := time.NewTicker(statusUpdatePeriodMs * time.Millisecond)
 		for range ticker.C {
-			updateStatusBox()
+			fyne.Do(func() {
+				statusText := ""
+				if currentSession.Session.Name == "" {
+					statusText = "No session loaded"
+				} else if playerActive {
+					statusText = "Playing"
+				} else {
+					statusText = "(Not Playing)"
+				}
+				if sessionDirty {
+					statusText = statusText + " - Unsaved changes"
+				}
+				statusLabel.SetText(statusText)
+			})
 		}
 	}()
 	return statBox
-}
-
-func updateStatusBox() {
-	fyne.Do(func() {
-		statusText := ""
-		if currentSession.Session.Name == "" {
-			statusText = "No session loaded"
-		} else if playerActive {
-			statusText = "Playing"
-		} else {
-			statusText = "(Not Playing)"
-		}
-		if sessionDirty {
-			statusText = statusText + " - Unsaved changes"
-		}
-		statusLabel.SetText(statusText)
-	})
 }

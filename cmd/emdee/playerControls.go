@@ -4,6 +4,7 @@
 package main
 
 import (
+	cw "emdee/internal/customwidgets"
 	"emdee/internal/players"
 
 	"log"
@@ -20,14 +21,18 @@ import (
 )
 
 var (
-	playButton, stopButton, previousButton, nextButton *widget.Button
-	playerCmd                                          *exec.Cmd = nil
+	playButton                             *cw.MinHeightButton
+	stopButton, previousButton, nextButton *widget.Button
+	playerCmd                              *exec.Cmd = nil
 )
 
 func buildPlayerControls() (playerControls *fyne.Container) {
 
-	playButton = widget.NewButtonWithIcon("Play", theme.MediaPlayIcon(), play)
+	playButton = cw.NewMinHeightButton("Play", 80*scaleFactor())
+	playButton.SetIcon(theme.MediaPlayIcon())
+	playButton.OnTapped = play
 	playButton.Disable()
+
 	stopButton = widget.NewButtonWithIcon("Stop", theme.MediaStopIcon(), stop)
 	stopButton.Disable()
 	previousButton = widget.NewButtonWithIcon("Previous", theme.MediaSkipPreviousIcon(), previous)

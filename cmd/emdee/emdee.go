@@ -19,7 +19,7 @@ const (
 	appCopyright = "Copyright ©2026 S.Merrony"
 	appSemVer    = "v0.3.0" // TODO Update SemVer on each release!
 	appWebsite   = "https://github.com/SMerrony/emdee"
-	helpURL      = "https://github.com/SMerrony/emdee"
+	helpURL      = "https://github.com/SMerrony/emdee/blob/main/doc/UserGuide.md"
 
 	statusUpdatePeriodMs = 500
 )

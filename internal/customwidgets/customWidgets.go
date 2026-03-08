@@ -45,3 +45,22 @@ func (e *MinWidthEntry) MinSize() fyne.Size {
 	min.Width = e.minWidth // Set a minimum width for the entry
 	return min
 }
+
+// Customised Button widget with a minimum height
+type MinHeightButton struct {
+	widget.Button
+	minHeight float32
+}
+
+func NewMinHeightButton(text string, minHeight float32) *MinHeightButton {
+	button := &MinHeightButton{minHeight: minHeight}
+	button.SetText(text)
+	button.ExtendBaseWidget(button)
+	return button
+}
+
+func (b *MinHeightButton) MinSize() fyne.Size {
+	min := b.Button.MinSize()
+	min.Height = b.minHeight // Set a minimum height for the button
+	return min
+}
