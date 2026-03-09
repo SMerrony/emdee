@@ -40,41 +40,32 @@ func buildMenu() (mainMenu *fyne.MainMenu) {
 
 	viewNormalItem = fyne.NewMenuItem("View Normal", func() {
 		GuiSize = GuiNormal
-		viewNormalItem.Checked = true
-		viewLargeItem.Checked = false
-		viewXLItem.Checked = false
 		if currentSession != nil {
 			currentSession.Session.FontSize = "M"
 			sessionDirty = true
 		}
-		content.Refresh()
+		showSession()
 		mainWindow.Resize(fyne.Size{Width: 20, Height: 20})
 	})
 	viewNormalItem.Checked = true
 
 	viewLargeItem = fyne.NewMenuItem("View Large", func() {
 		GuiSize = GuiLarge
-		viewNormalItem.Checked = false
-		viewLargeItem.Checked = true
-		viewXLItem.Checked = false
 		if currentSession != nil {
 			currentSession.Session.FontSize = "L"
 			sessionDirty = true
 		}
-		content.Refresh()
+		showSession()
 		mainWindow.Resize(fyne.Size{Width: 20, Height: 20})
 	})
 
 	viewXLItem = fyne.NewMenuItem("View X-Large", func() {
 		GuiSize = GuiXLarge
-		viewNormalItem.Checked = false
-		viewLargeItem.Checked = false
-		viewXLItem.Checked = true
 		if currentSession != nil {
 			currentSession.Session.FontSize = "XL"
 			sessionDirty = true
 		}
-		content.Refresh()
+		showSession()
 		mainWindow.Resize(fyne.Size{Width: 20, Height: 20})
 	})
 

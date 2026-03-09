@@ -39,34 +39,32 @@ var (
 )
 
 func showSession() {
-	switch currentSession.Session.FontSize {
-	case "M":
-		GuiSize = GuiNormal
+	mainWindow.SetTitle(fmt.Sprintf("%s - %s", appTitle, sessionFilePath))
+	mainWindow.SetMainMenu(buildMenu())
+	switch GuiSize {
+	case GuiNormal:
 		viewNormalItem.Checked = true
 		viewLargeItem.Checked = false
 		viewXLItem.Checked = false
-	case "L":
-		GuiSize = GuiLarge
+	case GuiLarge:
 		viewNormalItem.Checked = false
 		viewLargeItem.Checked = true
 		viewXLItem.Checked = false
-	case "XL":
-		GuiSize = GuiXLarge
+	case GuiXLarge:
 		viewNormalItem.Checked = false
 		viewLargeItem.Checked = false
 		viewXLItem.Checked = true
 	default:
-		GuiSize = GuiNormal
 		viewNormalItem.Checked = true
 		viewLargeItem.Checked = false
 		viewXLItem.Checked = false
 	}
-	mainWindow.SetTitle(fmt.Sprintf("%s - %s", appTitle, sessionFilePath))
 	status := container.NewVBox(buildPlayerControls(), buildStatusBox())
 	content = container.NewBorder(buildSessionHeader(), status, nil, nil, nil)
 	updateSessionHeader(currentSession.Session.Name, currentSession.Session.Notes)
 	tracksBox = buildTracksDisplay()
 	content.Add(tracksBox)
+	updateTrackSelection()
 	mainWindow.SetContent(content)
 }
 
@@ -78,13 +76,21 @@ func loadAndShowSession(path string) {
 		log.Printf("ERROR: Could not load Session file %s\n", path)
 	} else {
 		// fmt.Printf("%#v\n", currentSession)
+		activeTrackIx = -1
+		switch currentSession.Session.FontSize {
+		case "M":
+			GuiSize = GuiNormal
+		case "L":
+			GuiSize = GuiLarge
+		case "XL":
+			GuiSize = GuiXLarge
+		default:
+			GuiSize = GuiNormal
+		}
 		showSession()
 		sessionFilePath = path
 		sessionDirty = false
-
-		playButton.Enable()
-		previousButton.Enable()
-		nextButton.Enable()
+		setPlayerButtonsAvailability()
 	}
 }
 
@@ -141,7 +147,7 @@ func scaleFactor() float32 {
 	}
 }
 
-// Update the GUI whenever the active track changes.
+// Update the track selector buttons
 func updateTrackSelection() {
 	for _, r := range rows {
 		if r.id == activeTrackIx {
@@ -151,6 +157,7 @@ func updateTrackSelection() {
 		}
 		r.selectorBtn.Refresh()
 	}
+	setPlayerButtonsAvailability()
 }
 
 func buildTracksDisplay() *fyne.Container {
@@ -415,8 +422,6 @@ func buildTracksDisplayHeader() *fyne.Container {
 // updates to the UI after a track has finished playing
 func playerFinished() {
 	playerActive = false
-	playButton.Enable()
-	stopButton.Disable()
 	if activeTrackIx < len(currentSession.Tracks)-1 {
 		for {
 			activeTrackIx++
@@ -426,5 +431,6 @@ func playerFinished() {
 			}
 		}
 		updateTrackSelection()
+		setPlayerButtonsAvailability()
 	}
 }

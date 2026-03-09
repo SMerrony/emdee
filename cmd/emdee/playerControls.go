@@ -17,29 +17,36 @@ import (
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/theme"
-	"fyne.io/fyne/v2/widget"
 )
 
 var (
-	playButton                             *cw.MinHeightButton
-	stopButton, previousButton, nextButton *widget.Button
-	playerCmd                              *exec.Cmd = nil
+	playButton, stopButton, previousButton, nextButton *cw.MinHeightButton
+	playerCmd                                          *exec.Cmd = nil
 )
 
 func buildPlayerControls() (playerControls *fyne.Container) {
-
-	playButton = cw.NewMinHeightButton("Play", 80*scaleFactor())
+	playButton = cw.NewMinHeightButton("Play", 70*scaleFactor())
 	playButton.SetIcon(theme.MediaPlayIcon())
 	playButton.OnTapped = play
 	playButton.Disable()
 
-	stopButton = widget.NewButtonWithIcon("Stop", theme.MediaStopIcon(), stop)
+	stopButton = cw.NewMinHeightButton("Stop", 70*scaleFactor()) // Use NewMinHeightButton
+	stopButton.SetIcon(theme.MediaStopIcon())
+	stopButton.OnTapped = stop
 	stopButton.Disable()
-	previousButton = widget.NewButtonWithIcon("Previous", theme.MediaSkipPreviousIcon(), previous)
+
+	previousButton = cw.NewMinHeightButton("Previous", 70*scaleFactor()) // Use NewMinHeightButton
+	previousButton.SetIcon(theme.MediaSkipPreviousIcon())
+	previousButton.OnTapped = previous
 	previousButton.Disable()
-	nextButton = widget.NewButtonWithIcon("Next", theme.MediaSkipNextIcon(), next)
+
+	nextButton = cw.NewMinHeightButton("Next", 70*scaleFactor()) // Use NewMinHeightButton
+	nextButton.SetIcon(theme.MediaSkipNextIcon())
+	nextButton.OnTapped = next
 	nextButton.Disable()
+
 	playerControls = container.New(layout.NewGridLayout(4), playButton, stopButton, previousButton, nextButton)
+
 	return playerControls
 }
 
@@ -77,10 +84,7 @@ func play() {
 		playerActive = true
 		go monitorForCmdFinished(cmd)
 		playerCmd = cmd
-		stopButton.Enable()
-		playButton.Disable()
-		previousButton.Disable()
-		nextButton.Disable()
+		setPlayerButtonsAvailability()
 	}
 }
 
@@ -100,10 +104,7 @@ func stop() {
 	if playerActive {
 		players.StopPlayer(playerCmd)
 		playerActive = false
-		stopButton.Disable()
-		playButton.Enable()
-		previousButton.Enable()
-		nextButton.Enable()
+		setPlayerButtonsAvailability()
 	}
 }
 
@@ -111,6 +112,7 @@ func next() {
 	if activeTrackIx < len(currentSession.Tracks)-1 {
 		activeTrackIx++
 		updateTrackSelection()
+		setPlayerButtonsAvailability()
 	}
 }
 
@@ -118,5 +120,35 @@ func previous() {
 	if activeTrackIx > 0 {
 		activeTrackIx--
 		updateTrackSelection()
+		setPlayerButtonsAvailability()
+	}
+}
+
+func setPlayerButtonsAvailability() {
+	if playerActive {
+		stopButton.Enable()
+		playButton.Disable()
+		previousButton.Disable()
+		nextButton.Disable()
+	} else {
+		if activeTrackIx == -1 {
+			stopButton.Disable()
+			playButton.Disable()
+			previousButton.Disable()
+			nextButton.Disable()
+		} else {
+			stopButton.Disable()
+			playButton.Enable()
+			if activeTrackIx > 0 {
+				previousButton.Enable()
+			} else {
+				previousButton.Disable()
+			}
+			if activeTrackIx < len(currentSession.Tracks)-1 {
+				nextButton.Enable()
+			} else {
+				nextButton.Disable()
+			}
+		}
 	}
 }
