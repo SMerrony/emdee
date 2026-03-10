@@ -51,11 +51,11 @@ func buildPlayerControls() (playerControls *fyne.Container) {
 }
 
 func play() {
-	if currentSession == nil || activeTrackIx < 0 || activeTrackIx >= len(currentSession.Tracks) {
+	if config == nil || getActiveTrackIx() < 0 || getActiveTrackIx() >= len(config.Tracks) {
 		dialog.ShowInformation("No Track Selected", "Please select a track to play.", mainWindow)
 		return
 	}
-	track := currentSession.Tracks[activeTrackIx]
+	track := config.Tracks[getActiveTrackIx()]
 	if track.Skip {
 		dialog.ShowInformation("Track Skip", "This track is marked be skipped. Please uncheck the skip box to play it.", mainWindow)
 		return
@@ -63,16 +63,16 @@ func play() {
 	// TODO handle MIDI files, different OSes, etc.
 	var cmd *exec.Cmd
 	var err error
-	switch players.GuessMediaType(currentSession.Tracks[activeTrackIx].Path) {
+	switch players.GuessMediaType(track.Path) {
 	case players.MediaAudio:
 		// ffplay is used everywhere (!)
 		cmd, err = players.StartPlayer(players.PlayerFfplayer, track.Path, track.Volume, "")
 	case players.MediaMIDI:
 		switch runtime.GOOS {
 		case "linux":
-			cmd, err = players.StartPlayer(players.PlayerAplaymidi, track.Path, 100, currentSession.Session.MidiPort)
+			cmd, err = players.StartPlayer(players.PlayerAplaymidi, track.Path, 100, config.Session.MidiPort)
 		case "windows":
-			cmd, err = players.StartPlayer(players.PlayerPlaysmf, track.Path, 100, currentSession.Session.MidiPort)
+			cmd, err = players.StartPlayer(players.PlayerPlaysmf, track.Path, 100, config.Session.MidiPort)
 		default:
 			dialog.ShowInformation("Unsupported Platform", "Emdee cannot yet play MIDI files on this Operating System", mainWindow)
 			return
@@ -81,7 +81,7 @@ func play() {
 	if err != nil {
 		dialog.ShowError(err, mainWindow)
 	} else {
-		playerActive = true
+		setPlayerActive(true)
 		go monitorForCmdFinished(cmd)
 		playerCmd = cmd
 		setPlayerButtonsAvailability()
@@ -101,37 +101,37 @@ func monitorForCmdFinished(cmd *exec.Cmd) {
 }
 
 func stop() {
-	if playerActive {
+	if playerIsActive() {
 		players.StopPlayer(playerCmd)
-		playerActive = false
+		setPlayerActive(false)
 		setPlayerButtonsAvailability()
 	}
 }
 
 func next() {
-	if activeTrackIx < len(currentSession.Tracks)-1 {
-		activeTrackIx++
+	if getActiveTrackIx() < len(config.Tracks)-1 {
+		setActiveTrackIx((getActiveTrackIx() + 1))
 		updateTrackSelection()
 		setPlayerButtonsAvailability()
 	}
 }
 
 func previous() {
-	if activeTrackIx > 0 {
-		activeTrackIx--
+	if getActiveTrackIx() > 0 {
+		setActiveTrackIx((getActiveTrackIx() - 1))
 		updateTrackSelection()
 		setPlayerButtonsAvailability()
 	}
 }
 
 func setPlayerButtonsAvailability() {
-	if playerActive {
+	if playerIsActive() {
 		stopButton.Enable()
 		playButton.Disable()
 		previousButton.Disable()
 		nextButton.Disable()
 	} else {
-		if activeTrackIx == -1 {
+		if getActiveTrackIx() == -1 {
 			stopButton.Disable()
 			playButton.Disable()
 			previousButton.Disable()
@@ -139,12 +139,12 @@ func setPlayerButtonsAvailability() {
 		} else {
 			stopButton.Disable()
 			playButton.Enable()
-			if activeTrackIx > 0 {
+			if getActiveTrackIx() > 0 {
 				previousButton.Enable()
 			} else {
 				previousButton.Disable()
 			}
-			if activeTrackIx < len(currentSession.Tracks)-1 {
+			if getActiveTrackIx() < len(config.Tracks)-1 {
 				nextButton.Enable()
 			} else {
 				nextButton.Disable()

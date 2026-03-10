@@ -40,10 +40,8 @@ func buildMenu() (mainMenu *fyne.MainMenu) {
 
 	viewNormalItem = fyne.NewMenuItem("View Normal", func() {
 		GuiSize = GuiNormal
-		if currentSession != nil {
-			currentSession.Session.FontSize = "M"
-			sessionDirty = true
-		}
+		config.Session.FontSize = "M"
+		setSessionDirty(true)
 		showSession()
 		mainWindow.Resize(fyne.Size{Width: 20, Height: 20})
 	})
@@ -51,20 +49,16 @@ func buildMenu() (mainMenu *fyne.MainMenu) {
 
 	viewLargeItem = fyne.NewMenuItem("View Large", func() {
 		GuiSize = GuiLarge
-		if currentSession != nil {
-			currentSession.Session.FontSize = "L"
-			sessionDirty = true
-		}
+		config.Session.FontSize = "L"
+		setSessionDirty(true)
 		showSession()
 		mainWindow.Resize(fyne.Size{Width: 20, Height: 20})
 	})
 
 	viewXLItem = fyne.NewMenuItem("View X-Large", func() {
 		GuiSize = GuiXLarge
-		if currentSession != nil {
-			currentSession.Session.FontSize = "XL"
-			sessionDirty = true
-		}
+		config.Session.FontSize = "XL"
+		setSessionDirty(true)
 		showSession()
 		mainWindow.Resize(fyne.Size{Width: 20, Height: 20})
 	})
@@ -112,7 +106,7 @@ func buildMenu() (mainMenu *fyne.MainMenu) {
 }
 
 func promptToSaveIfDirty(after func()) {
-	if sessionDirty {
+	if sessionIsDirty() {
 		cd := dialog.NewConfirm("Unsaved Changes", "You have unsaved changes. Do you want to save before proceeding?",
 			func(save bool) {
 				if save {
@@ -129,7 +123,6 @@ func promptToSaveIfDirty(after func()) {
 func fileNew() {
 	promptToSaveIfDirty(func() {
 		clearSessionDisplayAndData()
-		activeTrackIx = -1
 		mainWindow.SetTitle(appTitle + " - (No Session Loaded)")
 		viewSessionEditingItem.Checked = true
 		trackEditMode = true
@@ -138,7 +131,6 @@ func fileNew() {
 	})
 }
 
-// FIXME: DISPLAY CORRUPTION WHEN OPENING AFTER OPENING 2 SESSIONS
 // opens a file dialog to select a session file, then loads and displays the session data in the UI
 func fileOpen() {
 	promptToSaveIfDirty(func() {
@@ -146,7 +138,7 @@ func fileOpen() {
 			if urirc != nil {
 				clearSessionDisplayAndData()
 				loadAndShowSession(urirc.URI().Path())
-				sessionDirty = false
+				setSessionDirty(false)
 			}
 		}, mainWindow)
 		od.Resize(fyne.Size{Width: 600, Height: 600})
@@ -158,17 +150,15 @@ func fileOpen() {
 }
 
 func fileSave() {
-	if currentSession != nil {
-		if sessionFilePath != "" {
-			if err := currentSession.Save(sessionFilePath); err != nil {
-				dialog.ShowError(err, mainWindow)
-				log.Printf("ERROR: Could not save Session file %s\n", sessionFilePath)
-			} else {
-				sessionDirty = false
-			}
+	if getSessionFilePath() != "" {
+		if err := config.Save(getSessionFilePath()); err != nil {
+			dialog.ShowError(err, mainWindow)
+			log.Printf("ERROR: Could not save Session file %s\n", getSessionFilePath())
 		} else {
-			fileSaveAs()
+			setSessionDirty(false)
 		}
+	} else {
+		fileSaveAs()
 	}
 }
 
@@ -176,12 +166,12 @@ func fileSaveAs() {
 	sd := dialog.NewFileSave(func(urirc fyne.URIWriteCloser, e error) {
 		if urirc != nil {
 			path := urirc.URI().Path()
-			if err := currentSession.Save(path); err != nil {
+			if err := config.Save(path); err != nil {
 				dialog.ShowError(err, mainWindow)
 				log.Printf("ERROR: Could not save Session file %s\n", path)
 			} else {
-				sessionFilePath = path
-				sessionDirty = false
+				setSessionFilePath(path)
+				setSessionDirty(false)
 			}
 		}
 	}, mainWindow)
@@ -192,12 +182,12 @@ func fileSaveAs() {
 
 func midiPortChooser() {
 	portEntry := widget.NewEntry()
-	portEntry.Text = currentSession.Session.MidiPort
+	portEntry.Text = config.Session.MidiPort
 	items := []*widget.FormItem{widget.NewFormItem("Port:", portEntry)}
 	dialog.ShowForm("MIDI Port", "Save", "Cancel", items, func(b bool) {
 		if b {
-			currentSession.Session.MidiPort = portEntry.Text
-			sessionDirty = true
+			config.Session.MidiPort = portEntry.Text
+			setSessionDirty(true)
 		}
 	}, mainWindow)
 }

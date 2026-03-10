@@ -4,6 +4,7 @@
 package main
 
 import (
+	"strconv"
 	"time"
 
 	"fyne.io/fyne/v2"
@@ -11,6 +12,8 @@ import (
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/widget"
 )
+
+var statusLabel *widget.Label
 
 func buildStatusBox() (statBox *fyne.Container) {
 	statusLabel = widget.NewLabel("No session loaded")
@@ -20,14 +23,13 @@ func buildStatusBox() (statBox *fyne.Container) {
 		for range ticker.C {
 			fyne.Do(func() {
 				statusText := ""
-				if currentSession.Session.Name == "" {
-					statusText = "No session loaded"
-				} else if playerActive {
-					statusText = "Playing"
+				if playerIsActive() {
+					statusText = "Playing Track " + strconv.Itoa(getActiveTrackIx()+1) +
+						" - " + config.Tracks[getActiveTrackIx()].Title
 				} else {
 					statusText = "(Not Playing)"
 				}
-				if sessionDirty {
+				if sessionIsDirty() {
 					statusText = statusText + " - Unsaved changes"
 				}
 				statusLabel.SetText(statusText)

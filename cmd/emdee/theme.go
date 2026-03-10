@@ -11,9 +11,9 @@ import (
 )
 
 const (
-	GuiNormal = 14
-	GuiLarge  = 20
-	GuiXLarge = 28
+	GuiNormal = 14 // M in the TOML config
+	GuiLarge  = 20 // L
+	GuiXLarge = 28 // XL
 )
 
 var GuiSize = GuiNormal

@@ -9,8 +9,6 @@ import (
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
-	"fyne.io/fyne/v2/container"
-	"fyne.io/fyne/v2/widget"
 )
 
 const (
@@ -25,17 +23,8 @@ const (
 )
 
 var (
-	emdeeApp    fyne.App
-	mainWindow  fyne.Window
-	content     *fyne.Container
-	tracksBox   *fyne.Container
-	statusLabel *widget.Label
-
-	currentSession  *Config = newConfig()
-	sessionDirty    bool    = false
-	sessionFilePath string  = ""
-	playerActive    bool    = false
-	activeTrackIx   int     = -1
+	emdeeApp   fyne.App
+	mainWindow fyne.Window
 )
 
 var (
@@ -55,6 +44,7 @@ func main() {
 	emdeeApp = app.New()
 	emdeeApp.SetIcon(resourceEmdeeiconPng)
 	emdeeApp.Settings().SetTheme(&emdeeTheme{})
+	initLiveData()
 	mainWindow = emdeeApp.NewWindow(appTitle + " - (No Session Loaded)")
 
 	setupWindow(mainWindow)
@@ -68,12 +58,4 @@ func main() {
 		})
 	})
 	mainWindow.ShowAndRun()
-}
-
-func setupWindow(w fyne.Window) {
-	w.Resize(fyne.NewSize(900, 600))
-	w.SetMainMenu(buildMenu())
-	status := container.NewVBox(buildPlayerControls(), buildStatusBox())
-	content = container.NewBorder(buildSessionHeader(), status, nil, nil, nil)
-	w.SetContent(content)
 }

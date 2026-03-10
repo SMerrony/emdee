@@ -32,14 +32,23 @@ type row struct {
 var (
 	sessionNameEntry  *widget.Entry
 	sessionNotesEntry *widget.Entry
-
-	trackEditMode bool = false
+	tracksBox         *fyne.Container
+	content           *fyne.Container
+	trackEditMode     bool = false
 
 	rows []row
 )
 
+func setupWindow(w fyne.Window) {
+	w.Resize(fyne.NewSize(900, 600))
+	w.SetMainMenu(buildMenu())
+	status := container.NewVBox(buildPlayerControls(), buildStatusBox())
+	content = container.NewBorder(buildSessionHeader(), status, nil, nil, nil)
+	w.SetContent(content)
+}
+
 func showSession() {
-	mainWindow.SetTitle(fmt.Sprintf("%s - %s", appTitle, sessionFilePath))
+	mainWindow.SetTitle(fmt.Sprintf("%s - %s", appTitle, getSessionFilePath()))
 	mainWindow.SetMainMenu(buildMenu())
 	switch GuiSize {
 	case GuiNormal:
@@ -61,7 +70,7 @@ func showSession() {
 	}
 	status := container.NewVBox(buildPlayerControls(), buildStatusBox())
 	content = container.NewBorder(buildSessionHeader(), status, nil, nil, nil)
-	updateSessionHeader(currentSession.Session.Name, currentSession.Session.Notes)
+	updateSessionHeader(config.Session.Name, config.Session.Notes)
 	tracksBox = buildTracksDisplay()
 	content.Add(tracksBox)
 	updateTrackSelection()
@@ -70,14 +79,14 @@ func showSession() {
 
 func loadAndShowSession(path string) {
 	var err error
-	currentSession, err = loadSession(path)
+	config, err = loadConfig(path)
 	if err != nil {
 		dialog.ShowError(err, mainWindow)
 		log.Printf("ERROR: Could not load Session file %s\n", path)
 	} else {
-		// fmt.Printf("%#v\n", currentSession)
-		activeTrackIx = -1
-		switch currentSession.Session.FontSize {
+		setSessionFilePath(path)
+		setActiveTrackIx(-1)
+		switch config.Session.FontSize {
 		case "M":
 			GuiSize = GuiNormal
 		case "L":
@@ -88,17 +97,13 @@ func loadAndShowSession(path string) {
 			GuiSize = GuiNormal
 		}
 		showSession()
-		sessionFilePath = path
-		sessionDirty = false
+		setSessionDirty(false)
 		setPlayerButtonsAvailability()
 	}
 }
 
 func clearSessionDisplayAndData() {
-	currentSession = newConfig()
-	rows = nil
-	sessionFilePath = ""
-	sessionDirty = false
+	initLiveData()
 	tracksBox = nil
 	content.RemoveAll()
 	content.Refresh()
@@ -112,14 +117,14 @@ func buildSessionHeader() (sessionHeader *fyne.Container) {
 	sessionLabel := widget.NewLabel("Session:")
 	sessionNameEntry = widget.NewEntry()
 	sessionNameEntry.OnChanged = func(s string) {
-		currentSession.Session.Name = s
-		sessionDirty = true
+		config.Session.Name = s
+		setSessionDirty(true)
 	}
 	notesLabel := widget.NewLabel("Notes:")
 	sessionNotesEntry = widget.NewEntry()
 	sessionNotesEntry.OnChanged = func(s string) {
-		currentSession.Session.Notes = s
-		sessionDirty = true
+		config.Session.Notes = s
+		setSessionDirty(true)
 	}
 	sessionHeader = container.New(layout.NewFormLayout(), sessionLabel, sessionNameEntry, notesLabel, sessionNotesEntry)
 	return sessionHeader
@@ -131,8 +136,8 @@ func updateSessionHeader(title string, notes string) {
 }
 
 func scaleFactor() float32 {
-	if currentSession != nil {
-		switch currentSession.Session.FontSize {
+	if config != nil {
+		switch config.Session.FontSize {
 		case "M":
 			return 1.0
 		case "L":
@@ -150,7 +155,7 @@ func scaleFactor() float32 {
 // Update the track selector buttons
 func updateTrackSelection() {
 	for _, r := range rows {
-		if r.id == activeTrackIx {
+		if r.id == getActiveTrackIx() {
 			r.selectorBtn.Importance = widget.HighImportance
 		} else {
 			r.selectorBtn.Importance = widget.MediumImportance
@@ -164,9 +169,9 @@ func buildTracksDisplay() *fyne.Container {
 	// log.Println("Building tracks display")
 	tracksBox = container.NewVBox()
 	tracksBox.Add(buildTracksDisplayHeader())
-	for rowid, track := range currentSession.Tracks {
+	for rowid, track := range config.Tracks {
 		selectorBtn := widget.NewButtonWithIcon("", theme.NavigateNextIcon(), func() {
-			activeTrackIx = rowid
+			setActiveTrackIx(rowid)
 			updateTrackSelection()
 		})
 		rows = append(rows, row{
@@ -187,31 +192,31 @@ func buildTracksDisplay() *fyne.Container {
 		titleEntry := cw.NewMinWidthEntry(300 * scaleFactor())
 		titleEntry.SetText(track.Title)
 		titleEntry.OnChanged = func(s string) {
-			currentSession.Tracks[rowid].Title = s
-			sessionDirty = true
+			config.Tracks[rowid].Title = s
+			setSessionDirty(true)
 		}
 		rowBox.Add(titleEntry)
 
 		skipCheck := widget.NewCheck("", func(b bool) {
-			currentSession.Tracks[rowid].Skip = b
-			sessionDirty = true
+			config.Tracks[rowid].Skip = b
+			setSessionDirty(true)
 		})
 		skipCheck.SetChecked(track.Skip)
 		skipCheck.OnChanged = func(b bool) {
-			currentSession.Tracks[rowid].Skip = b
-			sessionDirty = true
+			config.Tracks[rowid].Skip = b
+			setSessionDirty(true)
 		}
 		rowBox.Add(skipCheck)
 
 		commentEntry := cw.NewMinWidthEntry(200 * scaleFactor())
 		commentEntry.SetText(track.Comment)
 		commentEntry.OnChanged = func(s string) {
-			currentSession.Tracks[rowid].Comment = s
-			sessionDirty = true
+			config.Tracks[rowid].Comment = s
+			setSessionDirty(true)
 		}
 		rowBox.Add(commentEntry)
 
-		switch players.GuessMediaType(currentSession.Tracks[rowid].Path) {
+		switch players.GuessMediaType(config.Tracks[rowid].Path) {
 		case players.MediaNone:
 			rowBox.Add(cw.NewMinWidthLabel("No Media", 140*scaleFactor()))
 		case players.MediaMIDI:
@@ -220,24 +225,24 @@ func buildTracksDisplay() *fyne.Container {
 			volumeEntry := cw.NewMinWidthEntry(60 * scaleFactor())
 			volumeEntry.SetText(strconv.Itoa(track.Volume))
 			volumeEntry.OnChanged = func(s string) {
-				currentSession.Tracks[rowid].Volume, _ = strconv.Atoi(s)
-				sessionDirty = true
+				config.Tracks[rowid].Volume, _ = strconv.Atoi(s)
+				setSessionDirty(true)
 			}
 			rowBox.Add(volumeEntry)
 
 			rowBox.Add(widget.NewButtonWithIcon("", theme.VolumeDownIcon(), func() {
-				if currentSession.Tracks[rowid].Volume >= 10 {
-					currentSession.Tracks[rowid].Volume -= 5
-					volumeEntry.SetText(strconv.Itoa(currentSession.Tracks[rowid].Volume))
-					sessionDirty = true
+				if config.Tracks[rowid].Volume >= 10 {
+					config.Tracks[rowid].Volume -= 5
+					volumeEntry.SetText(strconv.Itoa(config.Tracks[rowid].Volume))
+					setSessionDirty(true)
 				}
 			}))
 			rowBox.Add(widget.NewButtonWithIcon("", theme.VolumeUpIcon(), func() {
-				currentSession.Tracks[rowid].Volume += 5
-				if currentSession.Tracks[rowid].Volume <= 95 {
-					currentSession.Tracks[rowid].Volume += 5
-					volumeEntry.SetText(strconv.Itoa(currentSession.Tracks[rowid].Volume))
-					sessionDirty = true
+				config.Tracks[rowid].Volume += 5
+				if config.Tracks[rowid].Volume <= 95 {
+					config.Tracks[rowid].Volume += 5
+					volumeEntry.SetText(strconv.Itoa(config.Tracks[rowid].Volume))
+					setSessionDirty(true)
 				}
 			}))
 		}
@@ -251,14 +256,14 @@ func buildTracksDisplay() *fyne.Container {
 			rowBox.Add(clearBtn)
 
 			tmpWidth := clearBtn.MinSize().Width
-			if rowid < len(currentSession.Tracks)-1 {
+			if rowid < len(config.Tracks)-1 {
 				rowBox.Add(widget.NewButtonWithIcon("", theme.MoveDownIcon(), func() {
-					currentSession.swapTracks(rowid, rowid+1)
+					config.swapTracks(rowid, rowid+1)
 					content.Remove(tracksBox)
 					tracksBox = buildTracksDisplay()
 					content.Add(tracksBox)
 					content.Refresh()
-					sessionDirty = true
+					setSessionDirty(true)
 				}))
 			} else {
 				rowBox.Add(cw.NewMinWidthLabel(" ", tmpWidth)) // Placeholder to keep buttons aligned
@@ -266,20 +271,20 @@ func buildTracksDisplay() *fyne.Container {
 
 			if rowid > 0 {
 				rowBox.Add(widget.NewButtonWithIcon("", theme.MoveUpIcon(), func() {
-					currentSession.swapTracks(rowid, rowid-1)
+					config.swapTracks(rowid, rowid-1)
 					content.Remove(tracksBox)
 					tracksBox = buildTracksDisplay()
 					content.Add(tracksBox)
 					content.Refresh()
-					sessionDirty = true
+					setSessionDirty(true)
 				}))
 			} else {
 				rowBox.Add(cw.NewMinWidthLabel(" ", tmpWidth)) // Placeholder to keep buttons aligned
 			}
 
 			rowBox.Add(widget.NewButtonWithIcon("", theme.DeleteIcon(), func() {
-				currentSession.Tracks = append(currentSession.Tracks[:rowid], currentSession.Tracks[rowid+1:]...)
-				sessionDirty = true
+				config.Tracks = append(config.Tracks[:rowid], config.Tracks[rowid+1:]...)
+				setSessionDirty(true)
 				content.Remove(tracksBox)
 				tracksBox = buildTracksDisplay()
 				content.Add(tracksBox)
@@ -294,7 +299,7 @@ func buildTracksDisplay() *fyne.Container {
 		newRow := row{}
 
 		rowBox := container.NewHBox()
-		rowBox.Add(cw.NewMinWidthLabel(strconv.Itoa(len(currentSession.Tracks)+1), 40*scaleFactor()))
+		rowBox.Add(cw.NewMinWidthLabel(strconv.Itoa(len(config.Tracks)+1), 40*scaleFactor()))
 
 		selectorBtn := widget.NewButtonWithIcon("", theme.NavigateNextIcon(), nil)
 		selectorBtn.Disable()
@@ -389,8 +394,8 @@ func buildTracksDisplay() *fyne.Container {
 				Skip:    skipCheck.Checked,
 				LeadIn:  leadIn,
 			}
-			currentSession.Tracks = append(currentSession.Tracks, newTrack)
-			sessionDirty = true
+			config.Tracks = append(config.Tracks, newTrack)
+			setSessionDirty(true)
 			content.Remove(tracksBox)
 			tracksBox = buildTracksDisplay()
 			content.Add(tracksBox)
@@ -421,12 +426,12 @@ func buildTracksDisplayHeader() *fyne.Container {
 
 // updates to the UI after a track has finished playing
 func playerFinished() {
-	playerActive = false
-	if activeTrackIx < len(currentSession.Tracks)-1 {
+	setPlayerActive(false)
+	if getActiveTrackIx() < len(config.Tracks)-1 {
 		for {
-			activeTrackIx++
-			if !currentSession.Tracks[activeTrackIx].Skip &&
-				activeTrackIx <= len(currentSession.Tracks)-1 {
+			setActiveTrackIx(getActiveTrackIx() + 1)
+			if !config.Tracks[getActiveTrackIx()].Skip &&
+				getActiveTrackIx() <= len(config.Tracks)-1 {
 				break
 			}
 		}
