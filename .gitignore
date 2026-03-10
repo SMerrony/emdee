@@ -5,6 +5,7 @@
 /*.png
 *.mid
 *.mp3
+.continue
 .vscode
 *.AppImage
 *.desktop
