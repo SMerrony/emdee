@@ -104,14 +104,15 @@ func loadAndShowSession(path string) {
 
 func clearSessionDisplayAndData() {
 	initLiveData()
+	config = newConfig()
 	tracksBox = nil
 	content.RemoveAll()
 	content.Refresh()
 }
 
 // The sessionHeader holds the session name and notes fields, which are displayed at the top of the
-// UI and can be edited by the user. Changes to these fields are tracked in the currentSession struct
-// and marked as dirty if they differ from the loaded values.
+// UI and can be edited by the user. Changes to these fields are tracked in the liveData struct
+// and marked as dirty if they are edited.
 // The sesssionHeader is the same for both the performance and editing modes.
 func buildSessionHeader() (sessionHeader *fyne.Container) {
 	sessionLabel := widget.NewLabel("Session:")
