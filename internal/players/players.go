@@ -43,19 +43,36 @@ func GuessMediaType(mediaPath string) MediaType {
 type KnownPlayers int
 
 const (
-	PlayerFfplayer KnownPlayers = iota
+	PlayerFfplay KnownPlayers = iota
 	PlayerAplaymidi
 	PlayerPlaysmf
 )
 
+func (s KnownPlayers) String() string {
+	switch s {
+	case PlayerAplaymidi:
+		return "aplaymidi"
+	case PlayerFfplay:
+		return "ffplay"
+	case PlayerPlaysmf:
+		return "playsmf"
+	}
+	return "unknown (internal error)"
+}
+
+func CheckPlayerFound(player KnownPlayers) bool {
+	_, err := exec.LookPath(player.String())
+	return err == nil
+}
+
 func StartPlayer(player KnownPlayers, path string, volume int, midiPort string) (cmd *exec.Cmd, err error) {
 	switch player {
-	case PlayerFfplayer:
-		cmd = exec.Command("ffplay", "-hide_banner", "-nodisp", "-autoexit", "-loglevel", "quiet", "-volume", strconv.Itoa(volume), path)
+	case PlayerFfplay:
+		cmd = exec.Command(player.String(), "-hide_banner", "-nodisp", "-autoexit", "-loglevel", "quiet", "-volume", strconv.Itoa(volume), path)
 	case PlayerAplaymidi:
-		cmd = exec.Command("aplaymidi", "-p", midiPort, path)
+		cmd = exec.Command(player.String(), "-p", midiPort, path)
 	case PlayerPlaysmf:
-		cmd = exec.Command("playsmf", "--out", midiPort, path)
+		cmd = exec.Command(player.String(), "--out", midiPort, path)
 	}
 	err = cmd.Start()
 	if err != nil {

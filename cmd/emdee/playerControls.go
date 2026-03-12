@@ -24,6 +24,26 @@ var (
 	playerCmd                                          *exec.Cmd = nil
 )
 
+func checkPlayers() {
+	switch runtime.GOOS {
+	case "linux":
+		if !players.CheckPlayerFound(players.PlayerFfplay) {
+			dialog.ShowInformation("Audio Player", "Cannot find '"+players.PlayerFfplay.String()+"' on path, audio playback will not work", mainWindow)
+		}
+		if !players.CheckPlayerFound(players.PlayerAplaymidi) {
+			dialog.ShowInformation("MIDI Player", "Cannot find '"+players.PlayerAplaymidi.String()+"' on path, MIDI file playback will not work", mainWindow)
+		}
+	case "windows":
+		if !players.CheckPlayerFound(players.PlayerFfplay) {
+			dialog.ShowInformation("Audio Player", "Cannot find '"+players.PlayerFfplay.String()+"' on path, audio playback will not work", mainWindow)
+		}
+		if !players.CheckPlayerFound(players.PlayerPlaysmf) {
+			dialog.ShowInformation("MIDI Player", "Cannot find '"+players.PlayerPlaysmf.String()+"' on path, MIDI file playback will not work", mainWindow)
+		}
+	default:
+	}
+}
+
 func buildPlayerControls() (playerControls *fyne.Container) {
 	playButton = cw.NewMinHeightButton("Play", 70*scaleFactor())
 	playButton.SetIcon(theme.MediaPlayIcon())
@@ -66,7 +86,7 @@ func play() {
 	switch players.GuessMediaType(track.Path) {
 	case players.MediaAudio:
 		// ffplay is used everywhere (!)
-		cmd, err = players.StartPlayer(players.PlayerFfplayer, track.Path, track.Volume, "")
+		cmd, err = players.StartPlayer(players.PlayerFfplay, track.Path, track.Volume, "")
 	case players.MediaMIDI:
 		switch runtime.GOOS {
 		case "linux":

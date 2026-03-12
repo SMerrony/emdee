@@ -52,10 +52,14 @@ func main() {
 	if *sessionFlag != "" {
 		loadAndShowSession(*sessionFlag)
 	}
+
+	checkPlayers()
+
 	mainWindow.SetCloseIntercept(func() {
 		promptToSaveIfDirty(func() {
 			mainWindow.Close()
 		})
 	})
+
 	mainWindow.ShowAndRun()
 }

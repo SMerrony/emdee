@@ -37,6 +37,8 @@ See the project [README.](../README.md)
 1. With no arguments - in which case an empty session is shown
 2. With the `-sesssion` argument followed by an existing session TOML file - in which case the specified session is loaded and displayed. Eg. `./emdee -session Christmas26.toml`
 
+Immediately after starting `eMDee` it will check that it can find the appropriate third-party players for audio and MIDI playback.  If they're not found, you'll see a warning message.
+
 ## Menu
 ### File
 No surprises here; you can create new sessions, open existing ones, save your session etc.
