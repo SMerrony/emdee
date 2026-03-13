@@ -25,6 +25,8 @@ const (
 var (
 	emdeeApp   fyne.App
 	mainWindow fyne.Window
+
+	silentFileName, allNotesOffFileName string
 )
 
 var (
@@ -33,6 +35,8 @@ var (
 )
 
 //go:generate fyne bundle -o bundled.go emdee_icon.png
+//go:generate fyne bundle -o bundled.go -append silence_1s.mp3
+//go:generate fyne bundle -o bundled.go -append all_notes_off.mid
 
 func main() {
 	flag.Parse()
@@ -54,6 +58,15 @@ func main() {
 	}
 
 	checkPlayers()
+	var err error
+	silentFileName, err = writeTempFile("silent1sec*.mp3", resourceSilence1sMp3Data)
+	defer deleteTempFile(silentFileName)
+	allNotesOffFileName, err = writeTempFile("allNotesOff*.midi", resourceAllnotesoffMidData)
+	defer deleteTempFile(allNotesOffFileName)
+
+	if err != nil {
+		panic(err)
+	}
 
 	mainWindow.SetCloseIntercept(func() {
 		promptToSaveIfDirty(func() {

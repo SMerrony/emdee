@@ -28,15 +28,16 @@ The MD can plan in advance the order of performance; later, `eMDee` will facilit
   - [Usage](#usage)
   - [Changes](#changes)
 
-![eMDee main screen, ready to perform!](doc/eMDee_0_2_0_Loaded.png)
+![eMDee main screen, ready to perform!](doc/eMDee_0_3_0_Loaded.png)
 
 ## Core Features
 * Create 'session' of 'tracks'
 * Tracks may be audio (FLAC, MP3, OGG, WAV) or MIDI files (played externally)
 * Tracks may be re-ordered
 * Tracks may be marked for skipping in performance
-* Controls are provided to Play, Stop
+* Controls are provided to Play, Stop, Skip, etc.
 * Audio tracks may have a volume modified
+* Each track can have a specific silent lead-in
 * Dummy or 'placeholder' tracks may be inserted to remind MD of a cappella pieces etc.
 * Independently scalable interface, so you can have a nice big font for live use without reconfiguring your desktop
 
@@ -50,7 +51,7 @@ When a MIDI file is manually stopped from playing, an all-notes-off MIDI file is
 
 ## Session Editing
 
-![eMDee main screen, editing tracks](doc/eMDee_0_2_0_Editing.png)
+![eMDee main screen, editing tracks](doc/eMDee_0_3_0_Editing.png)
 
 ## Prerequisites
 `eMDee` relies on well-known third-party applications to play audio and MIDI files, these must be installed

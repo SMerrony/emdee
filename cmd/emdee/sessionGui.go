@@ -24,6 +24,7 @@ type row struct {
 	id             int
 	title, comment string
 	volume         int
+	leadin         int
 	skip           bool
 	path           string
 	selectorBtn    *widget.Button
@@ -251,7 +252,12 @@ func buildTracksDisplay() *fyne.Container {
 		if trackEditMode {
 			LeadInEntry := cw.NewMinWidthEntry(40 * scaleFactor())
 			LeadInEntry.SetText(strconv.Itoa(track.LeadIn))
+			LeadInEntry.OnChanged = func(s string) {
+				config.Tracks[rowid].LeadIn, _ = strconv.Atoi(s)
+				setSessionDirty(true)
+			}
 			rowBox.Add(LeadInEntry)
+
 			rowBox.Add(widget.NewButtonWithIcon("", theme.FolderOpenIcon(), nil))
 			clearBtn := widget.NewButtonWithIcon("", theme.ContentClearIcon(), nil)
 			rowBox.Add(clearBtn)
@@ -350,7 +356,10 @@ func buildTracksDisplay() *fyne.Container {
 		}))
 
 		LeadInEntry := cw.NewMinWidthEntry(40 * scaleFactor())
-		LeadInEntry.SetText(strconv.Itoa(0))
+		LeadInEntry.SetText("0")
+		LeadInEntry.OnChanged = func(s string) {
+			newRow.leadin, _ = strconv.Atoi(s)
+		}
 		rowBox.Add(LeadInEntry)
 		rowBox.Add(widget.NewButtonWithIcon("", theme.FolderOpenIcon(), func() {
 			fd := dialog.NewFileOpen(func(reader fyne.URIReadCloser, err error) {

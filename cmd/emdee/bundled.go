@@ -14,3 +14,17 @@ var resourceEmdeeiconPng = &fyne.StaticResource{
 	StaticName:    "emdee_icon.png",
 	StaticContent: resourceEmdeeiconPngData,
 }
+
+//go:embed silence_1s.mp3
+var resourceSilence1sMp3Data []byte
+var resourceSilence1sMp3 = &fyne.StaticResource{
+	StaticName:    "silence_1s.mp3",
+	StaticContent: resourceSilence1sMp3Data,
+}
+
+//go:embed all_notes_off.mid
+var resourceAllnotesoffMidData []byte
+var resourceAllnotesoffMid = &fyne.StaticResource{
+	StaticName:    "all_notes_off.mid",
+	StaticContent: resourceAllnotesoffMidData,
+}

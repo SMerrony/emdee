@@ -6,6 +6,7 @@ package main
 import (
 	cw "emdee/internal/customwidgets"
 	"emdee/internal/players"
+	"time"
 
 	"log"
 
@@ -86,8 +87,15 @@ func play() {
 	switch players.GuessMediaType(track.Path) {
 	case players.MediaAudio:
 		// ffplay is used everywhere (!)
+		for sec := 0; sec < track.LeadIn; sec++ {
+			cmd, err = players.StartPlayer(players.PlayerFfplay, silentFileName, 1, "")
+			err = cmd.Wait()
+		}
 		cmd, err = players.StartPlayer(players.PlayerFfplay, track.Path, track.Volume, "")
 	case players.MediaMIDI:
+		if track.LeadIn > 0 {
+			time.Sleep(time.Duration(track.LeadIn) * time.Second)
+		}
 		switch runtime.GOOS {
 		case "linux":
 			cmd, err = players.StartPlayer(players.PlayerAplaymidi, track.Path, 100, config.Session.MidiPort)
