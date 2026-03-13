@@ -3,8 +3,6 @@
 /alire/
 /config/
 /*.png
-*.mid
-*.mp3
 .continue
 .vscode
 *.AppImage
