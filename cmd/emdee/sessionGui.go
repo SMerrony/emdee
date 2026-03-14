@@ -438,10 +438,9 @@ func buildTracksDisplayHeader() *fyne.Container {
 func playerFinished() {
 	setPlayerActive(false)
 	if getActiveTrackIx() < len(config.Tracks)-1 {
-		for {
+		for getActiveTrackIx() < len(config.Tracks)-1 {
 			setActiveTrackIx(getActiveTrackIx() + 1)
-			if !config.Tracks[getActiveTrackIx()].Skip &&
-				getActiveTrackIx() <= len(config.Tracks)-1 {
+			if !config.Tracks[getActiveTrackIx()].Skip {
 				break
 			}
 		}
