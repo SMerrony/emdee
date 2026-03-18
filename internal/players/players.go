@@ -56,8 +56,10 @@ func (s KnownPlayers) String() string {
 		return "ffplay"
 	case PlayerPlaysmf:
 		return "playsmf"
+	default:
+		log.Panic("Internal error: cannot stringify KnownPlayers value that does not exist")
+		return "unknown (internal error)"
 	}
-	return "unknown (internal error)"
 }
 
 func CheckPlayerFound(player KnownPlayers) bool {

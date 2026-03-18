@@ -258,7 +258,26 @@ func buildTracksDisplay() *fyne.Container {
 			}
 			rowBox.Add(LeadInEntry)
 
-			rowBox.Add(widget.NewButtonWithIcon("", theme.FolderOpenIcon(), nil))
+			rowBox.Add(widget.NewButtonWithIcon("", theme.FolderOpenIcon(), func() {
+				fd := dialog.NewFileOpen(func(reader fyne.URIReadCloser, err error) {
+					if err != nil {
+						dialog.ShowError(err, mainWindow)
+						return
+					}
+					if reader == nil {
+						// log.Println("Cancelled")
+						return
+					}
+					config.Tracks[rowid].Path = reader.URI().Path()
+					setSessionDirty(true)
+					// TODO should really refresh session display after a change here
+					reader.Close()
+				}, mainWindow)
+				fd.SetFileName(config.Tracks[rowid].Path)
+				fd.SetFilter(storage.NewExtensionFileFilter([]string{".mp3", ".wav", ".ogg", ".flac", ".midi", ".MP3", ".WAV", ".OGG", ".FLAC", ".MIDI"}))
+				fd.SetConfirmText("Select")
+				fd.Show()
+			}))
 			clearBtn := widget.NewButtonWithIcon("", theme.ContentClearIcon(), nil)
 			rowBox.Add(clearBtn)
 

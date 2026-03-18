@@ -81,7 +81,6 @@ func play() {
 		dialog.ShowInformation("Track Skip", "This track is marked be skipped. Please uncheck the skip box to play it.", mainWindow)
 		return
 	}
-	// TODO handle MIDI files, different OSes, etc.
 	var cmd *exec.Cmd
 	var err error
 	switch players.GuessMediaType(track.Path) {
@@ -99,7 +98,7 @@ func play() {
 		switch runtime.GOOS {
 		case "linux":
 			cmd, err = players.StartPlayer(players.PlayerAplaymidi, track.Path, 100, config.Session.MidiPort)
-		case "windows":
+		case "windows", "darwin":
 			cmd, err = players.StartPlayer(players.PlayerPlaysmf, track.Path, 100, config.Session.MidiPort)
 		default:
 			dialog.ShowInformation("Unsupported Platform", "Emdee cannot yet play MIDI files on this Operating System", mainWindow)

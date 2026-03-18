@@ -67,6 +67,10 @@ for `eMDee` to function.
 
 You will neeed to ensure that both of these players are on your PATH so that `eMDee` can find them.  There are clear instructions in the above FFmpeg installation guide on how to do this, follow the same steps for `playsmf`.
 
+### macOS (Needs testing!)
+1. `ffplay` is a part of the `ffmpeg` package.  A macOS binary is available at https://ffmpeg.org/download.html
+2. `playsmf` is part of "Div's MIDI Utilities" available here: http://public.sreal.com/~div/midi-utilities/.
+
 ## Installation
 
 ### Install Executable
