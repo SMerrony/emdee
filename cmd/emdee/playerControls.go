@@ -6,6 +6,7 @@ package main
 import (
 	cw "emdee/internal/customwidgets"
 	"emdee/internal/players"
+	"os"
 	"time"
 
 	"log"
@@ -83,6 +84,14 @@ func play() {
 	}
 	var cmd *exec.Cmd
 	var err error
+
+	// check we can actually access the track
+	t, err := os.Open(track.Path)
+	if err != nil {
+		dialog.ShowError(err, mainWindow)
+	}
+	t.Close()
+
 	switch players.GuessMediaType(track.Path) {
 	case players.MediaAudio:
 		// ffplay is used everywhere (!)
