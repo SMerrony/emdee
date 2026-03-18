@@ -249,6 +249,7 @@ func buildTracksDisplay() *fyne.Container {
 			}))
 		}
 
+		// add extra columns if we are in Session Editing mode
 		if trackEditMode {
 			LeadInEntry := cw.NewMinWidthEntry(40 * scaleFactor())
 			LeadInEntry.SetText(strconv.Itoa(track.LeadIn))
@@ -269,27 +270,31 @@ func buildTracksDisplay() *fyne.Container {
 						return
 					}
 					config.Tracks[rowid].Path = reader.URI().Path()
-					setSessionDirty(true)
-					// TODO should really refresh session display after a change here
 					reader.Close()
+					setSessionDirty(true)
+					rebuildSession()
 				}, mainWindow)
 				fd.SetFileName(config.Tracks[rowid].Path)
 				fd.SetFilter(storage.NewExtensionFileFilter([]string{".mp3", ".wav", ".ogg", ".flac", ".midi", ".MP3", ".WAV", ".OGG", ".FLAC", ".MIDI"}))
 				fd.SetConfirmText("Select")
 				fd.Show()
 			}))
-			clearBtn := widget.NewButtonWithIcon("", theme.ContentClearIcon(), nil)
+			clearBtn := widget.NewButtonWithIcon("", theme.ContentClearIcon(), func() {
+				config.Tracks[rowid].Path = ""
+				setSessionDirty(true)
+				rebuildSession()
+			})
+			if config.Tracks[rowid].Path == "" {
+				clearBtn.Disable()
+			}
 			rowBox.Add(clearBtn)
 
 			tmpWidth := clearBtn.MinSize().Width
 			if rowid < len(config.Tracks)-1 {
 				rowBox.Add(widget.NewButtonWithIcon("", theme.MoveDownIcon(), func() {
 					config.swapTracks(rowid, rowid+1)
-					content.Remove(tracksBox)
-					tracksBox = buildTracksDisplay()
-					content.Add(tracksBox)
-					content.Refresh()
 					setSessionDirty(true)
+					rebuildSession()
 				}))
 			} else {
 				rowBox.Add(cw.NewMinWidthLabel(" ", tmpWidth)) // Placeholder to keep buttons aligned
@@ -298,11 +303,8 @@ func buildTracksDisplay() *fyne.Container {
 			if rowid > 0 {
 				rowBox.Add(widget.NewButtonWithIcon("", theme.MoveUpIcon(), func() {
 					config.swapTracks(rowid, rowid-1)
-					content.Remove(tracksBox)
-					tracksBox = buildTracksDisplay()
-					content.Add(tracksBox)
-					content.Refresh()
 					setSessionDirty(true)
+					rebuildSession()
 				}))
 			} else {
 				rowBox.Add(cw.NewMinWidthLabel(" ", tmpWidth)) // Placeholder to keep buttons aligned
@@ -321,6 +323,7 @@ func buildTracksDisplay() *fyne.Container {
 		tracksBox.Add(rowBox)
 	}
 
+	// add blank extra row if we are in Session Editing mode
 	if trackEditMode {
 		newRow := row{}
 
@@ -425,10 +428,7 @@ func buildTracksDisplay() *fyne.Container {
 			}
 			config.Tracks = append(config.Tracks, newTrack)
 			setSessionDirty(true)
-			content.Remove(tracksBox)
-			tracksBox = buildTracksDisplay()
-			content.Add(tracksBox)
-			content.Refresh()
+			rebuildSession()
 		})
 
 		rowBox.Add(trackSaveBtn)
@@ -436,6 +436,13 @@ func buildTracksDisplay() *fyne.Container {
 		tracksBox.Add(rowBox)
 	}
 	return tracksBox
+}
+
+func rebuildSession() {
+	content.Remove(tracksBox)
+	tracksBox = buildTracksDisplay()
+	content.Add(tracksBox)
+	content.Refresh()
 }
 
 func buildTracksDisplayHeader() *fyne.Container {
