@@ -211,6 +211,6 @@ func openBrowser(url string) {
 }
 
 func helpAbout() {
-	info := fmt.Sprintf("%s\n\n%s\n\n%s\n\n%s", appTitle, appSemVer, appWebsite, appCopyright)
+	info := fmt.Sprintf("%s\n\n%s\n\n%s\n\n%s\n\n%s", appTitle, appComment, appSemVer, appWebsite, appCopyright)
 	dialog.ShowInformation("About", info, mainWindow)
 }

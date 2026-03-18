@@ -1,6 +1,16 @@
 Website = "https://github.com/SMerrony/emdee"
 
 [Details]
+Icon    = "cmd/emdee/emdee_icon.png"
 Name    = "eMDee"
 ID      = "fr.merrony.emdee"
 Version = "0.3.0"
+
+[LinuxAndBSD]
+Name        = "eMDee"
+Type        = "Application"
+GenericName = "Musical Performance Tool"
+Categories  = ["Audio"]
+Comment     = "Live performance and rehearsal tool for musical directors"
+Keywords    = ["mp3", "flac", "wav", "mid", "midi"]
+SingleMainWindow = true

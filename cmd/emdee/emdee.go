@@ -12,10 +12,11 @@ import (
 )
 
 const (
-	appTitle     = "eMDee"
-	appComment   = "Live performance and rehearsal assistant for musical directors"
+	appComment   = "Live performance and rehearsal tool for musical directors"
 	appCopyright = "Copyright ©2026 S.Merrony"
+	appID        = "fr.merrony.emdee"
 	appSemVer    = "v0.3.0" // TODO Update SemVer on each release!
+	appTitle     = "eMDee"
 	appWebsite   = "https://github.com/SMerrony/emdee"
 	helpURL      = "https://github.com/SMerrony/emdee/blob/main/doc/UserGuide.md"
 
@@ -45,7 +46,7 @@ func main() {
 		return
 	}
 
-	emdeeApp = app.New()
+	emdeeApp = app.NewWithID(appID)
 	emdeeApp.SetIcon(resourceEmdeeiconPng)
 	emdeeApp.Settings().SetTheme(&emdeeTheme{})
 	initLiveData()
