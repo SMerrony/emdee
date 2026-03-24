@@ -6,6 +6,7 @@ package main
 import (
 	cw "emdee/internal/customwidgets"
 	"emdee/internal/players"
+	"errors"
 	"os"
 	"time"
 
@@ -49,7 +50,7 @@ func checkPlayers() {
 func buildPlayerControls() (playerControls *fyne.Container) {
 	playButton = cw.NewMinHeightButton("Play", 70*scaleFactor())
 	playButton.SetIcon(theme.MediaPlayIcon())
-	playButton.OnTapped = play
+	playButton.OnTapped = playActiveTrack
 	playButton.Disable()
 
 	stopButton = cw.NewMinHeightButton("Stop", 70*scaleFactor()) // Use NewMinHeightButton
@@ -72,7 +73,7 @@ func buildPlayerControls() (playerControls *fyne.Container) {
 	return playerControls
 }
 
-func play() {
+func playActiveTrack() {
 	if config == nil || getActiveTrackIx() < 0 || getActiveTrackIx() >= len(config.Tracks) {
 		dialog.ShowInformation("No Track Selected", "Please select a track to play.", mainWindow)
 		return
@@ -82,46 +83,50 @@ func play() {
 		dialog.ShowInformation("Track Skip", "This track is marked be skipped. Please uncheck the skip box to play it.", mainWindow)
 		return
 	}
-	var cmd *exec.Cmd
 	var err error
+	playerCmd, err = playFile(track.Path, track.Volume, track.LeadIn)
+	if err == nil {
+		setPlayerActive(true)
+		setMediaType(players.GuessMediaType(track.Path))
+		go monitorForCmdFinished(playerCmd)
+		setPlayerButtonsAvailability()
+	}
+}
 
-	// check we can actually access the track
-	t, err := os.Open(track.Path)
+func playFile(filePath string, volume int, leadin int) (cmd *exec.Cmd, err error) {
+	// check we can actually access the media
+	t, err := os.Open(filePath)
 	if err != nil {
 		dialog.ShowError(err, mainWindow)
 	}
 	t.Close()
 
-	switch players.GuessMediaType(track.Path) {
+	switch players.GuessMediaType(filePath) {
 	case players.MediaAudio:
 		// ffplay is used everywhere (!)
-		for sec := 0; sec < track.LeadIn; sec++ {
+		for sec := 0; sec < leadin; sec++ {
 			cmd, err = players.StartPlayer(players.PlayerFfplay, silentFileName, 1, "")
 			err = cmd.Wait()
 		}
-		cmd, err = players.StartPlayer(players.PlayerFfplay, track.Path, track.Volume, "")
+		cmd, err = players.StartPlayer(players.PlayerFfplay, filePath, volume, "")
 	case players.MediaMIDI:
-		if track.LeadIn > 0 {
-			time.Sleep(time.Duration(track.LeadIn) * time.Second)
+		if leadin > 0 {
+			time.Sleep(time.Duration(leadin) * time.Second)
 		}
 		switch runtime.GOOS {
 		case "linux":
-			cmd, err = players.StartPlayer(players.PlayerAplaymidi, track.Path, 100, config.Session.MidiPort)
+			cmd, err = players.StartPlayer(players.PlayerAplaymidi, filePath, 100, config.Session.MidiPort)
 		case "windows", "darwin":
-			cmd, err = players.StartPlayer(players.PlayerPlaysmf, track.Path, 100, config.Session.MidiPort)
+			cmd, err = players.StartPlayer(players.PlayerPlaysmf, filePath, 100, config.Session.MidiPort)
 		default:
 			dialog.ShowInformation("Unsupported Platform", "Emdee cannot yet play MIDI files on this Operating System", mainWindow)
-			return
+			return nil, errors.New("Unsupported platform")
 		}
 	}
 	if err != nil {
 		dialog.ShowError(err, mainWindow)
-	} else {
-		setPlayerActive(true)
-		go monitorForCmdFinished(cmd)
-		playerCmd = cmd
-		setPlayerButtonsAvailability()
 	}
+	return cmd, err
 }
 
 // Check for command termination. Must be run in a separate goroutine
@@ -141,6 +146,10 @@ func stop() {
 		players.StopPlayer(playerCmd)
 		setPlayerActive(false)
 		setPlayerButtonsAvailability()
+	}
+	// if the last track was a MIDI file, we'll send all notes off even if is not active
+	if getMediaType() == players.MediaMIDI {
+		_, _ = playFile(allNotesOffFileName, 0, 0)
 	}
 }
 

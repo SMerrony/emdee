@@ -3,7 +3,10 @@
 
 package main
 
-import "sync"
+import (
+	"emdee/internal/players"
+	"sync"
+)
 
 type liveDataT struct {
 	mutex           sync.RWMutex
@@ -11,6 +14,7 @@ type liveDataT struct {
 	sessionFilePath string
 	playerActive    bool
 	activeTrackIx   int
+	mediaType       players.MediaType
 }
 
 var liveData liveDataT
@@ -77,4 +81,16 @@ func setActiveTrackIx(t int) {
 	liveData.mutex.Lock()
 	defer liveData.mutex.Unlock()
 	liveData.activeTrackIx = t
+}
+
+func getMediaType() players.MediaType {
+	liveData.mutex.RLock()
+	defer liveData.mutex.RUnlock()
+	return liveData.mediaType
+}
+
+func setMediaType(mt players.MediaType) {
+	liveData.mutex.Lock()
+	defer liveData.mutex.Unlock()
+	liveData.mediaType = mt
 }
