@@ -14,6 +14,7 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
+	"fyne.io/fyne/v2/driver/desktop"
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/storage"
 	"fyne.io/fyne/v2/theme"
@@ -43,9 +44,17 @@ var (
 func setupWindow(w fyne.Window) {
 	w.Resize(fyne.NewSize(900, 600))
 	w.SetMainMenu(buildMenu())
+	setupShortcuts(w)
 	status := container.NewVBox(buildPlayerControls(), buildStatusBox())
 	content = container.NewBorder(buildSessionHeader(), status, nil, nil, nil)
 	w.SetContent(content)
+}
+
+func setupShortcuts(w fyne.Window) {
+	ctrlS := &desktop.CustomShortcut{KeyName: fyne.KeyS, Modifier: fyne.KeyModifierControl}
+	w.Canvas().AddShortcut(ctrlS, func(shortcut fyne.Shortcut) { fileSave() })
+	ctrlQ := &desktop.CustomShortcut{KeyName: fyne.KeyQ, Modifier: fyne.KeyModifierControl}
+	w.Canvas().AddShortcut(ctrlQ, func(shortcut fyne.Shortcut) { w.Close() })
 }
 
 func showSession() {

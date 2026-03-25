@@ -28,6 +28,7 @@ The MD can plan in advance the order of performance; later, `eMDee` will facilit
   - [Editing Sessions](#editing-sessions)
     - [Move Down/Up](#move-downup)
     - [Trash](#trash)
+  - [Keyboard Shortcuts](#keyboard-shortcuts)
 
 
 ## Installation
@@ -113,3 +114,7 @@ The up and down arrows move a track one place in the track order.
 
 ### Trash
 The trash can button removes the track from the session.
+
+## Keyboard Shortcuts
+* `Ctrl+S` Save the current session
+* `Ctrl+Q` Quit eMDee

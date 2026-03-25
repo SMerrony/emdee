@@ -26,7 +26,7 @@ var (
 func buildMenu() (mainMenu *fyne.MainMenu) {
 	newItem := fyne.NewMenuItem("New Session...", fileNew)
 	openItem := fyne.NewMenuItem("Open Session...", fileOpen)
-	saveItem := fyne.NewMenuItem("Save Session", fileSave)
+	saveItem := fyne.NewMenuItem("Save Session (Ctrl+S)", fileSave)
 	saveAsItem := fyne.NewMenuItem("Save Session As...", fileSaveAs)
 	fileMenu := fyne.NewMenu("File",
 		newItem,
