@@ -23,6 +23,11 @@ The MD can plan in advance the order of performance; later, `eMDee` will facilit
     - [Increase/Decrease Volume](#increasedecrease-volume)
     - [Lead-in](#lead-in)
     - [Media File Chooser](#media-file-chooser)
+    - [Media Remove](#media-remove)
+    - [Add to Session](#add-to-session)
+  - [Editing Sessions](#editing-sessions)
+    - [Move Down/Up](#move-downup)
+    - [Trash](#trash)
 
 
 ## Installation
@@ -54,6 +59,8 @@ You can also switch between performance (normal) and Session Editing mode from t
 
 ## Creating a New Session
 First, ensure you are in the session editing mode either by choosing `Session Editing` from the `View` menu or via the `File | New` menu option - an empty track will appear on the display.
+
+![A new session in eMDee](eMDee_0.3.0_New_Session.png)
 
 Enter a descriptive name for the session in the top (`Session`) field.  Optionally, add further notes about the session in the `Notes` field.
 
@@ -88,4 +95,21 @@ This is very useful if your sound system needs a second or two to "wake up" (eg.
 ### Media File Chooser
 Hitting the folder button will bring up a file chooser for you to associate a media file (eg. .wav, .mp3, .flac, .midi, etc.) with the current track.
 
+### Media Remove
+This simply removes any media-association for the track.
 
+### Add to Session
+Once you have filled in the track details, use this button to add the track to the current sesssion.
+
+## Editing Sessions
+To make changes to an existing session first load it and then choose `Session Editing` from the `View` menu.
+
+![Sample eMDee session in editing mode](eMDee_0_3_0_Editing.png)
+
+Three new buttons appear on the right of each track.
+
+### Move Down/Up
+The up and down arrows move a track one place in the track order.
+
+### Trash
+The trash can button removes the track from the session.
