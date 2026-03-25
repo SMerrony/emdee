@@ -13,6 +13,8 @@ The MD can plan in advance the order of performance; later, `eMDee` will facilit
     - [File](#file)
     - [View](#view)
     - [MIDI](#midi)
+      - [List Ports](#list-ports)
+      - [MIDI Settings...](#midi-settings)
     - [Help](#help)
   - [Creating a New Session](#creating-a-new-session)
   - [Adding Tracks](#adding-tracks)
@@ -56,6 +58,17 @@ on laptops or tablets being used in performance.  The chosen view size is saved 
 You can also switch between performance (normal) and Session Editing mode from this menu.
 
 ### MIDI
+On some platforms eMDee can play MIDI files via an external player (amidiplay or playsmf).
+For this to work you must set the MIDI port to be used for your Session.
+#### List Ports
+
+![eMDee List MIDI Ports](eMDee_0_3_0_MidiPorts.png)
+
+The port is the number or numbers on the left.  Eg. for the test system above, the port to use would be `128:0`.  Generally, on Linux-based systems the port will be a pair of numbers separated with a colon; on Windows systems it may just be a single number.
+
+#### MIDI Settings...
+Enter your chosen MIDI port and hit Save.  It is saved in the Session file.
+
 ### Help
 
 ## Creating a New Session
