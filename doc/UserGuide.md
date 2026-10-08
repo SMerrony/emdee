@@ -1,9 +1,12 @@
 # eMDee User Guide
 
 `eMDee` is a live performance and rehearsal tool for musical directors which removes 
-the need to have folders of tracks and different media players open in order to play backing tracks for performance groups such as singers, choirs, and theatre-groups.
+the need to have folders of tracks and different media players open in order to play
+backing tracks for performance groups such as singers, choirs, and theatre-groups.
 
-The MD can plan in advance the order of performance; later, `eMDee` will facilitate the playing of each track in the specfied order during the performance.  The volume of each track can be adjusted, and tracks can be skipped etc.
+The MD can plan in advance the order of performance; later, `eMDee` will facilitate
+the playing of each track in the specfied order during the performance.  The volume 
+of each track can be adjusted, and tracks can be skipped etc.
 
 - [eMDee User Guide](#emdee-user-guide)
   - [Installation](#installation)
@@ -37,15 +40,19 @@ The MD can plan in advance the order of performance; later, `eMDee` will facilit
 See the project [README.](../README.md)
 
 ## Terminology
-* Track - usually an audio or MIDI file, typically the accompaniment for a single piece of music.  You can also add tracks with no associated media file, eg. as a placeholder for an unaccompanied item
+* Track - usually an audio or MIDI file, typically the accompaniment for a single piece of
+music.  You can also add tracks with no associated media file, eg. as a placeholder for an unaccompanied item
 * Session - a collection of tracks arranged in a specific order for a performance, rehearsal, gig, etc.
 
 ## Starting the Application
 `eMDee` may be started in two ways...
-1. With no arguments - in which case an empty session is shown
-2. With the `-sesssion` argument followed by an existing session TOML file - in which case the specified session is loaded and displayed. Eg. `./emdee -session Christmas26.toml`
 
-Immediately after starting `eMDee` it will check that it can find the appropriate third-party players for audio and MIDI playback.  If they're not found, you'll see a warning message.
+1. With no arguments - in which case an empty session is shown
+2. With the `-sesssion` argument followed by an existing session TOML file - in which case 
+the specified session is loaded and displayed. Eg. `./emdee -session Christmas26.toml`
+
+Immediately after starting `eMDee` it will check that it can find the appropriate third-party
+players for audio and MIDI playback.  If they're not found, you'll see a warning message.
 
 ## Menu
 ### File
@@ -64,7 +71,9 @@ For this to work you must set the MIDI port to be used for your Session.
 
 ![eMDee List MIDI Ports](eMDee_0_3_0_MidiPorts.png)
 
-The port is the number or numbers on the left.  Eg. for the test system above, the port to use would be `128:0`.  Generally, on Linux-based systems the port will be a pair of numbers separated with a colon; on Windows systems it may just be a single number.
+The port is the number or numbers on the left.  Eg. for the test system above, the port to 
+use would be `128:0`.  Generally, on Linux-based systems the port will be a pair of numbers
+separated with a colon; on Windows systems it may just be a single number.
 
 #### MIDI Settings...
 Enter your chosen MIDI port and hit Save.  It is saved in the Session file.
@@ -72,11 +81,13 @@ Enter your chosen MIDI port and hit Save.  It is saved in the Session file.
 ### Help
 
 ## Creating a New Session
-First, ensure you are in the session editing mode either by choosing `Session Editing` from the `View` menu or via the `File | New` menu option - an empty track will appear on the display.
+First, ensure you are in the session editing mode either by choosing `Session Editing` from 
+the `View` menu or via the `File | New` menu option - an empty track will appear on the display.
 
 ![A new session in eMDee](eMDee_0.3.0_New_Session.png)
 
-Enter a descriptive name for the session in the top (`Session`) field.  Optionally, add further notes about the session in the `Notes` field.
+Enter a descriptive name for the session in the top (`Session`) field.  Optionally, add further
+notes about the session in the `Notes` field.
 
 Now proceed to add tracks to your session...
 
@@ -91,7 +102,8 @@ From left to right...
 Enter the title of the track (compulsory) in the first field.
 
 ### Skip
-The check-box is to indicate that the track should be skipped, check it if you want the track to be skipped in performance - it will also be checked if there is no media file for the track.
+The check-box is to indicate that the track should be skipped, check it if you want the track to
+be skipped in performance - it will also be checked if there is no media file for the track.
 
 ### Comment
 Next is an optional comment field.  Often this is used for a short *aide memoire* for the MD.
@@ -104,10 +116,12 @@ The next two buttons decrease and increase the volume by 5% respectively.
 
 ### Lead-in
 Enter the number of seconds lead-in (silence) you want played before the track starts playing.
-This is very useful if your sound system needs a second or two to "wake up" (eg. some optical or Bluetooth connections), or if you simply need a little time to prepare yourself before the track actually starts.
+This is very useful if your sound system needs a second or two to "wake up" (eg. some optical or
+Bluetooth connections), or if you simply need a little time to prepare yourself before the track actually starts.
 
 ### Media File Chooser
-Hitting the folder button will bring up a file chooser for you to associate a media file (eg. .wav, .mp3, .flac, .midi, etc.) with the current track.
+Hitting the folder button will bring up a file chooser for you to associate a media file 
+(eg. .wav, .mp3, .flac, .midi, etc.) with the current track.
 
 ### Media Remove
 This simply removes any media-association for the track.

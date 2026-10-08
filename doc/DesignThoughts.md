@@ -1,5 +1,8 @@
 # Design Thoughts for 'eMDee'
 
+N.B. This document is retained purely for historical purposes, the program was not necessarily
+implemented as described below.
+
 ## Intended Use
 The idea behind `eMDee` is to provide a live performance assistant for musical directors which removes 
 the need to have folders of tracks and command-line windows open in order to play backing tracks for live

@@ -141,10 +141,11 @@ func fileOpen() {
 				setSessionDirty(false)
 			}
 		}, mainWindow)
-		od.Resize(fyne.Size{Width: 800, Height: 600})
+		// od.Resize(fyne.Size{Width: 800, Height: 600})
 		od.SetConfirmText("Open")
 		od.SetFilter(storage.NewExtensionFileFilter([]string{".toml", ".TOML"}))
 		od.Show()
+		od.Resize(fyne.Size{Width: 800, Height: 600}) // moved here due to Fyne bug #6495
 	})
 
 }
@@ -175,9 +176,10 @@ func fileSaveAs() {
 			}
 		}
 	}, mainWindow)
-	sd.Resize(fyne.Size{Width: 800, Height: 600})
+	// sd.Resize(fyne.Size{Width: 800, Height: 600})
 	sd.SetConfirmText("Save")
 	sd.Show()
+	sd.Resize(fyne.Size{Width: 800, Height: 600})
 }
 
 func midiPortChooser() {
