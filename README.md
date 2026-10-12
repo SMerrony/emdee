@@ -75,7 +75,7 @@ You will neeed to ensure that both of these players are on your PATH so that `eM
 
 ### Install Executable
 #### GNU/Linux
-An AppImage file will normally be provided with each release.  Install it in the usual manner.
+TODO
 
 #### Windows
 TODO
@@ -93,7 +93,7 @@ See our [User Guide](doc/UserGuide.md).
 
 ## Changes
 
-* 0.3.0(WIP) Rewrite in Go.  Improvements to .toml file format, lead-in per track (not per session)
+* 0.3.0 Rewrite in Go.  Improvements to .toml file format, lead-in per track (not per session)
 * 0.2.1 Fix case where last text field edited might not be saved
 * 0.2.0 Add button to delete sound file from a track - Issue #2
 * 0.1.1 Fix adding new tracks with no associated sound file - Issue #1
